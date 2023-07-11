@@ -1,4 +1,4 @@
-BLACK=black -l 120 -t py36 app.py coup_clone
+BLACK=black -l 120 app.py coup_clone
 format:
 	isort app.py coup_clone
 	${BLACK}
@@ -13,4 +13,3 @@ mypy:
 install:
 	python -m pip install --upgrade pip
 	pip install -r requirements.txt
-	
