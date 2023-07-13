@@ -1,14 +1,17 @@
-BLACK=black -l 120 app.py coup_clone
+BLACK=black -l 120 coup_clone
 format:
-	isort app.py coup_clone
+	python -m isort coup_clone
 	${BLACK}
 
 lint:
 	${BLACK} --check
-	flake8 app.py coup_clone/
+	flake8 coup_clone/
 
 mypy:
-	mypy -m app -p coup_clone
+	mypy -p coup_clone
+
+test:
+	pytest tests
 
 install:
 	python -m pip install --upgrade pip
