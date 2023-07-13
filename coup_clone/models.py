@@ -2,19 +2,20 @@ from __future__ import annotations
 
 from typing import List
 
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from coup_clone.database import Base
+db = SQLAlchemy()
 
 
-class Game(Base):
+class Game(db.Model): # type: ignore
     __tablename__ = "games"
     id: Mapped[str] = mapped_column(String(16), primary_key=True)
     players: Mapped[List["Player"]] = relationship()
 
 
-class Player(Base):
+class Player(db.Model): # type: ignore
     __tablename__ = "players"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
