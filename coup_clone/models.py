@@ -5,18 +5,20 @@ from typing import List
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.schema import UniqueConstraint
 
 db = SQLAlchemy()
 
 
-class Game(db.Model): # type: ignore
+class Game(db.Model):  # type: ignore
     __tablename__ = "games"
     id: Mapped[str] = mapped_column(String(16), primary_key=True)
     players: Mapped[List["Player"]] = relationship()
 
 
-class Player(db.Model): # type: ignore
+class Player(db.Model):  # type: ignore
     __tablename__ = "players"
+    __table_args__ = (UniqueConstraint("game_id", "session_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
     game_id: Mapped[int] = mapped_column(ForeignKey("games.id"))

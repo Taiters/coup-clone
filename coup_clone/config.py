@@ -3,10 +3,10 @@ class Config:
     TESTING = False
 
 
-class ProdConfig:
+class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///project.db"
 
 
-class TestConfig:
+class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
