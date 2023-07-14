@@ -10,7 +10,7 @@ lint:
 mypy:
 	mypy -p coup_clone
 
-test:
+test: lint mypy
 	pytest tests
 
 install:
