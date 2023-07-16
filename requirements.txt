@@ -1,5 +1,6 @@
 Flask==2.3.2
 Flask-SQLAlchemy==3.0.5
+flask-socketio==5.3.4
 pytest==7.4.0
 pytest-mock==3.11.1
 black==23.7.0
