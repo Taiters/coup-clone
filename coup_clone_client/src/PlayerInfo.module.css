@@ -1,0 +1,41 @@
+.right {
+    margin-left: auto;
+}
+
+.influence {
+    padding: 0.2em 0.4em;
+    font-size: 0.7em;
+    border-radius: 0.25em;
+    border: 2px solid;
+    color: white;
+    font-weight: bold;
+    border-color: #fff4;
+}
+
+.disconnected {
+    filter: blur(1px) opacity(40%);
+}
+
+.unknown {
+    background-color: grey;
+}
+
+.duke {
+    background-color: var(--duke-color);
+}
+
+.captain {
+    background-color: var(--captain-color);
+}
+
+.assassin {
+    background-color: var(--assassin-color);
+}
+
+.ambassador {
+    background-color: var(--ambassador-color);
+}
+
+.contessa {
+    background-color: var(--contessa-color);
+}

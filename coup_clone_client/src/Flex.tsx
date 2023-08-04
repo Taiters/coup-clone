@@ -4,6 +4,7 @@ import styles from "./Flex.module.css";
 type Props = {
     width?: number | string | undefined,
     grow?: number | undefined,
+    alignItems?: string | undefined,
     direction?: "row" | "column",
     children: ReactNode,
 }
@@ -11,12 +12,15 @@ type Props = {
 function Flex({
     width,
     grow,
+    alignItems,
     direction="row",
     children,
 }: Props) {
     const s: CSSProperties = {
         flexDirection: direction,
-        alignItems: direction === "row" ? "flex-start" : "stretch",
+        alignItems: alignItems != null 
+            ? alignItems 
+            :  direction === "row" ? "flex-start" : "stretch",
         flexGrow: grow,
         width,
     };
