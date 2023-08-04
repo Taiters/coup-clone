@@ -1,0 +1,21 @@
+.actions {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.actions li:not(:first-child) {
+    margin-top: 0.5em;
+}
+
+.actions button {
+    width: 100%;
+    padding: 2em;
+    cursor: pointer;
+    border: 1px solid black;
+    background-color: green;
+}
+
+.actions button:hover {
+    background-color: pink;
+}
