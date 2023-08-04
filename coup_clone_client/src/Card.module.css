@@ -4,6 +4,7 @@
     border: 1px solid #aaaaaa;
     border-radius: 0.5em;
     padding: 1em;
+    box-shadow: 0 0 4px #0003;
 }
 
 .heading {

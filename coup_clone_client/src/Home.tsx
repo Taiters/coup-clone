@@ -3,6 +3,8 @@ import styles from "./Home.module.css";
 import Button, { ButtonStyle } from "./Button";
 import TurnActions from "./TurnActions";
 import Flex from "./Flex";
+import Card from "./Card";
+import PlayerList from "./PlayerList";
 
 function Home() {
     const submit = useSubmit();
@@ -24,19 +26,12 @@ function Home() {
         //     </div>
         // </div>
         <Flex>
-            <TurnActions />
-            <Flex direction="column" grow={1}>
+            <Card heading="Players">
+                <PlayerList />
+            </Card>
+            <Card heading="Your turn" subheading="What's your next move?">
                 <TurnActions />
-                <TurnActions />
-            </Flex>
-            <TurnActions />
-            <Flex direction="column" grow={1}>
-                <TurnActions />
-                <TurnActions />
-                <TurnActions />
-                <TurnActions />
-            </Flex>
-            <TurnActions />
+            </Card>
         </Flex>
     );
 }
