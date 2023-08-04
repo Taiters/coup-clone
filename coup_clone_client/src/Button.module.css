@@ -1,0 +1,44 @@
+.button {
+    width: 100%;
+    display: block;
+    padding: 0.75em;
+    cursor: pointer;
+    border: 2px solid #4a4a4a;
+    color: white;
+    font-weight: bold;
+    border-radius: 0.5em;
+}
+
+.description {
+    display: block;
+    color: #FFFFFF99;
+    font-weight: normal;
+}
+
+.button:hover {
+    filter: brightness(1.1);
+}
+
+.button:active {
+    filter: brightness(0.9);
+}
+
+.normal {
+    background-color: #6c7181;
+}
+
+.tax {
+    background-color: var(--duke-color);
+}
+
+.assassinate {
+    background-color: var(--assassin-color);
+}
+
+.steal {
+    background-color: var(--captain-color);
+}
+
+.exchange {
+    background-color: var(--ambassador-color);
+}

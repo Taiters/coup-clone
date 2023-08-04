@@ -1,5 +1,8 @@
 import { useSubmit } from "react-router-dom";
 import styles from "./Home.module.css";
+import Button, { ButtonStyle } from "./Button";
+import TurnActions from "./TurnActions";
+import Flex from "./Flex";
 
 function Home() {
     const submit = useSubmit();
@@ -20,29 +23,21 @@ function Home() {
         //         <button>Join</button>
         //     </div>
         // </div>
-        <menu className={styles.actions}>
-            <li>
-                <button>Income</button>
-            </li>
-            <li>
-                <button>Foreign Aid</button>
-            </li>
-            <li>
-                <button>Tax</button>
-            </li>
-            <li>
-                <button>Steal</button>
-            </li>
-            <li>
-                <button>Assasinate</button>
-            </li>
-            <li>
-                <button>Exchnage</button>
-            </li>
-            <li>
-                <button>Coup</button>
-            </li>
-        </menu>
+        <Flex>
+            <TurnActions />
+            <Flex direction="column" grow={1}>
+                <TurnActions />
+                <TurnActions />
+            </Flex>
+            <TurnActions />
+            <Flex direction="column" grow={1}>
+                <TurnActions />
+                <TurnActions />
+                <TurnActions />
+                <TurnActions />
+            </Flex>
+            <TurnActions />
+        </Flex>
     );
 }
 

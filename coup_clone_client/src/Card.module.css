@@ -1,0 +1,23 @@
+.card {
+    flex-grow: 1;
+    background-color: white;
+    border: 1px solid #aaaaaa;
+    border-radius: 0.5em;
+    padding: 1em;
+}
+
+.heading {
+    margin-bottom: 1em;
+}
+
+.heading h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.heading p {
+    font-size: 0.9em;
+    margin: 0;
+    color: var(--text-light-color);
+    font-style: italic;
+}
