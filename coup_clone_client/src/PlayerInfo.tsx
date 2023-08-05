@@ -1,4 +1,5 @@
-import {FaUser} from "react-icons/fa6";
+import { FaUser } from "react-icons/fa6";
+import { GiTwoCoins } from "react-icons/gi";
 import Flex from "./Flex";
 import styles from "./PlayerInfo.module.css";
 
@@ -6,6 +7,8 @@ type Props = {
     name: string,
     influence: PlayerInfluenceType[],
     isConnected: boolean,
+    color: string,
+    coins: number,
 }
 
 export enum PlayerInfluenceType {
@@ -19,23 +22,28 @@ export enum PlayerInfluenceType {
 
 function PlayerInfo({
     name,
-    influence, 
+    influence,
     isConnected,
+    color,
+    coins,
 }: Props) {
     return (
-        <div className={!isConnected ? styles.disconnected : undefined}>
-            <Flex alignItems="center">
-                <FaUser color={isConnected ? '#46c946' : '#ff4949'} />
-                <span>{name}</span>
-                <div className={styles.right}>
-                    <Flex alignItems="center">
-                        {influence.map((infl, i) => (
-                            <span className={`${styles.influence} ${styles[infl.toLowerCase()]}`}>{infl}</span>
-                        ))}
-                    </Flex>
-                </div>
-            </Flex>
-        </div>
+        <Flex alignItems="center">
+            <FaUser color={color} />
+            <span className={styles.name} style={{ color }}>{name}</span>
+            <div className={styles.right}>
+                <Flex alignItems="center">
+                    {influence.map((infl, i) => (
+                        <span className={`${styles.influence} ${styles[infl.toLowerCase()]}`}>{infl}</span>
+                    ))}
+                </Flex>
+            </div>
+            <span className={styles.coins}>{coins}</span>
+            <GiTwoCoins />
+            <div className={styles.connection} style={{
+                backgroundColor: isConnected ? "#7eff7e" : "#fe5151"
+            }} />
+        </Flex>
     )
 }
 

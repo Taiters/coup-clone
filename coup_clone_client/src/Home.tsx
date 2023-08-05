@@ -5,6 +5,7 @@ import TurnActions from "./TurnActions";
 import Flex from "./Flex";
 import Card from "./Card";
 import PlayerList from "./PlayerList";
+import GameLog from "./GameLog";
 
 function Home() {
     const submit = useSubmit();
@@ -26,8 +27,11 @@ function Home() {
         //     </div>
         // </div>
         <Flex>
-            <Card heading="Players">
-                <PlayerList />
+            <Card heading="Game">
+                <Flex direction="column">
+                    <PlayerList />
+                    <GameLog />
+                </Flex>
             </Card>
             <Card heading="Your turn" subheading="What's your next move?">
                 <TurnActions />

@@ -12,10 +12,6 @@
     border-color: #fff4;
 }
 
-.disconnected {
-    filter: blur(1px) opacity(40%);
-}
-
 .unknown {
     background-color: grey;
 }
@@ -38,4 +34,15 @@
 
 .contessa {
     background-color: var(--contessa-color);
+}
+
+.connection {
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 0.25em;
+}
+
+.coins {
+    width: 1em;
+    text-align: right;
 }
