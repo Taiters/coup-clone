@@ -6,3 +6,12 @@
     overflow-y: scroll;
     padding: 0.5em 1em;
 }
+
+.message {
+    margin: 0.5em 0;
+    padding: 0.5em 1em;
+    text-align: right;
+    font-size: 0.9em;
+    background-color: #e8e8e8;
+
+}

@@ -27,15 +27,15 @@ function Home() {
         //     </div>
         // </div>
         <Flex>
-            <Card heading="Game">
+            <Card>
                 <Flex direction="column">
-                    <PlayerList />
                     <GameLog />
+                    <PlayerList />
                 </Flex>
             </Card>
-            <Card heading="Your turn" subheading="What's your next move?">
+            {/* <Card heading="Your turn" subheading="What's your next move?">
                 <TurnActions />
-            </Card>
+            </Card> */}
         </Flex>
     );
 }

@@ -9,6 +9,7 @@ type Props = {
     isConnected: boolean,
     color: string,
     coins: number,
+    isCurrentTurn: boolean,
 }
 
 export enum PlayerInfluenceType {
@@ -26,24 +27,32 @@ function PlayerInfo({
     isConnected,
     color,
     coins,
+    isCurrentTurn,
 }: Props) {
     return (
-        <Flex alignItems="center">
-            <FaUser color={color} />
-            <span className={styles.name} style={{ color }}>{name}</span>
-            <div className={styles.right}>
-                <Flex alignItems="center">
-                    {influence.map((infl, i) => (
-                        <span className={`${styles.influence} ${styles[infl.toLowerCase()]}`}>{infl}</span>
-                    ))}
-                </Flex>
-            </div>
-            <span className={styles.coins}>{coins}</span>
-            <GiTwoCoins />
-            <div className={styles.connection} style={{
-                backgroundColor: isConnected ? "#7eff7e" : "#fe5151"
-            }} />
-        </Flex>
+        <div className={styles.container}>
+            <Flex alignItems="center">
+                <FaUser color={color} />
+                <span className={styles.name} style={{ color }}>{name}</span>
+                {isCurrentTurn ? (
+                    <span className={styles.turn}>
+                        (Current turn)
+                    </span>
+                ) : null}
+                <div className={styles.right}>
+                    <Flex direction="column" alignItems="flex-end">
+                        {influence.map((infl, i) => (
+                            <span className={`${styles.influence} ${styles[infl.toLowerCase()]}`}>{infl}</span>
+                        ))}
+                    </Flex>
+                </div>
+                <span className={styles.coins}>{coins}</span>
+                <GiTwoCoins />
+                <div className={styles.connection} style={{
+                    backgroundColor: isConnected ? "#7eff7e" : "#fe5151"
+                }} />
+            </Flex>
+        </div>
     )
 }
 
