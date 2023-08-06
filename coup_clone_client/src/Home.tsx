@@ -1,42 +1,23 @@
-import { useSubmit } from "react-router-dom";
+import Container from "./Container";
+import PageTitle from "./PageTitle";
+import TextInput from "./TextInput";
+
+import Button from "./Button";
+import HGroup from "./HGroup";
+
 import styles from "./Home.module.css";
-import Button, { ButtonStyle } from "./Button";
-import TurnActions from "./TurnActions";
-import Flex from "./Flex";
-import Card from "./Card";
-import PlayerList from "./PlayerList";
-import GameLog from "./GameLog";
+import { Link } from "react-router-dom";
 
 function Home() {
-    const submit = useSubmit();
-    const createGame = () => {
-        submit({}, {
-            method: "post",
-            action: "/"
-        });
-    }
     return (
-        // <div>
-        //     <h1>Coup Clone</h1>
-        //     <div>
-        //         <button onClick={createGame}>Create Game</button>
-        //     </div>
-        //     <div>
-        //         <input type="text" />
-        //         <button>Join</button>
-        //     </div>
-        // </div>
-        <Flex>
-            <Card>
-                <Flex direction="column">
-                    <GameLog />
-                    <PlayerList />
-                </Flex>
-            </Card>
-            {/* <Card heading="Your turn" subheading="What's your next move?">
-                <TurnActions />
-            </Card> */}
-        </Flex>
+        <Container>
+            <PageTitle heading="Coup" subheading="Another online Coup clone" />
+            <HGroup>
+                <TextInput placeholder="Enter game code..." />
+                <Button label="Join" />
+            </HGroup>
+            <Link to="join" className={styles.create}>Create a new game</Link>
+        </Container>
     );
 }
 
