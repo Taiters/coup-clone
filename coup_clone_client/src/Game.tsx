@@ -14,7 +14,7 @@ function Game() {
     const [started, setStarted] = useState<boolean>(false);
 
     return !started 
-        ? <Lobby onStart={() => setStarted(true)} />
+        ? <Lobby isHost={true} onStart={() => setStarted(true)} />
         : (
             <div className={styles.verticalContainer}>
                 <TopBar>

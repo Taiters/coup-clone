@@ -6,10 +6,11 @@ import VGroup from "./VGroup";
 import styles from "./Lobby.module.css";
 
 type Props = {
+    isHost: boolean,
     onStart: () => void,
 }
 
-function Lobby({onStart}: Props) {
+function Lobby({isHost, onStart}: Props) {
     return (
         <Container>
             <PageTitle heading="Lobby" subheading="Code: 123ABC" />
@@ -22,7 +23,10 @@ function Lobby({onStart}: Props) {
                 <LobbyPlayer />
             </VGroup>
             <VGroup>
-                <Button label="Start" onClick={onStart} />
+                {isHost 
+                    ? <Button label="Start" onClick={onStart} />
+                    : <p className={styles.waiting}>Waiting for host...</p>
+                }
             </VGroup>
 
         </Container>
