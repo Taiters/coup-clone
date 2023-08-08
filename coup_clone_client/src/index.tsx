@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import Home from './Home';
 import Join from './Join';
+import Game from './Game';
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
   {
     path: "/join",
     element: <Join />,
+  },
+  {
+    path: "/game",
+    element: <Game />,
   },
 ]);
 

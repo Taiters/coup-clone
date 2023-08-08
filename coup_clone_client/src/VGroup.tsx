@@ -3,11 +3,16 @@ import styles from "./VGroup.module.css";
 
 type Props = {
     children: ReactNode,
+    className?: string | undefined,
 }
 
-function VGroup({children}: Props) {
+function VGroup({children, className}: Props) {
+    const cls = className != null 
+        ? `${styles.vgroup} ${className}`
+        : styles.vgroup;
+
     return (
-        <div className={styles.vgroup}>
+        <div className={cls}>
             {children}
         </div>
     )

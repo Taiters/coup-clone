@@ -3,11 +3,21 @@ import styles from "./HGroup.module.css";
 
 type Props = {
     children: ReactNode,
+    className?: string | undefined,
+    gap?: number | string | undefined,
 }
 
-function HGroup({children}: Props) {
+function HGroup({children, className, gap}: Props) {
+    const cls = className != null 
+        ? `${styles.hgroup} ${className}`
+        : styles.hgroup;
+    
+    const extraStyles = {
+        gap,
+    }
+
     return (
-        <div className={styles.hgroup}>
+        <div style={extraStyles} className={cls}>
             {children}
         </div>
     )

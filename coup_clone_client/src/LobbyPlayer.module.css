@@ -1,0 +1,8 @@
+.container {
+    width: 10em;
+    margin: 0 auto;
+}
+
+.pending {
+    color: #8E8D7E;
+}
