@@ -3,7 +3,7 @@ import Lobby from "./Lobby";
 import Container from "./Container";
 import TopBar from "./TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { InfluenceType } from "./Influence";
+import { PlayerInfluence } from "./types";
 import VGroup from "./VGroup";
 import styles from "./Game.module.css";
 import Button from "./Button";
@@ -22,7 +22,7 @@ function Game() {
                         <PlayerInfo 
                             name="Danny Boy"
                             coins={5}
-                            influence={[InfluenceType.AMBASSADOR, InfluenceType.AMBASSADOR]} />
+                            influence={[PlayerInfluence.AMBASSADOR, PlayerInfluence.AMBASSADOR]} />
                     </Container>
                 </TopBar>
                 <div className={styles.players}>
@@ -31,19 +31,19 @@ function Game() {
                             <PlayerInfo 
                                 name="Snejy Meche"
                                 coins={12}
-                                influence={[InfluenceType.UNKNOWN, InfluenceType.DUKE]} />
+                                influence={[PlayerInfluence.UNKNOWN, PlayerInfluence.DUKE]} />
                             <PlayerInfo 
                                 name="Walter White"
                                 coins={4}
-                                influence={[InfluenceType.ASSASSIN, InfluenceType.AMBASSADOR]} />
+                                influence={[PlayerInfluence.ASSASSIN, PlayerInfluence.AMBASSADOR]} />
                             <PlayerInfo 
                                 name="Jesse Pinkman"
                                 coins={12}
-                                influence={[InfluenceType.CAPTAIN, InfluenceType.UNKNOWN]} />
+                                influence={[PlayerInfluence.CAPTAIN, PlayerInfluence.UNKNOWN]} />
                             <PlayerInfo 
                                 name="Snejy Meche"
                                 coins={12}
-                                influence={[InfluenceType.UNKNOWN, InfluenceType.DUKE]} />
+                                influence={[PlayerInfluence.UNKNOWN, PlayerInfluence.DUKE]} />
                         </VGroup>
                     </Container>
                 </div>

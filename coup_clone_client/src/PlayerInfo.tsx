@@ -1,12 +1,13 @@
 import Coins from "./Coins";
 import HGroup from "./HGroup";
-import Influence, { InfluenceType } from "./Influence";
+import Influence from "./Influence";
 import PlayerName from "./PlayerName";
+import { PlayerInfluence } from "./types";
 
 type Props = {
     name: string,
     coins: number,
-    influence: InfluenceType[],
+    influence: PlayerInfluence[],
 }
 
 function PlayerInfo({name, coins, influence}: Props) {

@@ -1,38 +1,30 @@
 import styles from "./Influence.module.css"
-
-export enum InfluenceType {
-    UNKNOWN,
-    AMBASSADOR,
-    ASSASSIN,
-    CAPTAIN,
-    DUKE,
-    CONTESSA,
-}
+import { PlayerInfluence } from "./types";
 
 const INFLUENCE_COLORS = {
-    [InfluenceType.UNKNOWN]: "#8E8D7E",
-    [InfluenceType.AMBASSADOR]: "#ADB55A",
-    [InfluenceType.ASSASSIN]: "#689393",
-    [InfluenceType.CAPTAIN]: "#4494DE",
-    [InfluenceType.DUKE]: "#BF7BDF",
-    [InfluenceType.CONTESSA]: "#DA7777",
+    [PlayerInfluence.UNKNOWN]: "#8E8D7E",
+    [PlayerInfluence.AMBASSADOR]: "#ADB55A",
+    [PlayerInfluence.ASSASSIN]: "#689393",
+    [PlayerInfluence.CAPTAIN]: "#4494DE",
+    [PlayerInfluence.DUKE]: "#BF7BDF",
+    [PlayerInfluence.CONTESSA]: "#DA7777",
 }
 
 const INFLUENCE_NAMES = {
-    [InfluenceType.UNKNOWN]: "???",
-    [InfluenceType.AMBASSADOR]: "AMBASSADOR",
-    [InfluenceType.ASSASSIN]: "ASSASSIN",
-    [InfluenceType.CAPTAIN]: "CAPTAIN",
-    [InfluenceType.DUKE]: "DUKE",
-    [InfluenceType.CONTESSA]: "CONTESSA",
+    [PlayerInfluence.UNKNOWN]: "???",
+    [PlayerInfluence.AMBASSADOR]: "AMBASSADOR",
+    [PlayerInfluence.ASSASSIN]: "ASSASSIN",
+    [PlayerInfluence.CAPTAIN]: "CAPTAIN",
+    [PlayerInfluence.DUKE]: "DUKE",
+    [PlayerInfluence.CONTESSA]: "CONTESSA",
 }
 
 type Props = {
-    influence: InfluenceType,
+    influence: PlayerInfluence,
 }
 
 function Influence({influence}: Props) {
-    const isUnknown = influence === InfluenceType.UNKNOWN;
+    const isUnknown = influence === PlayerInfluence.UNKNOWN;
     return (
         <div className={styles.influence} style={{
             color: INFLUENCE_COLORS[influence],
