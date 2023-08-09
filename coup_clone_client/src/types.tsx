@@ -30,10 +30,16 @@ export enum Outcome {
     FAIL,
 }
 
+export enum PlayerState {
+    JOINING,
+    JOINED,
+}
+
 export type PlayerID = string;
 export type Player = {
     id: PlayerID,
     name: string,
+    state: PlayerState,
     coins: number,
     influence: PlayerInfluence[],
 }
@@ -57,10 +63,4 @@ export type GameEvent = {
     targetRevealed: PlayerInfluence | null,
     coinsReceived: number | null,
     coinsSpent: number | null,
-}
-
-export type AppState = {
-    game: Game,
-    players: Player[],
-    events: GameEvent[],
 }

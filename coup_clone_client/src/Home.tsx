@@ -6,17 +6,31 @@ import Button from "./Button";
 import HGroup from "./HGroup";
 
 import styles from "./Home.module.css";
-import { Link } from "react-router-dom";
+import { socket } from "./socket";
+import { useState } from "react";
+
 
 function Home() {
+    const [gameID, setGameID] = useState('');
+    const onCreateGame = () => {
+        socket.connect();
+        socket.emit('create');
+    }
+    const onJoinGame = () => {
+        socket.connect();
+        socket.emit('join', {
+            'game_id': gameID,
+        })
+    }
+
     return (
         <Container>
             <PageTitle heading="Coup" subheading="Another online Coup clone" />
             <HGroup>
-                <TextInput placeholder="Enter game code..." />
-                <Button label="Join" />
+                <TextInput value={gameID} onChange={setGameID} placeholder="Enter game code..." />
+                <Button label="Join" onClick={onJoinGame} />
             </HGroup>
-            <Link to="join" className={styles.create}>Create a new game</Link>
+            <a className={styles.create} href="#" onClick={onCreateGame}>Create a new game</a>
         </Container>
     );
 }

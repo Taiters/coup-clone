@@ -2,27 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import {
-  createBrowserRouter,
-  RouterProvider,
+  BrowserRouter,
+  Route,
+  Routes,
 } from "react-router-dom";
 import Home from './Home';
-import Join from './Join';
 import Game from './Game';
+import App from './App';
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/join",
-    element: <Join />,
-  },
-  {
-    path: "/game",
-    element: <Game />,
-  },
-]);
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -30,6 +17,13 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />}>
+          <Route index element={<Home />} />
+          <Route path="/game/:gameID" element={<Game />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );

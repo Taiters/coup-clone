@@ -4,23 +4,25 @@ import LobbyPlayer from "./LobbyPlayer";
 import PageTitle from "./PageTitle";
 import VGroup from "./VGroup";
 import styles from "./Lobby.module.css";
+import { Player } from "./types";
 
 type Props = {
+    players: Player[],
     isHost: boolean,
     onStart: () => void,
 }
 
-function Lobby({isHost, onStart}: Props) {
+function Lobby({players, isHost, onStart}: Props) {
+    const lobbyPlayers = players.map((p, i) => <LobbyPlayer key={i} player={p} />);
+    while (lobbyPlayers.length < 6) {
+        lobbyPlayers.push(<LobbyPlayer key={lobbyPlayers.length} />);
+    }
+
     return (
         <Container>
             <PageTitle heading="Lobby" subheading="Code: 123ABC" />
             <VGroup className={styles.players}>
-                <LobbyPlayer name="Danny boy" />
-                <LobbyPlayer name="Snejy Meche" />
-                <LobbyPlayer name="Walter White" />
-                <LobbyPlayer name="Jesse Pinkman" />
-                <LobbyPlayer />
-                <LobbyPlayer />
+                {lobbyPlayers}
             </VGroup>
             <VGroup>
                 {isHost 

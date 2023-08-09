@@ -1,18 +1,32 @@
-import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Button from "./Button";
 import Container from "./Container";
 import PageTitle from "./PageTitle";
 import TextInput from "./TextInput";
 import VGroup from "./VGroup";
+import { useState } from "react";
+import { socket } from "./socket";
 
 function Join() {
-    const navigate = useNavigate();
+    const {gameID} = useParams();
+    const [name, setName] = useState("");
+
+    const onContinue = () => {
+        socket.emit("set_name", {
+            game_id: gameID,
+            name: name,
+        })
+    }
+
     return (
         <Container>
-            <PageTitle heading="Joining" subheading="123ABC" />
+            <PageTitle heading="Joining" subheading={gameID} />
             <VGroup>
-                <TextInput placeholder="Enter your name..." />
-                <Button label="Continue" onClick={() => navigate("/game")} />
+                <TextInput 
+                    value={name}
+                    onChange={setName}
+                    placeholder="Enter your name..." />
+                <Button label="Continue" onClick={onContinue} />
             </VGroup>
         </Container>
     );

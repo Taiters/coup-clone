@@ -3,18 +3,26 @@ import Lobby from "./Lobby";
 import Container from "./Container";
 import TopBar from "./TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { PlayerInfluence } from "./types";
+import { PlayerInfluence, PlayerState } from "./types";
 import VGroup from "./VGroup";
 import styles from "./Game.module.css";
 import Button from "./Button";
 import HGroup from "./HGroup";
 import GameLog from "./GameLog";
+import { useOutletContext } from "react-router-dom";
+import { AppState } from "./App";
+import Join from "./Join";
 
 function Game() {
-    const [started, setStarted] = useState<boolean>(false);
+    const {currentPlayer, players} = useOutletContext<AppState>();
+    const [started, setStarted] = useState(false);
+
+    if (currentPlayer != null && currentPlayer.state === PlayerState.JOINING) {
+        return <Join />
+    }
 
     return !started 
-        ? <Lobby isHost={true} onStart={() => setStarted(true)} />
+        ? <Lobby players={players} isHost={true} onStart={() => setStarted(true)} />
         : (
             <div className={styles.verticalContainer}>
                 <TopBar>
