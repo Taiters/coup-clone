@@ -12,10 +12,7 @@ function Join() {
     const [name, setName] = useState("");
 
     const onContinue = () => {
-        socket.emit("set_name", {
-            game_id: gameID,
-            name: name,
-        })
+        socket.emit("set_name", name);
     }
 
     return (

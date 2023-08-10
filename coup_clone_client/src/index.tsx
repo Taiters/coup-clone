@@ -7,8 +7,7 @@ import {
   Routes,
 } from "react-router-dom";
 import Home from './Home';
-import Game from './Game';
-import App from './App';
+import GameContainer from './GameContainer';
 
 
 const root = ReactDOM.createRoot(
@@ -19,10 +18,8 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<Home />} />
-          <Route path="/game/:gameID" element={<Game />} />
-        </Route>
+        <Route path="/" element={<Home />} />
+        <Route path="/game/:gameID" element={<GameContainer />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

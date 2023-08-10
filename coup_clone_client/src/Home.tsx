@@ -8,19 +8,23 @@ import HGroup from "./HGroup";
 import styles from "./Home.module.css";
 import { socket } from "./socket";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 function Home() {
     const [gameID, setGameID] = useState('');
-    const onCreateGame = () => {
+    const navigate = useNavigate();
+
+    const onCreateGame = async () => {
         socket.connect();
-        socket.emit('create');
+        const createdGameID = await socket.timeout(5000).emitWithAck('create_game');
+        navigate('/game/' + createdGameID);
     }
-    const onJoinGame = () => {
+
+    const onJoinGame = async () => {
         socket.connect();
-        socket.emit('join', {
-            'game_id': gameID,
-        })
+        const joinedGameID = await socket.timeout(5000).emitWithAck('join_game', gameID);
+        navigate('/game/' + joinedGameID);
     }
 
     return (

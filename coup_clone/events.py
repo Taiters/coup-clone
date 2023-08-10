@@ -1,5 +1,5 @@
 import enum
-from coup_clone.player import Influence
+from coup_clone.players import Influence
 
 from aiosqlite import Connection
 

@@ -1,21 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Lobby from "./Lobby";
 import Container from "./Container";
 import TopBar from "./TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { PlayerInfluence, PlayerState } from "./types";
+import { Game, GameEvent, Player, PlayerInfluence, PlayerState } from "./types";
 import VGroup from "./VGroup";
-import styles from "./Game.module.css";
+import styles from "./GameContainer.module.css";
 import Button from "./Button";
 import HGroup from "./HGroup";
 import GameLog from "./GameLog";
-import { useOutletContext } from "react-router-dom";
-import { AppState } from "./App";
+import { useParams } from "react-router-dom";
 import Join from "./Join";
+import { socket } from "./socket";
 
-function Game() {
-    const {currentPlayer, players} = useOutletContext<AppState>();
+
+export type GameState = {
+    game: Game | null,
+    players: Player[],
+    events: GameEvent[],
+    currentPlayer: Player | null,
+}
+
+
+function GameContainer() {
+    const {gameID} = useParams();
+    const [game, setGame] = useState<Game | null>(null);
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [events, setEvents] = useState<GameEvent[]>([]);
+    const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
     const [started, setStarted] = useState(false);
+
+    useEffect(() => {
+        const handlePlayersUpdate = (players: Player[]) => {
+            setPlayers(players);
+            setCurrentPlayer(players.find(p => p.id === currentPlayer?.id) ?? null);
+        }
+
+        socket.on('update_players', handlePlayersUpdate);
+
+        socket.connect();
+        socket.timeout(5000).emitWithAck('enter_game', gameID)
+            .then(({
+                game,
+                players,
+                currentPlayer
+            }: {
+                game: Game,
+                players: Player[],
+                events: GameEvent[],
+                currentPlayer: Player
+            }) => {
+                setGame(game);
+                setPlayers(players);
+                setEvents(events);
+                setCurrentPlayer(currentPlayer);
+            });
+        
+            return () => {
+                socket.off('update_players', handlePlayersUpdate);
+            }
+    }, [gameID]);
+
+    if (currentPlayer == null) {
+        return <h1>Joining</h1>;
+    }
+
 
     if (currentPlayer != null && currentPlayer.state === PlayerState.JOINING) {
         return <Join />
@@ -83,4 +132,4 @@ function Game() {
         );
 }
 
-export default Game;
+export default GameContainer;
