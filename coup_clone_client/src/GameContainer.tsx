@@ -31,13 +31,6 @@ function GameContainer() {
     const [started, setStarted] = useState(false);
 
     useEffect(() => {
-        const handlePlayersUpdate = (players: Player[]) => {
-            setPlayers(players);
-            setCurrentPlayer(players.find(p => p.id === currentPlayer?.id) ?? null);
-        }
-
-        socket.on('update_players', handlePlayersUpdate);
-
         socket.connect();
         socket.timeout(5000).emitWithAck('enter_game', gameID)
             .then(({
@@ -55,11 +48,19 @@ function GameContainer() {
                 setEvents(events);
                 setCurrentPlayer(currentPlayer);
             });
-        
-            return () => {
-                socket.off('update_players', handlePlayersUpdate);
-            }
     }, [gameID]);
+
+    useEffect(() => {
+        const handlePlayersUpdate = (players: Player[]) => {
+            setPlayers(players);
+            setCurrentPlayer(currentPlayer => players.find(p => p.id === currentPlayer?.id) ?? null);
+        }
+
+        socket.on('update_players', handlePlayersUpdate);
+        return () => {
+            socket.off('update_players', handlePlayersUpdate);
+        }
+    }, [setPlayers, setCurrentPlayer])
 
     if (currentPlayer == null) {
         return <h1>Joining</h1>;

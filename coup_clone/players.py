@@ -101,21 +101,29 @@ async def get_player(db: Connection, id: int) -> Player:
         return _player_from_row(row)
 
 
+async def get_player_by_session_id(db: Connection, session_id: str) -> Player:
+    async with db.execute((
+        f'{SELECT} '
+        'FROM players WHERE session_id = ?'
+    ), (session_id,)) as cursor:
+        row = await cursor.fetchone()
+        return _player_from_row(row)
+
+
 async def set_name(db: Connection, session_id: str, name: str) -> Player:
-    await db.execute('UPDATE players SET name = :name, state = :state WHERE session_id = :session_id', {
+    cursor = await db.execute('UPDATE players SET name = :name, state = :state WHERE session_id = :session_id', {
         'name': name,
         'state': PlayerState.READY,
         'session_id': session_id,
     })
-    player_id = cursor.lastrowid
     await db.commit()
-    return await get_player(db, player_id)
+    return await get_player_by_session_id(db, session_id)
 
 
 async def get_players_in_game(db: Connection, game_id: int) -> List[Player]:
     async with db.execute((
         f'{SELECT} '
-        'FROM players WHERE game_id = ?'
+        'FROM players WHERE game_id = ? ORDER BY id'
     ), (game_id,)) as cursor:
         rows = await cursor.fetchall()
         return [_player_from_row(row) for row in rows]

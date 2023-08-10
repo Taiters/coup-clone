@@ -73,7 +73,7 @@ async def enter_game(sid, game_id):
     return {
         'game': _game_json(game),
         'players': [_player_json(p) for p in game_players],
-        'events': [],
+        'events': game_events,
         'currentPlayer': next((_player_json(p) for p in game_players if p.session_id == sid))
     }
 
