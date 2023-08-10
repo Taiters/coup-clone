@@ -3,13 +3,14 @@ import aiosqlite
 from contextlib import asynccontextmanager
 from aiosqlite import Connection
 
-from coup_clone import players, games, events
+from coup_clone import players, games, events, sessions
 
 DB_FILE = "./test.db"
 TABLE_DEFINITIONS = [
     players.TABLE_DEFINITION,
     games.TABLE_DEFINITION,
     events.TABLE_DEFINITION,
+    sessions.TABLE_DEFINITION,
 ]
 
 
