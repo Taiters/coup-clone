@@ -1,21 +1,21 @@
-from flask import Flask
+from aiohttp import web
+import socketio
 
+sio = socketio.AsyncServer()
+app = web.Application()
+sio.attach(app)
 
-def create_app(config_object: str = "coup_clone.config.ProdConfig") -> Flask:
-    app = Flask(__name__)
-    app.config.from_object(config_object)
+@sio.event
+def connect(sid, environ):
+    print("connect ", sid)
 
-    from coup_clone.models import db
-    from coup_clone.socket import socketio
+@sio.event
+async def chat_message(sid, data):
+    print("message ", data)
 
-    db.init_app(app)
-    socketio.init_app(app)
+@sio.event
+def disconnect(sid):
+    print('disconnect ', sid)
 
-    with app.app_context():
-        db.create_all()
-
-    from coup_clone.blueprints.games import games_bp
-
-    app.register_blueprint(games_bp)
-
-    return app
+if __name__ == '__main__':
+    web.run_app(app)
