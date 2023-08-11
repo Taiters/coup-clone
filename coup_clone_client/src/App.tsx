@@ -26,6 +26,8 @@ function App() {
 
             if (currentGameID != null) {
                 navigate("/game/" + currentGameID);
+            } else {
+                navigate("/");
             }
 
             setSessionInitiated(true);

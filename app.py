@@ -61,7 +61,7 @@ async def connect(sid, environ, auth):
     await sio.emit('session', {
         'sessionID': session_id,
         'currentGameID': player.game_id if player is not None else None
-    })
+    }, room=sid)
     print('connect ', sid)
 
 
@@ -75,7 +75,7 @@ async def create_game(sid):
     async with sio.session(sid) as socket_session:
         async with database.open_db() as db:
             game_id = await games.create_game(db)
-            player_id = await players.create_player(db, game_id)
+            player_id = await players.create_player(db, game_id, True)
             await sessions.set_player(db, socket_session['session'], player_id)
             await db.commit()
     return game_id
@@ -109,6 +109,23 @@ async def enter_game(sid):
         'currentPlayer': next((_player_json(p) for p in game_players if p.id == player.id))
     }
 
+
+@sio.event
+async def leave_game(sid):
+    async with sio.session(sid) as socket_session:
+        async with database.open_db() as db:
+            player = await players.get_player_from_session(db, socket_session['session'])
+            await players.delete_player(db, player.id)
+            players_remaining = await players.get_players_in_game(db, player.game_id)
+            if not players_remaining:
+                await games.delete_game(db, player.game_id)
+            await db.commit()
+        await sio.emit('update_players', [_player_json(p) for p in players_remaining], room=player.game_id, skip_sid=sid)
+        await sio.emit('session', {
+            'sessionID': socket_session['session'],
+            'currentGameID': None,
+        }, room=sid)
+    
 
 @sio.event
 async def set_name(sid, name):

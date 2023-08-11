@@ -5,6 +5,7 @@ import PageTitle from "./PageTitle";
 import VGroup from "./VGroup";
 import styles from "./Lobby.module.css";
 import { Player } from "./types";
+import { socket } from "./socket";
 
 type Props = {
     players: Player[],
@@ -18,6 +19,10 @@ function Lobby({players, isHost, onStart}: Props) {
         lobbyPlayers.push(<LobbyPlayer key={lobbyPlayers.length} />);
     }
 
+    const leaveGame = () => {
+        socket.emit('leave_game');
+    }
+
     return (
         <Container>
             <PageTitle heading="Lobby" subheading="Code: 123ABC" />
@@ -29,8 +34,8 @@ function Lobby({players, isHost, onStart}: Props) {
                     ? <Button label="Start" onClick={onStart} />
                     : <p className={styles.waiting}>Waiting for host...</p>
                 }
+                <a href="#" onClick={leaveGame}>Leave Game</a>
             </VGroup>
-
         </Container>
     )
 }

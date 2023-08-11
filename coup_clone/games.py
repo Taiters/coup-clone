@@ -52,3 +52,7 @@ async def get_game(db: Connection, id: str) -> Optional[Game]:
             state=GameState(row[1]),
             deck=row[2],
         )
+
+
+async def delete_game(db: Connection, id: str) -> None:
+    await db.execute('DELETE FROM games WHERE games.id = :id', {'id': id})
