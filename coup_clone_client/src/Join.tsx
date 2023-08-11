@@ -6,6 +6,7 @@ import TextInput from "./TextInput";
 import VGroup from "./VGroup";
 import { useState } from "react";
 import { socket } from "./socket";
+import LeaveButton from "./LeaveButton";
 
 function Join() {
     const {gameID} = useParams();
@@ -24,6 +25,7 @@ function Join() {
                     onChange={setName}
                     placeholder="Enter your name..." />
                 <Button label="Continue" onClick={onContinue} />
+                <LeaveButton />
             </VGroup>
         </Container>
     );
