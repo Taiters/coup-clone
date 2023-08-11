@@ -42,6 +42,7 @@ export type Player = {
     state: PlayerState,
     coins: number,
     influence: PlayerInfluence[],
+    host: boolean,
 }
 
 export type GameID = string;

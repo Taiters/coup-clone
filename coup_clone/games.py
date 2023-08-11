@@ -56,3 +56,10 @@ async def get_game(db: Connection, id: str) -> Optional[Game]:
 
 async def delete_game(db: Connection, id: str) -> None:
     await db.execute('DELETE FROM games WHERE games.id = :id', {'id': id})
+
+
+async def set_state(db: Connection, id: str, state: GameState) -> None:
+    await db.execute('UPDATE games SET state = :state WHERE id = :id', {
+        'state': state,
+        'id': id,
+    })

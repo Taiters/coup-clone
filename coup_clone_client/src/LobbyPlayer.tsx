@@ -6,10 +6,12 @@ import { Player, PlayerState } from './types';
 
 type Props = {
     player?: Player,
+    current?: boolean,
 }
 
 function LobbyPlayer({
     player,
+    current = false,
 }: Props) {
     if (player == null) {
         return (
@@ -24,7 +26,7 @@ function LobbyPlayer({
 
     return (
         <div className={styles.container}>
-            {player.state == PlayerState.JOINED ? <PlayerName name={player.name} /> : (
+            {player.state == PlayerState.JOINED ?<div className={current ? styles.current : undefined}><PlayerName name={player.name} /></div> : (
                 <HGroup className={styles.pending}>
                     <FaUser />
                     Joining...

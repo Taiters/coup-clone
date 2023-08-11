@@ -5,7 +5,7 @@ from typing import Optional
 
 from coup_clone import database, games, players, sessions
 from coup_clone.players import Influence, Player
-from coup_clone.games import Game
+from coup_clone.games import Game, GameState
 
 sio = socketio.AsyncServer(cors_allowed_origins='*', cookie='coup_session')
 
@@ -27,7 +27,8 @@ def _player_json(player: Player) -> dict:
         'influence': [
             player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
             player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
-        ]
+        ],
+        'host': player.host,
     }
 
 
@@ -125,6 +126,20 @@ async def leave_game(sid):
             'sessionID': socket_session['session'],
             'currentGameID': None,
         }, room=sid)
+
+
+@sio.event
+async def start_game(sid):
+    async with sio.session(sid) as socket_session:
+        async with database.open_db() as db:
+            player = await players.get_player_from_session(db, socket_session['session'])
+            if not player.host:
+                raise Error("Only host can start")
+            await games.set_state(db, player.game_id, GameState.RUNNING)
+            game = await games.get_game(db, player.game_id)
+            await db.commit()
+    await sio.emit('update_game', _game_json(game), room=game.id)
+            
     
 
 @sio.event

@@ -10,12 +10,12 @@ import LeaveButton from "./LeaveButton";
 
 type Props = {
     players: Player[],
-    isHost: boolean,
+    currentPlayer: Player,
     onStart: () => void,
 }
 
-function Lobby({players, isHost, onStart}: Props) {
-    const lobbyPlayers = players.map((p, i) => <LobbyPlayer key={i} player={p} />);
+function Lobby({players, currentPlayer, onStart}: Props) {
+    const lobbyPlayers = players.map((p, i) => <LobbyPlayer key={i} player={p} current={currentPlayer.id === p.id} />);
     while (lobbyPlayers.length < 6) {
         lobbyPlayers.push(<LobbyPlayer key={lobbyPlayers.length} />);
     }
@@ -27,7 +27,7 @@ function Lobby({players, isHost, onStart}: Props) {
                 {lobbyPlayers}
             </VGroup>
             <VGroup>
-                {isHost 
+                {currentPlayer.host
                     ? <Button label="Start" onClick={onStart} />
                     : <p className={styles.waiting}>Waiting for host...</p>
                 }

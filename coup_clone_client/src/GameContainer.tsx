@@ -3,7 +3,7 @@ import Lobby from "./Lobby";
 import Container from "./Container";
 import TopBar from "./TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { Game, GameEvent, Player, PlayerInfluence, PlayerState } from "./types";
+import { Game, GameEvent, GameState, Player, PlayerInfluence, PlayerState } from "./types";
 import VGroup from "./VGroup";
 import styles from "./GameContainer.module.css";
 import Button from "./Button";
@@ -14,13 +14,6 @@ import Join from "./Join";
 import { socket } from "./socket";
 
 
-export type GameState = {
-    game: Game | null,
-    players: Player[],
-    events: GameEvent[],
-    currentPlayer: Player | null,
-}
-
 
 function GameContainer() {
     const {gameID} = useParams();
@@ -28,7 +21,6 @@ function GameContainer() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [events, setEvents] = useState<GameEvent[]>([]);
     const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-    const [started, setStarted] = useState(false);
 
     useEffect(() => {
         socket.timeout(5000).emitWithAck('enter_game')
@@ -55,9 +47,15 @@ function GameContainer() {
             setCurrentPlayer(currentPlayer => players.find(p => p.id === currentPlayer?.id) ?? null);
         }
 
+        const handleGameUpdate = (game: Game) => {
+            setGame(game);
+        }
+
         socket.on('update_players', handlePlayersUpdate);
+        socket.on('update_game', handleGameUpdate);
         return () => {
             socket.off('update_players', handlePlayersUpdate);
+            socket.off('update_game', handleGameUpdate);
         }
     }, [setPlayers, setCurrentPlayer])
 
@@ -70,8 +68,8 @@ function GameContainer() {
         return <Join />
     }
 
-    return !started 
-        ? <Lobby players={players} isHost={true} onStart={() => setStarted(true)} />
+    return game?.state === GameState.LOBBY
+        ? <Lobby players={players} currentPlayer={currentPlayer} onStart={() => socket.emit('start_game')} />
         : (
             <div className={styles.verticalContainer}>
                 <TopBar>
