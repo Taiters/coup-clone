@@ -17,6 +17,7 @@ TABLE_DEFINITIONS = [
 @asynccontextmanager
 async def open_db() -> Connection:
     async with aiosqlite.connect(DB_FILE) as db:
+        await db.execute('PRAGMA foreign_keys = ON;')
         yield db
 
 

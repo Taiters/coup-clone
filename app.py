@@ -1,7 +1,7 @@
 from aiohttp import web
 import socketio
 
-from coup_clone import database, games, players
+from coup_clone import database, games, players, sessions
 from coup_clone.players import Influence, Player
 from coup_clone.games import Game
 
@@ -10,6 +10,8 @@ sio = socketio.AsyncServer(cors_allowed_origins='*', cookie='coup_session')
 async def app_factory():
     async with database.open_db() as db:
         await database.create_tables(db)
+    
+    await create_game('abcd')
     app = web.Application()
     sio.attach(app)
     return app
@@ -49,9 +51,12 @@ def disconnect(sid):
 @sio.event
 async def create_game(sid):
     async with database.open_db() as db:
-        game = await games.create_game(db)
-        player = await players.create_player(db, game.id, sid)
-    return game.id
+        session_id = await sessions.create_session(db)
+        game_id = await games.create_game(db)
+        player_id = await players.create_player(db, game_id)
+        await sessions.set_player(db, session_id, 123)
+        await db.commit()
+    return game_id
 
 
 @sio.event

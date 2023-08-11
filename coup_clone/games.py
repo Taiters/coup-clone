@@ -4,6 +4,7 @@ import enum
 
 from dataclasses import dataclass
 from aiosqlite import Connection
+from typing import Optional
 
 
 DECK = "aaammmcccdddppp"
@@ -28,7 +29,7 @@ class Game:
     deck: str
 
 
-async def create_game(db: Connection) -> Game:
+async def create_game(db: Connection) -> str:
     game_id = "".join([
         random.choice(string.ascii_lowercase) 
         for _ in range(6)
@@ -38,13 +39,14 @@ async def create_game(db: Connection) -> Game:
         'game_id': game_id,
         'deck': deck
     })
-    await db.commit()
-    return await get_game(db, game_id)
+    return game_id
 
 
-async def get_game(db: Connection, id: str) -> Game:
-    async with db.execute('SELECT id, state, deck FROM games WHERE id = ?', (id,)) as cursor:
+async def get_game(db: Connection, id: str) -> Optional[Game]:
+    async with db.execute('SELECT id, state, deck FROM games WHERE id = :id', {'id': id}) as cursor:
         row = await cursor.fetchone()
+        if row is None:
+            return None
         return Game(
             id=row[0],
             state=GameState(row[1]),
