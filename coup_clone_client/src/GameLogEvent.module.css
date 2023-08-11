@@ -5,6 +5,7 @@
 .spinner {
     animation: spin 2s infinite linear;
 }
+
 @keyframes spin {
     0% {
       transform: rotate3d(0, 0, 1, 0deg);

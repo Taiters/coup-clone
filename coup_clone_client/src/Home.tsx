@@ -16,13 +16,11 @@ function Home() {
     const navigate = useNavigate();
 
     const onCreateGame = async () => {
-        socket.connect();
         const createdGameID = await socket.timeout(5000).emitWithAck('create_game');
         navigate('/game/' + createdGameID);
     }
 
     const onJoinGame = async () => {
-        socket.connect();
         const joinedGameID = await socket.timeout(5000).emitWithAck('join_game', gameID);
         navigate('/game/' + joinedGameID);
     }

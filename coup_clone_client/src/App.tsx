@@ -1,79 +1,50 @@
-import { useEffect, useReducer } from "react";
+import {FaSpinner} from 'react-icons/fa6';
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Game, GameEvent, Player } from "./types";
 import { socket } from "./socket";
+import styles from "./App.module.css";
 
-export type AppState = {
-    game: Game | null,
-    players: Player[],
-    events: GameEvent[],
-    currentPlayer: Player | null,
-}
-
-type DispatchAction = 
-{
-    type: "init",
-    game: Game,
-    players: Player[],
-    events: GameEvent[],
-    currentPlayer: Player,
-} | {
-    type: "players_updated",
-    players: Player[],
-}
 
 function App() {
     const navigate = useNavigate();
-    const [appState, dispatch] = useReducer((currentState: AppState, action: DispatchAction) => {
-        switch (action.type) {
-            case "init":
-                navigate("/game/"+action.game.id);
-                return {
-                    game: action.game,
-                    players: action.players,
-                    events: action.events,
-                    currentPlayer: action.currentPlayer,
-                };
-            case "players_updated":
-                const currentPlayer = action.players.find(p => p.id === currentState.currentPlayer?.id);
-                return {
-                    ...currentState,
-                    players: action.players,
-                    currentPlayer: currentPlayer ?? null,
-                }
-        }
-    }, {
-        game: null,
-        players: [],
-        events: [],
-        currentPlayer: null,
-    });
-
+    const [sessionInitiated, setSessionInitiated] = useState(false);
     useEffect(() => {
-        const handleWelcome = (data: any) => dispatch({
-            type: "init",
-            game: data.game,
-            players: data.players,
-            events: data.events,
-            currentPlayer: data.currentPlayer,
+        const sessionID = localStorage.getItem("sessionID");
+        if (sessionID != null) {
+            socket.auth = {sessionID};
+        }
+
+        const handleSession = (({
+            sessionID,
+            currentGameID
+        }: {
+            sessionID: string,
+            currentGameID: string | null
+        }) => {
+            localStorage.setItem('sessionID', sessionID);
+            socket.auth = {sessionID};
+
+            if (currentGameID != null) {
+                navigate("/game/" + currentGameID);
+            }
+
+            setSessionInitiated(true);
         });
 
-        const handlePlayersUpdated = (data: any) => dispatch({
-            type: "players_updated",
-            players: data.players,
-        });
-
-        socket.on('welcome', handleWelcome);
-        socket.on('players_updated', handlePlayersUpdated)
+        socket.on('session', handleSession);
+        socket.connect();
 
         return () => {
-            socket.off('welcome', handleWelcome);
-            socket.off('players_updated', handlePlayersUpdated);
+            socket.off('session', handleSession);
+            socket.disconnect();
         }
     }, []);
 
-    return (
-        <Outlet context={appState} />
+    return sessionInitiated ? <Outlet /> : (
+        <div className={styles.container}>
+            <FaSpinner className={styles.spinner} />
+            <h1>Connecting</h1>
+        </div>
     );
 }
 

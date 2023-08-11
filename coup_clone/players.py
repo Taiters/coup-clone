@@ -76,12 +76,12 @@ def _player_from_row(row) -> Player:
 
 
 async def create_player(db: Connection, game_id: str) -> int:
-    cursor = await db.execute('INSERT INTO players (game_id) VALUES(:game_id)', {
+    async with await db.execute('INSERT INTO players (game_id) VALUES(:game_id)', {
         'game_id': game_id,
-    })
-    await cursor.execute('SELECT id FROM players WHERE ROWID = :rowid', {'rowid': cursor.lastrowid})
-    row = await cursor.fetchone()
-    return row[0]
+    }) as cursor:
+        await cursor.execute('SELECT id FROM players WHERE ROWID = :rowid', {'rowid': cursor.lastrowid})
+        row = await cursor.fetchone()
+        return row[0]
 
 
 async def get_player(db: Connection, id: int) -> Optional[Player]:
@@ -98,7 +98,7 @@ async def get_player(db: Connection, id: int) -> Optional[Player]:
 
 
 async def set_name(db: Connection, id: int, name: str) -> None:
-    await db.execute('UPDATE players SET players.name = :name, players.state = :state WHERE players.id = :id', {
+    await db.execute('UPDATE players SET name = :name, state = :state WHERE id = :id', {
         'name': name,
         'state': PlayerState.READY,
         'id': id,
@@ -118,8 +118,8 @@ async def get_players_in_game(db: Connection, game_id: int) -> List[Player]:
 
 async def get_player_from_session(db: Connection, session_id: int) -> Optional[Player]:
     async with await db.execute((
-        f'SELECT {COLUMNS}'
-        'FROM players, sessions ON players.id = sessions.player_id'
+        f'SELECT {COLUMNS} '
+        'FROM players JOIN sessions ON players.id = sessions.player_id '
         'WHERE sessions.id = :session_id'
     ), {
         'session_id': session_id,

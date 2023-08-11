@@ -31,8 +31,7 @@ function GameContainer() {
     const [started, setStarted] = useState(false);
 
     useEffect(() => {
-        socket.connect();
-        socket.timeout(5000).emitWithAck('enter_game', gameID)
+        socket.timeout(5000).emitWithAck('enter_game')
             .then(({
                 game,
                 players,

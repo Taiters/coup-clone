@@ -68,8 +68,8 @@ async def create_event(
     target_id=None,
     coins=None,
     revealed=None,
-) -> Event:
-    cursor = await db.execute('''
+) -> id:
+    with await db.execute('''
         INSERT INTO events (
             game_id,
             actor_id,
@@ -92,10 +92,10 @@ async def create_event(
         'target_id': target_id,
         'coins': coins,
         'revealed': revealed,
-    })
-    event_id = cursor.lastrowid
-    await db.commit()
-    return await get_event(db, event_id)
+    }) as cursor:
+        await cursor.execute('SELECT id FROM events WHERE ROWID = :rowid', {'rowid': cursor.lastrowid})
+        row = await cursor.fetchone()
+        return row[0]
 
 
 async def get_event(db: Connection, id: int) -> Event:
