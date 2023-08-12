@@ -36,6 +36,7 @@ function GameContainer() {
             }) => {
                 setGame(game);
                 setPlayers(players);
+                debugger;
                 setEvents(events);
                 setCurrentPlayer(currentPlayer);
             });

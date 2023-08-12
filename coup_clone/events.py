@@ -68,22 +68,25 @@ async def create_event(
     target_id=None,
     coins=None,
     revealed=None,
+    parent_id=None,
 ) -> id:
-    with await db.execute('''
+    async with await db.execute('''
         INSERT INTO events (
             game_id,
             actor_id,
             event_type,
             target_id,
             coins,
-            revealed
+            revealed,
+            parent_id
         ) VALUES(
             :game_id,
             :actor_id,
             :event_type,
             :target_id,
             :coins,
-            :revealed
+            :revealed,
+            :parent_id
         );
     ''', {
         'game_id': game_id,
@@ -92,13 +95,14 @@ async def create_event(
         'target_id': target_id,
         'coins': coins,
         'revealed': revealed,
+        'parent_id': parent_id,
     }) as cursor:
         await cursor.execute('SELECT id FROM events WHERE ROWID = :rowid', {'rowid': cursor.lastrowid})
         row = await cursor.fetchone()
         return row[0]
 
 
-async def get_event(db: Connection, id: int) -> Event:
+async def get_events_for_game(db: Connection, game_id: int) -> Event:
     async with db.execute(
     '''
     SELECT  
@@ -112,19 +116,22 @@ async def get_event(db: Connection, id: int) -> Event:
         coins,
         revealed,
         success
-    FROM events WHERE id = ?
-    ''', (id,)) as cursor:
-        row = await cursor.fetchone()
-        print(row)
-        return Event(
-            id=row[0],
-            game_id=row[1],
-            parent_id=row[2],
-            actor_id=row[3],
-            target_id=row[4],
-            time_created=datetime.strptime(row[5], '%Y-%m-%d %H:%M:%S'),
-            event_type=EventType(row[6]),
-            coins=row[7],
-            revealed=row[8],
-            success=row[9],
-        )
+    FROM events WHERE game_id = :game_id
+    ORDER BY time_created;
+    ''', {'game_id': game_id}) as cursor:
+        rows = await cursor.fetchall()
+        return [
+            Event(
+                id=r[0],
+                game_id=r[1],
+                parent_id=r[2],
+                actor_id=r[3],
+                target_id=r[4],
+                time_created=datetime.strptime(r[5], '%Y-%m-%d %H:%M:%S'),
+                event_type=EventType(r[6]),
+                coins=r[7],
+                revealed=r[8],
+                success=r[9],
+            )
+            for r in rows
+        ]
