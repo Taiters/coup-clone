@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from sqlite3 import Cursor, Row
-from typing import Generic, TypeVar
+from typing import AsyncIterator, Generic, TypeVar
 
 
 TID = TypeVar('TID', int, str)
@@ -25,11 +25,11 @@ class Table(Generic[T, TID], ABC):
     @staticmethod
     @abstractmethod
     def row_factory(cursor: Cursor, row: Row) -> T:
-        pass
+        ...
 
 
     @asynccontextmanager
-    async def wrap_row_factory(self, cursor: Cursor) -> None:
+    async def wrap_row_factory(self, cursor: Cursor) -> AsyncIterator:
         previous_row_factory = cursor.row_factory
         cursor.row_factory = self.row_factory
         yield
