@@ -9,23 +9,23 @@ function App() {
     const navigate = useNavigate();
     const [sessionInitiated, setSessionInitiated] = useState(false);
     useEffect(() => {
-        const sessionID = localStorage.getItem("sessionID");
-        if (sessionID != null) {
-            socket.auth = {sessionID};
+        const session = localStorage.getItem("session");
+        if (session != null) {
+            socket.auth = {session};
         }
 
         const handleSession = (({
-            sessionID,
-            currentGameID
+            session,
+            currentGame
         }: {
-            sessionID: string,
-            currentGameID: string | null
+            session: string,
+            currentGame: string | null
         }) => {
-            localStorage.setItem('sessionID', sessionID);
-            socket.auth = {sessionID};
+            localStorage.setItem('session', session);
+            socket.auth = {session};
 
-            if (currentGameID != null) {
-                navigate("/game/" + currentGameID);
+            if (currentGame != null) {
+                navigate("/game/" + currentGame);
             } else {
                 navigate("/");
             }

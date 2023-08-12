@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 import aiosqlite
 
 from contextlib import asynccontextmanager
@@ -19,7 +20,7 @@ TABLE_DEFINITIONS = [
 
 
 @asynccontextmanager
-async def open() -> Connection:
+async def open() -> AsyncIterator[Connection]:
     async with aiosqlite.connect(DB_FILE) as db:
         await db.execute('PRAGMA foreign_keys = ON;')
         yield db

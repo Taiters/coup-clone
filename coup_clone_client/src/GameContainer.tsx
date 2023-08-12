@@ -23,11 +23,20 @@ function GameContainer() {
     const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
 
     useEffect(() => {
-        socket.timeout(5000).emitWithAck('enter_game')
-            .then(({
+        socket.emit('game_state')
+    }, []);
+
+    useEffect(() => {
+        // const handlePlayersUpdate = (players: Player[]) => {
+        //     setPlayers(players);
+        //     setCurrentPlayer(currentPlayer => players.find(p => p.id === currentPlayer?.id) ?? null);
+        // }
+
+        const handleGame = ({
                 game,
                 players,
-                currentPlayer
+                events,
+                currentPlayer,
             }: {
                 game: Game,
                 players: Player[],
@@ -36,27 +45,16 @@ function GameContainer() {
             }) => {
                 setGame(game);
                 setPlayers(players);
-                debugger;
                 setEvents(events);
                 setCurrentPlayer(currentPlayer);
-            });
-    }, [gameID]);
+            };
 
-    useEffect(() => {
-        const handlePlayersUpdate = (players: Player[]) => {
-            setPlayers(players);
-            setCurrentPlayer(currentPlayer => players.find(p => p.id === currentPlayer?.id) ?? null);
-        }
 
-        const handleGameUpdate = (game: Game) => {
-            setGame(game);
-        }
-
-        socket.on('update_players', handlePlayersUpdate);
-        socket.on('update_game', handleGameUpdate);
+        // socket.on('update_players', handlePlayersUpdate);
+        socket.on('game', handleGame);
         return () => {
-            socket.off('update_players', handlePlayersUpdate);
-            socket.off('update_game', handleGameUpdate);
+            // socket.off('update_players', handlePlayersUpdate);
+            socket.off('game', handleGame);
         }
     }, [setPlayers, setCurrentPlayer])
 

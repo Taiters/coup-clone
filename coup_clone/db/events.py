@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-import datetime
 import enum
-from sqlite3 import Cursor, Row
+from datetime import datetime
+from aiosqlite import Cursor, Row
 from typing import Optional
 from coup_clone.db.players import Influence
 from coup_clone.db.table import Table, TableRow
@@ -36,7 +36,7 @@ class EventRow(TableRow[int]):
     success: Optional[bool]
 
 
-class EventsTable(Table[EventRow, id]):
+class EventsTable(Table[EventRow, int]):
     TABLE_NAME = 'events'
     TABLE_DEFINITION = '''
         CREATE TABLE IF NOT EXISTS events (

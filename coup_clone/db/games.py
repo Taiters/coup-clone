@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import enum
-from sqlite3 import Cursor, Row
+from aiosqlite import Cursor, Row
 from coup_clone.db.table import Table, TableRow
 
 

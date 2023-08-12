@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from sqlite3 import Cursor, Row
+from aiosqlite import Cursor, Row
+from coup_clone.db.players import PlayerRow, PlayersTable
 from coup_clone.db.table import Table, TableRow
 
 
-@dataclass()
+@dataclass
 class SessionRow(TableRow[str]):
     player_id: int
 
