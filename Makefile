@@ -1,18 +1,18 @@
-BLACK=black -l 120 coup_clone
+BLACK=black -l 120 server
 format:
-	python -m isort coup_clone
+	python -m isort server
 	${BLACK}
 
 lint:
 	${BLACK} --check
-	flake8 coup_clone/
+	flake8 --config server/setup.cfg server
 
 mypy:
-	mypy -p coup_clone
+	mypy --config-file server/setup.cfg server/app.py
 
 test: lint mypy
-	pytest tests
+	pytest server/tests
 
 install:
 	python -m pip install --upgrade pip
-	pip install -r requirements.txt
+	pip install -r server/requirements.txt
