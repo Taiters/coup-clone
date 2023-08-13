@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
 
 type Props = {
@@ -9,11 +9,14 @@ type Props = {
 
 function SessionManager({ children, initializing }: Props) {
   const navigate = useNavigate();
+  const {game} = useParams();
   const [isInitializing, setIsInitializing] = useState(true);
+
   useEffect(() => {
     const session = localStorage.getItem("session");
-    if (session != null) {
-      socket.auth = { session };
+    socket.auth = {
+      session,
+      game,
     }
 
     const handleSession = ({
@@ -35,11 +38,22 @@ function SessionManager({ children, initializing }: Props) {
       setIsInitializing(false);
     };
 
+    const handleDisconnect = (e, a) => {
+      debugger;
+      console.log('disconnected');
+    }
+
     socket.on("session", handleSession);
-    socket.connect();
+    socket.on('disconnect', handleDisconnect);
+    try {
+      socket.connect();
+    } catch (e) {
+      debugger;
+    }
 
     return () => {
       socket.off("session", handleSession);
+      socket.off('disconnect', handleDisconnect);
       socket.disconnect();
     };
   }, []);

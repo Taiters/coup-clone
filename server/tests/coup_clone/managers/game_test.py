@@ -53,7 +53,6 @@ async def test_create_when_already_in_a_game(
 ):
     with pytest.raises(PlayerAlreadyInGameException):
         await game_manager.create(db_connection, active_session)
-    socket_server.disconnect.assert_called_with(active_session.sid)
 
 
 @pytest.mark.asyncio
@@ -99,7 +98,6 @@ async def test_join_when_already_in_game(
 
     with pytest.raises(PlayerAlreadyInGameException):
         await game_manager.join(db_connection, new_game.id, active_session)
-    socket_server.disconnect.assert_called_with(active_session.sid)
 
 
 @pytest.mark.asyncio
@@ -121,7 +119,6 @@ async def test_join_when_game_not_exists(
 
     with pytest.raises(GameNotFoundException):
         await game_manager.join(db_connection, "does not exist", active_session)
-    socket_server.disconnect.assert_called_with(active_session.sid)
 
 
 @pytest.mark.asyncio

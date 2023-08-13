@@ -62,7 +62,6 @@ class GameManager:
         async with conn.cursor() as cursor:
             current_player = await session.current_player(cursor)
             if current_player is not None:
-                await self.socket_server.disconnect(session.sid)
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
             game_id = "".join([random.choice(string.ascii_lowercase) for _ in range(6)])
@@ -77,7 +76,6 @@ class GameManager:
         async with conn.cursor() as cursor:
             current_player = await session.current_player(cursor)
             if current_player is not None:
-                await self.socket_server.disconnect(session.sid)
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
             try:
@@ -86,7 +84,6 @@ class GameManager:
                 await conn.commit()
             except IntegrityError as e:
                 if str(e) == "FOREIGN KEY constraint failed":
-                    await self.socket_server.disconnect(session.sid)
                     raise GameNotFoundException("Game not found with ID: " + game_id)
                 raise
         self.socket_server.enter_room(session.sid, game_id)
@@ -104,7 +101,6 @@ class GameManager:
         async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             if player is None:
-                await self.socket_server.disconnect(session.sid)
                 raise PlayerNotInGameException("Attempted to notify player when not in game")
             game = await self.games_table.get(cursor, player.game_id)
             players = await self.players_table.query(cursor, game_id=game.id)

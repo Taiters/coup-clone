@@ -23,7 +23,7 @@ function App() {
           >
             <Route index element={<Home />} />
             <Route
-              path="/game/:gameID"
+              path="/game/:game"
               element={
                 <GameManager render={(state) => <GameContainer {...state} />} />
               }

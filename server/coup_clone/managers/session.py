@@ -94,14 +94,12 @@ class SessionManager:
             session_id = socket_session.get(SESSION_KEY, None)
 
         if session_id is None:
-            await self.socket_server.disconnect(sid)
             raise NoActiveSessionException("session is not present in socket connection")
 
         async with conn.cursor() as cursor:
             existing_session = await self.sessions_table.get(cursor, session_id)
 
         if existing_session is None:
-            await self.socket_server.disconnect(sid)
             raise NoActiveSessionException("session not found in database")
 
         return ActiveSession(
