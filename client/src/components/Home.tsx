@@ -1,12 +1,12 @@
-import Container from "./Container";
-import PageTitle from "./PageTitle";
-import TextInput from "./TextInput";
+import Container from "./layout/Container";
+import PageTitle from "./ui/PageTitle";
+import TextInput from "./ui/TextInput";
 
-import Button from "./Button";
-import HGroup from "./HGroup";
+import Button from "./ui/Button";
+import HGroup from "./layout/HGroup";
 
 import styles from "./Home.module.css";
-import { socket } from "./socket";
+import { socket } from "../socket";
 import { useState } from "react";
 
 

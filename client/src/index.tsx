@@ -6,9 +6,10 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-import Home from './Home';
-import GameContainer from './GameContainer';
-import App from './components/App';
+import GameManager from './managers/GameManager';
+import AppContainer from './containers/AppContainer';
+import GameContainer from './containers/GameContainer';
+import Home from './components/Home';
 
 
 const root = ReactDOM.createRoot(
@@ -19,9 +20,11 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App />} >
+        <Route path="/" element={<AppContainer />} >
           <Route index element={<Home />} />
-          <Route path="/game/:gameID" element={<GameContainer />} />
+          <Route path="/game/:gameID" element={
+            <GameManager render={(state) => <GameContainer {...state} />} />
+          }/>
         </Route>
       </Routes>
     </BrowserRouter>

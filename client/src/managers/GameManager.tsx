@@ -1,9 +1,14 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Game, GameEvent, Player } from "../types";
+import { Game, GameEvent, Player, PlayerState } from "../types";
 import { socket } from "../socket";
 
 type Props = {
-    render: (game: Game | null, players: Player[], events: GameEvent[], currentPlayer: Player | null) => ReactNode,
+    render: ({game, players, events, currentPlayer}: {
+        game: Game | null,
+        players: Player[], 
+        events: GameEvent[], 
+        currentPlayer: Player | null,
+    }) => ReactNode,
 }
 
 function GameManager({render}: Props) {
