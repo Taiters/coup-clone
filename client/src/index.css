@@ -34,3 +34,26 @@ input, button {
   
   font-size: 1em;
 }
+
+.spinner {
+    animation: spin 2s infinite linear;
+    font-size: 2em;
+}
+
+@keyframes spin {
+    0% {
+      transform: rotate3d(0, 0, 1, 0deg);
+    }
+    25% {
+      transform: rotate3d(0, 0, 1, 90deg);
+    }
+    50% {
+      transform: rotate3d(0, 0, 1, 180deg);
+    }
+    75% {
+      transform: rotate3d(0, 0, 1, 270deg);
+    }
+    100% {
+      transform: rotate3d(0, 0, 1, 360deg);
+    }
+  }

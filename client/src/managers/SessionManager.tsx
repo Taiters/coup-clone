@@ -1,13 +1,15 @@
-import {FaSpinner} from 'react-icons/fa6';
-import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
-import { socket } from "./socket";
-import styles from "./App.module.css";
+import { ReactNode, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { socket } from "../socket";
 
+type Props = {
+    children: ReactNode,
+    initializing: ReactNode,
+}
 
-function App() {
+function SessionManager({children, initializing}: Props) {
     const navigate = useNavigate();
-    const [sessionInitiated, setSessionInitiated] = useState(false);
+    const [isInitializing, setIsInitializing] = useState(true);
     useEffect(() => {
         const session = localStorage.getItem("session");
         if (session != null) {
@@ -30,7 +32,7 @@ function App() {
                 navigate("/");
             }
 
-            setSessionInitiated(true);
+            setIsInitializing(false);
         });
 
         socket.on('session', handleSession);
@@ -42,12 +44,7 @@ function App() {
         }
     }, []);
 
-    return sessionInitiated ? <Outlet /> : (
-        <div className={styles.container}>
-            <FaSpinner className={styles.spinner} />
-            <h1>Connecting</h1>
-        </div>
-    );
+    return <>{isInitializing ? initializing : children}</>;
 }
 
-export default App;
+export default SessionManager;

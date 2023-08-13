@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import Home from './Home';
 import GameContainer from './GameContainer';
-import App from './App';
+import App from './components/App';
 
 
 const root = ReactDOM.createRoot(
