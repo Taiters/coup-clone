@@ -23,7 +23,7 @@ function GameContainer() {
     const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
 
     useEffect(() => {
-        socket.emit('game_state')
+        socket.emit('initialize_game')
     }, []);
 
     useEffect(() => {

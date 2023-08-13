@@ -47,7 +47,7 @@ class Handler(AsyncNamespace):
             await self.session_manager.notify(conn, session)
     
     
-    async def on_game_state(self, sid) -> None:
+    async def on_initialize_game(self, sid) -> None:
         async with db.open() as conn:
             session = await self.session_manager.get(conn, sid)
             await self.game_manager.notify(conn, session)

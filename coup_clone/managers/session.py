@@ -49,6 +49,10 @@ class ActiveSession:
             self.session.player_id,
         )
         self.session.player_id = None
+    
+    @property
+    def id(self) -> str:
+        return self.session.id
         
         
 class SessionManager:
@@ -95,14 +99,14 @@ class SessionManager:
 
         if session_id is None:
             await self.socket_server.disconnect(sid)
-            raise ValueError('session is not present in socket connection')
+            raise NoActiveSessionException('session is not present in socket connection')
 
         async with conn.cursor() as cursor:
             existing_session = await self.sessions_table.get(cursor, session_id)
 
         if existing_session is None:
             await self.socket_server.disconnect(sid)
-            raise ValueError('session not found in database')
+            raise NoActiveSessionException('session not found in database')
         
         return ActiveSession(
             sid,

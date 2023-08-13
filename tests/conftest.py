@@ -3,10 +3,13 @@ from uuid import uuid4
 from aiosqlite import Connection, Cursor
 import pytest
 import pytest_asyncio
+from socketio import AsyncServer
 from coup_clone import db
 from coup_clone.db.games import GameRow, GamesTable
 from coup_clone.db.players import PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
+from coup_clone.managers.game import GameManager
+from coup_clone.managers.session import ActiveSession, SessionManager
 
 
 @pytest_asyncio.fixture
@@ -57,6 +60,7 @@ async def session(sessions_table: SessionsTable, player: PlayerRow, cursor: Curs
 def socket_server(mocker):
     server = mocker.MagicMock()
     server.disconnect = mocker.AsyncMock()
+    server.emit = mocker.AsyncMock()
     return server
 
 
@@ -65,3 +69,40 @@ def socket_session(socket_server):
     session = {}
     socket_server.session.return_value.__aenter__.return_value = session
     return session
+
+
+@pytest.fixture
+def active_session(socket_session, session, sessions_table, players_table):
+    socket_session['session'] = session.id
+    return ActiveSession(
+        sid='1234',
+        session=session,
+        sessions_table=sessions_table,
+        players_table=players_table,
+    )
+
+
+@pytest.fixture
+def session_manager(
+    socket_server: AsyncServer,
+    sessions_table: SessionsTable,
+    players_table: PlayersTable,
+):
+    return SessionManager(
+        socket_server,
+        sessions_table,
+        players_table
+    )
+
+
+@pytest.fixture
+def game_manager(
+    socket_server: AsyncServer,
+    games_table: GamesTable,
+    players_table: PlayersTable,
+):
+    return GameManager(
+        socket_server,
+        games_table,
+        players_table
+    )

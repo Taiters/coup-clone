@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import random
+from sqlite3 import IntegrityError
 import string
 from aiosqlite import Connection
 from socketio import AsyncServer
@@ -9,6 +9,9 @@ from coup_clone.managers.session import ActiveSession
 
 
 DECK = "aaammmcccdddppp"
+
+class PlayerAlreadyInGameException(Exception): ...
+class GameNotFoundException(Exception): ...
 
 def _player_json(player: PlayerRow) -> dict:
     return {
@@ -45,11 +48,16 @@ class GameManager:
 
 
     async def create(self, conn: Connection, session: ActiveSession) -> (str, PlayerRow):
-        game_id = "".join([
-            random.choice(string.ascii_lowercase) 
-            for _ in range(6)
-        ])
         async with conn.cursor() as cursor:
+            current_player = await session.current_player(cursor)
+            if current_player is not None:
+                await self.socket_server.disconnect(session.sid)
+                raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
+
+            game_id = "".join([
+                random.choice(string.ascii_lowercase) 
+                for _ in range(6)
+            ])
             game = await self.games_table.create(
                 cursor,
                 id=game_id,
@@ -67,12 +75,23 @@ class GameManager:
 
     async def join(self, conn: Connection, game_id: str, session: ActiveSession) -> (str, PlayerRow):
         async with conn.cursor() as cursor:
-            player = await self.players_table.create(
-                cursor,
-                game_id=game_id
-            )
-            await session.set_current_player(cursor, player.id)
-            await conn.commit()
+            current_player = await session.current_player(cursor)
+            if current_player is not None:
+                await self.socket_server.disconnect(session.sid)
+                raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
+
+            try:
+                player = await self.players_table.create(
+                    cursor,
+                    game_id=game_id
+                )
+                await session.set_current_player(cursor, player.id)
+                await conn.commit()
+            except IntegrityError as e:
+                if str(e) == 'FOREIGN KEY constraint failed':
+                    await self.socket_server.disconnect(session.sid)
+                    raise GameNotFoundException("Game not found with ID: " + game_id)
+                raise
         self.socket_server.enter_room(session.sid, game_id)
         return (game_id, player)
     
