@@ -1,13 +1,13 @@
 .input {
-    color: #E8CFA9;
-    background-color: #584528;
+  color: #e8cfa9;
+  background-color: #584528;
 
-    border-radius: 0;
-    border: 2px solid #E8CFA9;
+  border-radius: 0;
+  border: 2px solid #e8cfa9;
 
-    height: 2.5em;
-    padding: 0 1em;
-    width: 100%;
-    
-    box-sizing: border-box;
+  height: 2.5em;
+  padding: 0 1em;
+  width: 100%;
+
+  box-sizing: border-box;
 }

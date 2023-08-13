@@ -10,7 +10,7 @@ import Button from "./Button";
 import HGroup from "./HGroup";
 import GameLog from "./GameLog";
 import { useParams } from "react-router-dom";
-import Join from "./Join";
+import Join from "./components/Join";
 import { socket } from "./socket";
 
 

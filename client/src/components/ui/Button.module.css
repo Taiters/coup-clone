@@ -1,9 +1,9 @@
 .button {
-    background-color: #C78DBA;
-    border-radius: 0;
-    border: none;
-    padding: 0 2em;
-    cursor: pointer;
-    color: white;
-    height: 2.5em;
+  background-color: #c78dba;
+  border-radius: 0;
+  border: none;
+  padding: 0 2em;
+  cursor: pointer;
+  color: white;
+  height: 2.5em;
 }

@@ -3,48 +3,48 @@ import { useNavigate } from "react-router-dom";
 import { socket } from "../socket";
 
 type Props = {
-    children: ReactNode,
-    initializing: ReactNode,
-}
+  children: ReactNode;
+  initializing: ReactNode;
+};
 
-function SessionManager({children, initializing}: Props) {
-    const navigate = useNavigate();
-    const [isInitializing, setIsInitializing] = useState(true);
-    useEffect(() => {
-        const session = localStorage.getItem("session");
-        if (session != null) {
-            socket.auth = {session};
-        }
+function SessionManager({ children, initializing }: Props) {
+  const navigate = useNavigate();
+  const [isInitializing, setIsInitializing] = useState(true);
+  useEffect(() => {
+    const session = localStorage.getItem("session");
+    if (session != null) {
+      socket.auth = { session };
+    }
 
-        const handleSession = (({
-            session,
-            currentGame
-        }: {
-            session: string,
-            currentGame: string | null
-        }) => {
-            localStorage.setItem('session', session);
-            socket.auth = {session};
+    const handleSession = ({
+      session,
+      currentGame,
+    }: {
+      session: string;
+      currentGame: string | null;
+    }) => {
+      localStorage.setItem("session", session);
+      socket.auth = { session };
 
-            if (currentGame != null) {
-                navigate("/game/" + currentGame);
-            } else {
-                navigate("/");
-            }
+      if (currentGame != null) {
+        navigate("/game/" + currentGame);
+      } else {
+        navigate("/");
+      }
 
-            setIsInitializing(false);
-        });
+      setIsInitializing(false);
+    };
 
-        socket.on('session', handleSession);
-        socket.connect();
+    socket.on("session", handleSession);
+    socket.connect();
 
-        return () => {
-            socket.off('session', handleSession);
-            socket.disconnect();
-        }
-    }, []);
+    return () => {
+      socket.off("session", handleSession);
+      socket.disconnect();
+    };
+  }, []);
 
-    return <>{isInitializing ? initializing : children}</>;
+  return <>{isInitializing ? initializing : children}</>;
 }
 
 export default SessionManager;
