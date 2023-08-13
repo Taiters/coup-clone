@@ -91,7 +91,7 @@ class SessionManager:
 
     async def get(self, conn: Connection, sid: str) -> ActiveSession:
         async with self.socket_server.session(sid) as socket_session:
-            session_id = socket_session[SESSION_KEY]
+            session_id = socket_session.get(SESSION_KEY, None)
 
         if session_id is None:
             await self.socket_server.disconnect(sid)

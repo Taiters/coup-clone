@@ -49,7 +49,7 @@ class GameManager:
             random.choice(string.ascii_lowercase) 
             for _ in range(6)
         ])
-        async with await conn.cursor() as cursor:
+        async with conn.cursor() as cursor:
             game = await self.games_table.create(
                 cursor,
                 id=game_id,
@@ -66,7 +66,7 @@ class GameManager:
     
 
     async def join(self, conn: Connection, game_id: str, session: ActiveSession) -> (str, PlayerRow):
-        async with await conn.cursor() as cursor:
+        async with conn.cursor() as cursor:
             player = await self.players_table.create(
                 cursor,
                 game_id=game_id
@@ -78,7 +78,7 @@ class GameManager:
     
     
     async def leave(self, conn: Connection, session: ActiveSession) -> None:
-        async with await conn.cursor() as cursor:
+        async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             await session.clear_current_player(cursor)
             await conn.commit()
@@ -86,7 +86,7 @@ class GameManager:
     
     
     async def notify(self, conn: Connection, session: ActiveSession) -> None:
-        async with await conn.cursor() as cursor:
+        async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             game = await self.games_table.get(cursor, player.game_id)
             players = await self.players_table.query(cursor, game_id=game.id)
