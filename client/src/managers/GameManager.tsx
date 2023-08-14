@@ -1,26 +1,31 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Game, GameEvent, Player } from "../types";
 import { socket } from "../socket";
+import { useOutletContext } from "react-router-dom";
+import { ActiveSession } from "./SessionManager";
 
 type Props = {
-  render: ({
+  initializing: ReactNode;
+  children: ({
     game,
     players,
     events,
     currentPlayer,
   }: {
-    game: Game | null;
+    game: Game;
     players: Player[];
     events: GameEvent[];
-    currentPlayer: Player | null;
+    currentPlayer: Player;
   }) => ReactNode;
 };
 
-function GameManager({ render }: Props) {
+function GameManager({ initializing, children }: Props) {
+  const session = useOutletContext<ActiveSession>();
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [events, setEvents] = useState<GameEvent[]>([]);
-  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+
+  const currentPlayer = players.find((p) => p.id == session.playerID);
 
   useEffect(() => {
     socket.emit("initialize_game");
@@ -31,17 +36,14 @@ function GameManager({ render }: Props) {
       game,
       players,
       events,
-      currentPlayer,
     }: {
       game: Game;
       players: Player[];
       events: GameEvent[];
-      currentPlayer: Player;
     }) => {
       setGame(game);
       setPlayers(players);
       setEvents(events);
-      setCurrentPlayer(currentPlayer);
     };
 
     // socket.on('update_players', handlePlayersUpdate);
@@ -50,9 +52,13 @@ function GameManager({ render }: Props) {
       // socket.off('update_players', handlePlayersUpdate);
       socket.off("game", handleGame);
     };
-  }, [setPlayers, setCurrentPlayer]);
+  }, [setGame, setPlayers, setEvents]);
 
-  return <>{render({ game, players, events, currentPlayer })}</>;
+  if (game == null || currentPlayer == null) {
+    return <>{initializing}</>;
+  }
+
+  return <>{children({ game, players, events, currentPlayer })}</>;
 }
 
 export default GameManager;

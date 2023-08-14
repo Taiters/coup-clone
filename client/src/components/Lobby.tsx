@@ -5,7 +5,6 @@ import PageTitle from "./ui/PageTitle";
 import VGroup from "./layout/VGroup";
 import styles from "./Lobby.module.css";
 import { Player } from "../types";
-import { socket } from "../socket";
 import LeaveButton from "./LeaveButton";
 
 type Props = {

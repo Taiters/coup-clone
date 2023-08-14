@@ -6,9 +6,10 @@ from typing import Tuple
 from aiosqlite import Connection
 from socketio import AsyncServer
 
-from coup_clone.db.games import GameRow, GamesTable
-from coup_clone.db.players import Influence, PlayerRow, PlayersTable
-from coup_clone.managers.session import ActiveSession
+from coup_clone.db.games import GamesTable
+from coup_clone.db.players import PlayerRow, PlayersTable
+from coup_clone.session import ActiveSession
+from coup_clone.mappers import map_game, map_player
 
 DECK = "aaammmcccdddppp"
 
@@ -23,28 +24,6 @@ class PlayerNotInGameException(Exception):
 
 class GameNotFoundException(Exception):
     ...
-
-
-def _player_json(player: PlayerRow) -> dict:
-    return {
-        "id": player.id,
-        "name": player.name,
-        "state": player.state,
-        "coins": player.coins,
-        "influence": [
-            player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
-            player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
-        ],
-        "host": player.host,
-    }
-
-
-def _game_json(game: GameRow) -> dict:
-    return {
-        "id": game.id,
-        "state": game.state,
-        "currentPlayerTurn": None,
-    }
 
 
 class GameManager:
@@ -108,9 +87,8 @@ class GameManager:
         await self.socket_server.emit(
             "game",
             {
-                "game": _game_json(game),
-                "players": [_player_json(p) for p in players],
-                "currentPlayer": _player_json(player) if player is not None else None,
+                "game": map_game(game),
+                "players": [map_player(p, session) for p in players],
                 "events": [],
             },
             room=session.session.id,

@@ -9,10 +9,10 @@ from coup_clone.managers.game import (
     PlayerAlreadyInGameException,
 )
 from coup_clone.managers.session import (
-    ActiveSession,
     NoActiveSessionException,
     SessionManager,
 )
+from coup_clone.session import ActiveSession
 
 
 class Handler(AsyncNamespace):
@@ -40,7 +40,7 @@ class Handler(AsyncNamespace):
                 try:
                     await self.game_manager.join(conn, game, session)
                 except (PlayerAlreadyInGameException, GameNotFoundException):
-                    raise ConnectionRefusedError('invalid game id')
+                    raise ConnectionRefusedError("invalid game id")
             await self.session_manager.notify(conn, session)
 
     async def on_create_game(self, sid: str) -> None:

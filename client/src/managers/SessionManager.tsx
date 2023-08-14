@@ -3,43 +3,48 @@ import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
 
 type Props = {
-  children: ReactNode;
+  children: (session: ActiveSession) => ReactNode;
   initializing: ReactNode;
+};
+
+export type ActiveSession = {
+  id: string;
+  playerID: number;
 };
 
 function SessionManager({ children, initializing }: Props) {
   const navigate = useNavigate();
   const { game } = useParams();
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const handleSession = (session: ActiveSession, gameID: string) => {
+      localStorage.setItem("session", session.id);
+      socket.auth = { ...socket.auth, session: session.id };
+
+      if (gameID != null) {
+        navigate("/game/" + gameID);
+      } else {
+        navigate("/");
+      }
+
+      setActiveSession(session);
+    };
+
+    socket.on("session", handleSession);
+
+    return () => {
+      socket.off("session", handleSession);
+    };
+  }, [navigate, setActiveSession]);
 
   useEffect(() => {
     const session = localStorage.getItem("session");
     socket.auth = {
       session,
       game,
-    };
-
-    const handleSession = ({
-      session,
-      currentGame,
-    }: {
-      session: string;
-      currentGame: string | null;
-    }) => {
-      localStorage.setItem("session", session);
-      socket.auth = { session };
-
-      if (currentGame != null) {
-        navigate("/game/" + currentGame);
-      } else {
-        navigate("/");
-      }
-
-      setIsInitializing(false);
-    };
-
-    const handleDisconnect = () => {
-      socket.connect();
     };
 
     const handleConnectionError = (e: Error) => {
@@ -51,24 +56,25 @@ function SessionManager({ children, initializing }: Props) {
       }
     };
 
-    socket.on("session", handleSession);
-    socket.on("disconnect", handleDisconnect);
+    const handleDisconnect = () => {
+    };
+
     socket.on("connect_error", handleConnectionError);
-    try {
-      socket.connect();
-    } catch (e) {
-      debugger;
-    }
+    socket.on("disconnect", handleDisconnect);
+    socket.connect();
 
     return () => {
-      socket.off("session", handleSession);
-      socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleConnectionError);
+      socket.off("disconnect", handleDisconnect);
       socket.disconnect();
     };
   }, []);
 
-  return <>{isInitializing ? initializing : children}</>;
+  if (activeSession == null) {
+    return <>{initializing}</>;
+  }
+
+  return <>{children(activeSession)}</>;
 }
 
 export default SessionManager;

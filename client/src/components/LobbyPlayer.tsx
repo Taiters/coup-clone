@@ -23,7 +23,7 @@ function LobbyPlayer({ player, current = false }: Props) {
 
   return (
     <div className={styles.container}>
-      {player.state == PlayerState.JOINED ? (
+      {player.state === PlayerState.JOINED ? (
         <div className={current ? styles.current : undefined}>
           <PlayerName name={player.name} />
         </div>

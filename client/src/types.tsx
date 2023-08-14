@@ -35,9 +35,8 @@ export enum PlayerState {
   JOINED,
 }
 
-export type PlayerID = string;
 export type Player = {
-  id: PlayerID;
+  id: number;
   name: string;
   state: PlayerState;
   coins: number;
@@ -45,16 +44,14 @@ export type Player = {
   host: boolean;
 };
 
-export type GameID = string;
 export type Game = {
-  id: GameID;
+  id: string;
   state: GameState;
   currentPlayerTurn: Player | null;
 };
 
-export type GameEventID = string;
 export type GameEvent = {
-  id: GameEventID;
+  id: number;
   timestamp: number;
   actor: Player;
   target: Player | null;

@@ -86,8 +86,11 @@ async def test_notify(
     socket_server.emit.assert_called_with(
         "session",
         {
-            "session": active_session.id,
-            "currentGame": player.game_id,
+            "session": {
+                "id": active_session.id,
+                "playerID": active_session.session.player_id,
+            },
+            "gameID": player.game_id,
         },
         room=active_session.id,
     )

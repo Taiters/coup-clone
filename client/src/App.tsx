@@ -17,7 +17,7 @@ function App() {
             path="/"
             element={
               <SessionManager initializing={<Initializing />}>
-                <Outlet />
+                {(session) => <Outlet context={session} />}
               </SessionManager>
             }
           >
@@ -25,7 +25,9 @@ function App() {
             <Route
               path="/game/:game"
               element={
-                <GameManager render={(state) => <GameContainer {...state} />} />
+                <GameManager initializing={<Initializing />}>
+                  {(state) => <GameContainer {...state} />}
+                </GameManager>
               }
             />
           </Route>
