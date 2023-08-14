@@ -8,8 +8,8 @@ from socketio import AsyncServer
 
 from coup_clone.db.games import GamesTable
 from coup_clone.db.players import PlayerRow, PlayersTable
-from coup_clone.session import ActiveSession
 from coup_clone.mappers import map_game, map_player
+from coup_clone.session import ActiveSession
 
 DECK = "aaammmcccdddppp"
 
@@ -76,20 +76,41 @@ class GameManager:
                 await conn.commit()
                 self.socket_server.leave_room(session.sid, player.game_id)
 
-    async def notify(self, conn: Connection, session: ActiveSession) -> None:
+    async def set_name(self, conn: Connection, session: ActiveSession, name: str) -> None:
+        async with conn.cursor() as cursor:
+            player_id = session.session.player_id
+            if player_id is None:
+                raise PlayerNotInGameException()
+            await self.players_table.update(cursor, player_id, name=name)
+            await conn.commit()
+
+    async def notify_all(self, conn: Connection, session: ActiveSession) -> None:
         async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             if player is None:
-                raise PlayerNotInGameException("Attempted to notify player when not in game")
+                raise PlayerNotInGameException()
             game = await self.games_table.get(cursor, player.game_id)
             players = await self.players_table.query(cursor, game_id=game.id)
 
         await self.socket_server.emit(
-            "game",
+            "game:all",
             {
                 "game": map_game(game),
                 "players": [map_player(p, session) for p in players],
                 "events": [],
             },
             room=session.session.id,
+        )
+
+    async def notify_players(self, conn: Connection, session: ActiveSession) -> None:
+        async with conn.cursor() as cursor:
+            player = await session.current_player(cursor)
+            if player is None:
+                raise PlayerNotInGameException("Attempted to notify player when not in game")
+            players = await self.players_table.query(cursor, game_id=player.game_id)
+        
+        await self.socket_server.emit(
+            "game:players",
+            [map_player(p, session) for p in players],
+            room=player.game_id,
         )

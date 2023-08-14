@@ -8,10 +8,7 @@ from coup_clone.managers.game import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
 )
-from coup_clone.managers.session import (
-    NoActiveSessionException,
-    SessionManager,
-)
+from coup_clone.managers.session import NoActiveSessionException, SessionManager
 from coup_clone.session import ActiveSession
 
 
@@ -37,10 +34,16 @@ class Handler(AsyncNamespace):
             session = await self.session_manager.setup(conn, sid, auth)
             game = auth.get("game", None) if auth else None
             if game:
-                try:
-                    await self.game_manager.join(conn, game, session)
-                except (PlayerAlreadyInGameException, GameNotFoundException):
-                    raise ConnectionRefusedError("invalid game id")
+                async with conn.cursor() as cursor:
+                    player = await session.current_player(cursor)
+                if player:
+                    if player.game_id != game:
+                        raise ConnectionRefusedError("invalid game id")
+                else:
+                    try:
+                        await self.game_manager.join(conn, game, session)
+                    except GameNotFoundException:
+                        raise ConnectionRefusedError("invalid game id")
             await self.session_manager.notify(conn, session)
 
     async def on_create_game(self, sid: str) -> None:
@@ -72,4 +75,10 @@ class Handler(AsyncNamespace):
     async def on_initialize_game(self, sid: str) -> None:
         async with db.open() as conn:
             session = await self._get_session(conn, sid)
-            await self.game_manager.notify(conn, session)
+            await self.game_manager.notify_all(conn, session)
+
+    async def on_set_name(self, sid: str, name: str) -> None:
+        async with db.open() as conn:
+            session = await self._get_session(conn, sid)
+            await self.game_manager.set_name(conn, session, name)
+            await self.game_manager.notify_players(conn, session)

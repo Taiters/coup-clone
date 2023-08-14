@@ -5,8 +5,8 @@ from socketio import AsyncServer
 
 from coup_clone.db.players import PlayersTable
 from coup_clone.db.sessions import SessionsTable
-from coup_clone.session import ActiveSession
 from coup_clone.mappers import map_session
+from coup_clone.session import ActiveSession
 
 SESSION_KEY = "session"
 

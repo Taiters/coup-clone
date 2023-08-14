@@ -32,7 +32,7 @@ function GameManager({ initializing, children }: Props) {
   }, []);
 
   useEffect(() => {
-    const handleGame = ({
+    const handleAll = ({
       game,
       players,
       events,
@@ -46,11 +46,18 @@ function GameManager({ initializing, children }: Props) {
       setEvents(events);
     };
 
-    // socket.on('update_players', handlePlayersUpdate);
-    socket.on("game", handleGame);
+    const handlePlayers = (players: Player[]) => {
+      console.log('players');
+      console.log(players);
+      setPlayers(players);
+    }
+
+    socket.on("game:all", handleAll);
+    socket.on("game:players", handlePlayers);
+
     return () => {
-      // socket.off('update_players', handlePlayersUpdate);
-      socket.off("game", handleGame);
+      socket.off("game", handleAll);
+      socket.off("game:players", handlePlayers);
     };
   }, [setGame, setPlayers, setEvents]);
 

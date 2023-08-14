@@ -1,5 +1,7 @@
-from sqlite3 import Cursor
 from typing import Optional
+
+from aiosqlite import Cursor
+
 from coup_clone.db.players import PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionRow, SessionsTable
 
@@ -42,4 +44,3 @@ class ActiveSession:
     @property
     def id(self) -> str:
         return self.session.id
-
