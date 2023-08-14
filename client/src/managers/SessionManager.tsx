@@ -9,7 +9,7 @@ type Props = {
 
 function SessionManager({ children, initializing }: Props) {
   const navigate = useNavigate();
-  const {game} = useParams();
+  const { game } = useParams();
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ function SessionManager({ children, initializing }: Props) {
     socket.auth = {
       session,
       game,
-    }
+    };
 
     const handleSession = ({
       session,
@@ -38,13 +38,22 @@ function SessionManager({ children, initializing }: Props) {
       setIsInitializing(false);
     };
 
-    const handleDisconnect = (e, a) => {
-      debugger;
-      console.log('disconnected');
-    }
+    const handleDisconnect = () => {
+      socket.connect();
+    };
+
+    const handleConnectionError = (e: Error) => {
+      if (e.message === "invalid game id") {
+        socket.auth = {
+          session,
+        };
+        socket.connect();
+      }
+    };
 
     socket.on("session", handleSession);
-    socket.on('disconnect', handleDisconnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectionError);
     try {
       socket.connect();
     } catch (e) {
@@ -53,7 +62,8 @@ function SessionManager({ children, initializing }: Props) {
 
     return () => {
       socket.off("session", handleSession);
-      socket.off('disconnect', handleDisconnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectionError);
       socket.disconnect();
     };
   }, []);

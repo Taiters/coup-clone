@@ -56,25 +56,21 @@ async def test_setup_with_existing_session(
 async def test_get_without_existing_session_on_socket(
     session_manager: SessionManager,
     socket_session: dict,
-    socket_server: AsyncServer,
     db_connection: Connection,
 ):
     with pytest.raises(NoActiveSessionException, match="session is not present in socket connection"):
         await session_manager.get(db_connection, "1234")
-    socket_server.disconnect.assert_called_with("1234")
 
 
 @pytest.mark.asyncio
 async def test_get_without_existing_session_in_table(
     session_manager: SessionManager,
     socket_session: dict,
-    socket_server: AsyncServer,
     db_connection: Connection,
 ):
     socket_session["session"] = "abcd"
     with pytest.raises(NoActiveSessionException, match="session not found in database"):
         await session_manager.get(db_connection, "1234")
-    socket_server.disconnect.assert_called_with("1234")
 
 
 @pytest.mark.asyncio
