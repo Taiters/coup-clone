@@ -72,8 +72,6 @@ function SessionManager({ children, initializing }: Props) {
     return () => {
       socket.off("connect_error", handleConnectionError);
       socket.off("disconnect", handleDisconnect);
-      console.log('disconnecting');
-      socket.disconnect();
     };
   }, [game]);
 

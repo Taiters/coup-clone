@@ -7,7 +7,7 @@ from aiosqlite import Connection
 from socketio import AsyncServer
 
 from coup_clone.db.games import GamesTable
-from coup_clone.db.players import PlayerRow, PlayersTable
+from coup_clone.db.players import PlayerRow, PlayerState, PlayersTable
 from coup_clone.mappers import map_game, map_player
 from coup_clone.session import ActiveSession
 
@@ -45,7 +45,7 @@ class GameManager:
 
             game_id = "".join([random.choice(string.ascii_lowercase) for _ in range(6)])
             game = await self.games_table.create(cursor, id=game_id, deck="".join(random.sample(DECK, k=len(DECK))))
-            player = await self.players_table.create(cursor, game_id=game.id)
+            player = await self.players_table.create(cursor, game_id=game.id, host=True)
             await session.set_current_player(cursor, player.id)
             await conn.commit()
         self.socket_server.enter_room(session.sid, game.id)
@@ -81,7 +81,7 @@ class GameManager:
             player_id = session.session.player_id
             if player_id is None:
                 raise PlayerNotInGameException()
-            await self.players_table.update(cursor, player_id, name=name)
+            await self.players_table.update(cursor, player_id, name=name, state=PlayerState.READY)
             await conn.commit()
 
     async def notify_all(self, conn: Connection, session: ActiveSession) -> None:
