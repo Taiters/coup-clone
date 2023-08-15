@@ -8,6 +8,7 @@ from coup_clone.db.sessions import SessionsTable
 from coup_clone.handler import Handler
 from coup_clone.managers.game import GameManager
 from coup_clone.managers.session import SessionManager
+from server.coup_clone.managers.notifications import NotificationsManager
 
 sio = socketio.AsyncServer(cors_allowed_origins="*", cookie="coup_session")
 
@@ -20,12 +21,13 @@ async def app_factory():
     # events_table = EventsTable()
     players_table = PlayersTable()
     sessions_table = SessionsTable()
-    session_manager = SessionManager(sio, sessions_table, players_table)
-    game_manager = GameManager(sio, games_table, players_table)
+    notifications_manager = NotificationsManager(sio, games_table, players_table)
+    session_manager = SessionManager(sio, notifications_manager, sessions_table, players_table)
+    game_manager = GameManager(sio, notifications_manager, games_table, players_table)
 
     app = web.Application()
     sio.attach(app)
-    sio.register_namespace(Handler(session_manager, game_manager))
+    sio.register_namespace(Handler(session_manager, game_manager, notifications_manager))
     return app
 
 

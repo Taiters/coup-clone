@@ -11,6 +11,7 @@ from coup_clone.db.players import PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.managers.game import GameManager
 from coup_clone.managers.session import ActiveSession, SessionManager
+from coup_clone.managers.notifications import NotificationsManager
 
 
 @pytest_asyncio.fixture
@@ -18,6 +19,9 @@ async def db_connection(mocker):
     mocker.patch("coup_clone.db.DB_FILE", ":memory:")
     async with db.open() as conn:
         await db.init(conn)
+        open_mock = mocker.MagicMock()
+        open_mock.__aenter__.return_value = conn
+        mocker.patch("coup_clone.handler.db.open", return_value=open_mock)
         yield conn
 
 
@@ -84,18 +88,29 @@ def active_session(socket_session, session, sessions_table, players_table):
 
 
 @pytest.fixture
+def notifications_manager(
+    socket_server: AsyncServer,
+    games_table: GamesTable,
+    players_table: PlayersTable,
+):
+    return NotificationsManager(socket_server, games_table, players_table)
+
+
+@pytest.fixture
 def session_manager(
     socket_server: AsyncServer,
+    notifications_manager: NotificationsManager,
     sessions_table: SessionsTable,
     players_table: PlayersTable,
 ):
-    return SessionManager(socket_server, sessions_table, players_table)
+    return SessionManager(socket_server, notifications_manager, sessions_table, players_table)
 
 
 @pytest.fixture
 def game_manager(
     socket_server: AsyncServer,
+    notifications_manager: NotificationsManager,
     games_table: GamesTable,
     players_table: PlayersTable,
 ):
-    return GameManager(socket_server, games_table, players_table)
+    return GameManager(socket_server, notifications_manager, games_table, players_table)

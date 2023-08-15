@@ -1,7 +1,6 @@
 import pytest
-from aiosqlite import Connection, Cursor
+from aiosqlite import Connection
 from socketio import AsyncServer
-from socketio.exceptions import ConnectionRefusedError
 
 from coup_clone.db.games import GameRow
 from coup_clone.handler import Handler
@@ -11,6 +10,7 @@ from coup_clone.managers.game import (
     PlayerAlreadyInGameException,
 )
 from coup_clone.managers.session import ActiveSession, SessionManager
+from coup_clone.managers.notifications import NotificationsManager
 
 
 @pytest.fixture
@@ -22,20 +22,16 @@ def session_manager(mocker):
 def game_manager(mocker):
     return mocker.AsyncMock()
 
+@pytest.fixture
+def notifications_manager(mocker):
+    return mocker.AsyncMock()
 
 @pytest.fixture
-def opened_conn(mocker, db_connection):
-    open_mock = mocker.MagicMock()
-    open_mock.__aenter__.return_value = db_connection
-    mocker.patch("coup_clone.handler.db.open", return_value=open_mock)
-    return db_connection
-
-
-@pytest.fixture
-def handler(socket_server, session_manager, game_manager):
+def handler(socket_server, session_manager, game_manager, notifications_manager):
     h = Handler(
         session_manager,
         game_manager,
+        notifications_manager,
     )
     h.server = socket_server
     return h
@@ -47,14 +43,12 @@ async def test_on_connect_without_game_id(
     game_manager: GameManager,
     active_session: ActiveSession,
     handler: Handler,
-    opened_conn: Connection,
 ):
     session_manager.setup.return_value = active_session
 
     await handler.on_connect("1234", {}, {})
 
     game_manager.join.assert_not_called()
-    session_manager.notify.assert_called_with(opened_conn, active_session)
 
 
 @pytest.mark.asyncio
@@ -64,7 +58,7 @@ async def test_on_connect_with_game_id(
     game_manager: GameManager,
     game: GameRow,
     handler: Handler,
-    opened_conn: Connection,
+    db_connection: Connection,
 ):
     active_session = mocker.AsyncMock()
     active_session.current_player.return_value = None
@@ -72,8 +66,7 @@ async def test_on_connect_with_game_id(
 
     await handler.on_connect("1234", {}, {"game": game.id})
 
-    game_manager.join.assert_called_with(opened_conn, game.id, active_session)
-    session_manager.notify.assert_called_with(opened_conn, active_session)
+    game_manager.join.assert_called_with(db_connection, game.id, active_session)
 
 
 # @pytest.mark.parametrize(
@@ -103,20 +96,17 @@ async def test_on_connect_with_game_id(
 
 @pytest.mark.asyncio
 async def test_on_create_game(
-    mocker,
     game_manager: GameManager,
     session_manager: SessionManager,
     active_session: ActiveSession,
     handler: Handler,
+    db_connection: Connection,
 ):
-    conn = mocker.MagicMock()
-    mocker.patch("coup_clone.handler.db.open", return_value=conn)
     session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
 
     await handler.on_create_game("1234")
 
-    game_manager.create.assert_called_with(conn.__aenter__.return_value, active_session)
-    session_manager.notify.assert_called_with(conn.__aenter__.return_value, active_session)
+    game_manager.create.assert_called_with(db_connection, active_session)
 
 
 @pytest.mark.asyncio
@@ -135,20 +125,17 @@ async def test_on_create_game_disconnects_if_already_in_game(
 
 @pytest.mark.asyncio
 async def test_on_join_game(
-    mocker,
     game_manager: GameManager,
     session_manager: SessionManager,
     active_session: ActiveSession,
     handler: Handler,
+    db_connection: Connection,
 ):
-    conn = mocker.MagicMock()
-    mocker.patch("coup_clone.handler.db.open", return_value=conn)
     session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
 
     await handler.on_join_game("1234", "5678")
 
-    game_manager.join.assert_called_with(conn.__aenter__.return_value, "5678", active_session)
-    session_manager.notify.assert_called_with(conn.__aenter__.return_value, active_session)
+    game_manager.join.assert_called_with(db_connection, "5678", active_session)
 
 
 @pytest.mark.parametrize(
@@ -175,34 +162,29 @@ async def test_on_join_game_disconnects_on_error(
 
 @pytest.mark.asyncio
 async def test_on_leave_game(
-    mocker,
     game_manager: GameManager,
     session_manager: SessionManager,
     active_session: ActiveSession,
     handler: Handler,
+    db_connection: Connection,
 ):
-    conn = mocker.MagicMock()
-    mocker.patch("coup_clone.handler.db.open", return_value=conn)
     session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
 
     await handler.on_leave_game("1234")
 
-    game_manager.leave.assert_called_with(conn.__aenter__.return_value, active_session)
-    session_manager.notify.assert_called_with(conn.__aenter__.return_value, active_session)
+    game_manager.leave.assert_called_with(db_connection, active_session)
 
 
 @pytest.mark.asyncio
 async def test_on_initialize_game(
-    mocker,
-    game_manager: GameManager,
     session_manager: SessionManager,
+    notifications_manager: NotificationsManager,
     active_session: ActiveSession,
     handler: Handler,
+    db_connection: Connection,
 ):
-    conn = mocker.MagicMock()
-    mocker.patch("coup_clone.handler.db.open", return_value=conn)
     session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
 
     await handler.on_initialize_game("1234")
 
-    game_manager.notify_all.assert_called_with(conn.__aenter__.return_value, active_session)
+    notifications_manager.notify_game_full.assert_called_with(db_connection, active_session)

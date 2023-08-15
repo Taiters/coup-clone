@@ -5,24 +5,23 @@ from socketio import AsyncServer
 
 from coup_clone.db.players import PlayersTable
 from coup_clone.db.sessions import SessionsTable
-from coup_clone.mappers import map_session
+from coup_clone.managers.exceptions import NoActiveSessionException
+from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.session import ActiveSession
 
 SESSION_KEY = "session"
-
-
-class NoActiveSessionException(Exception):
-    ...
 
 
 class SessionManager:
     def __init__(
         self,
         socket_server: AsyncServer,
+        notifications_manager: NotificationsManager,
         sessions_table: SessionsTable,
         players_table: PlayersTable,
     ):
         self.socket_server = socket_server
+        self.notifications_manager = notifications_manager
         self.sessions_table = sessions_table
         self.players_table = players_table
 
@@ -49,6 +48,7 @@ class SessionManager:
                 )
 
         self.socket_server.enter_room(sid, session.id)
+        await self.notifications_manager.notify_session(conn, active_session)
         return active_session
 
     async def get(self, conn: Connection, sid: str) -> ActiveSession:
@@ -69,16 +69,4 @@ class SessionManager:
             existing_session,
             self.sessions_table,
             self.players_table,
-        )
-
-    async def notify(self, conn: Connection, session: ActiveSession) -> None:
-        async with conn.cursor() as cursor:
-            current_player = await session.current_player(cursor)
-        await self.socket_server.emit(
-            "session",
-            {
-                "session": map_session(session),
-                "gameID": current_player.game_id if current_player else None,
-            },
-            room=session.session.id,
         )

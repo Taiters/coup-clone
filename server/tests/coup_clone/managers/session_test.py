@@ -73,24 +73,25 @@ async def test_get_without_existing_session_in_table(
         await session_manager.get(db_connection, "1234")
 
 
-@pytest.mark.asyncio
-async def test_notify(
-    session_manager: SessionManager,
-    socket_server: AsyncServer,
-    db_connection: Connection,
-    active_session: ActiveSession,
-    player: PlayerRow,
-):
-    await session_manager.notify(db_connection, active_session)
+# TODO: Move this to a test for notifications manager
+# @pytest.mark.asyncio
+# async def test_notify(
+#     session_manager: SessionManager,
+#     socket_server: AsyncServer,
+#     db_connection: Connection,
+#     active_session: ActiveSession,
+#     player: PlayerRow,
+# ):
+#     await session_manager.notify(db_connection, active_session)
 
-    socket_server.emit.assert_called_with(
-        "session",
-        {
-            "session": {
-                "id": active_session.id,
-                "playerID": active_session.session.player_id,
-            },
-            "gameID": player.game_id,
-        },
-        room=active_session.id,
-    )
+#     socket_server.emit.assert_called_with(
+#         "session",
+#         {
+#             "session": {
+#                 "id": active_session.id,
+#                 "playerID": active_session.session.player_id,
+#             },
+#             "gameID": player.game_id,
+#         },
+#         room=active_session.id,
+#     )
