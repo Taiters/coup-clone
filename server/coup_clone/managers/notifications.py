@@ -49,6 +49,15 @@ class NotificationsManager:
             room=session.session.id,
         )
 
+    async def broadcast_game(self, conn: Connection, game_id: str) -> None:
+        async with conn.cursor() as cursor:
+            game = await self.games_table.get(cursor, game_id)
+        await self.socket_server.emit(
+            "game:game",
+            map_game(game),
+            room=game_id,
+        )
+
     async def broadcast_game_players(self, conn: Connection, game_id: str, session: ActiveSession) -> None:
         async with conn.cursor() as cursor:
             players = await self.players_table.query(cursor, game_id=game_id)

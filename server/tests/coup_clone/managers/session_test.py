@@ -2,10 +2,8 @@ import pytest
 from aiosqlite import Connection
 from socketio import AsyncServer
 
-from coup_clone.db.players import PlayerRow
 from coup_clone.db.sessions import SessionRow
 from coup_clone.managers.session import (
-    ActiveSession,
     NoActiveSessionException,
     SessionManager,
 )

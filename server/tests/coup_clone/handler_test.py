@@ -9,8 +9,8 @@ from coup_clone.managers.game import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
 )
-from coup_clone.managers.session import ActiveSession, SessionManager
 from coup_clone.managers.notifications import NotificationsManager
+from coup_clone.managers.session import ActiveSession, SessionManager
 
 
 @pytest.fixture
@@ -22,9 +22,11 @@ def session_manager(mocker):
 def game_manager(mocker):
     return mocker.AsyncMock()
 
+
 @pytest.fixture
 def notifications_manager(mocker):
     return mocker.AsyncMock()
+
 
 @pytest.fixture
 def handler(socket_server, session_manager, game_manager, notifications_manager):

@@ -6,10 +6,11 @@ from typing import Tuple
 from aiosqlite import Connection
 from socketio import AsyncServer
 
-from coup_clone.db.games import GamesTable
+from coup_clone.db.games import GamesTable, GameState
 from coup_clone.db.players import PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
     GameNotFoundException,
+    NotEnoughPlayersException,
     PlayerAlreadyInGameException,
     PlayerNotInGameException,
 )
@@ -85,3 +86,15 @@ class GameManager:
             await conn.commit()
             player = await session.current_player(cursor)
         await self.notifications_manager.broadcast_game_players(conn, player.game_id, session)
+
+    async def start(self, conn: Connection, session: ActiveSession) -> None:
+        async with conn.cursor() as cursor:
+            player = await session.current_player(cursor)
+            if player is None:
+                raise PlayerNotInGameException()
+            player_count = await self.players_table.count(cursor, game_id=player.game_id)
+            if player_count < 2:
+                raise NotEnoughPlayersException()
+            await self.games_table.update(cursor, player.game_id, state=GameState.RUNNING)
+            await conn.commit()
+        await self.notifications_manager.broadcast_game(conn, player.game_id)

@@ -86,3 +86,9 @@ class Handler(AsyncNamespace):
         async with db.open() as conn:
             session = await self._get_session(conn, sid)
             await self.game_manager.set_name(conn, session, name)
+
+    async def on_start_game(self, sid: str) -> None:
+        print("on_start_game: ", sid)
+        async with db.open() as conn:
+            session = await self._get_session(conn, sid)
+            await self.game_manager.start(conn, session)

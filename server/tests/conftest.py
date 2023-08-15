@@ -10,8 +10,8 @@ from coup_clone.db.games import GameRow, GamesTable
 from coup_clone.db.players import PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.managers.game import GameManager
-from coup_clone.managers.session import ActiveSession, SessionManager
 from coup_clone.managers.notifications import NotificationsManager
+from coup_clone.managers.session import ActiveSession, SessionManager
 
 
 @pytest_asyncio.fixture

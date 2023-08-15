@@ -25,7 +25,7 @@ function GameManager({ initializing, children }: Props) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [events, setEvents] = useState<GameEvent[]>([]);
 
-  const currentPlayer = players.find((p) => p.id == session.playerID);
+  const currentPlayer = players.find((p) => p.id === session.playerID);
 
   useEffect(() => {
     socket.emit("initialize_game");
@@ -46,6 +46,12 @@ function GameManager({ initializing, children }: Props) {
       setEvents(events);
     };
 
+    const handleGame = (game: Game) => {
+      console.log('game');
+      console.log(game);
+      setGame(game);
+    }
+
     const handlePlayers = (players: Player[]) => {
       console.log('players');
       console.log(players);
@@ -53,10 +59,12 @@ function GameManager({ initializing, children }: Props) {
     }
 
     socket.on("game:all", handleAll);
+    socket.on("game:game", handleGame);
     socket.on("game:players", handlePlayers);
 
     return () => {
       socket.off("game", handleAll);
+      socket.off("game:game", handleGame);
       socket.off("game:players", handlePlayers);
     };
   }, [setGame, setPlayers, setEvents]);

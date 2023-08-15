@@ -12,3 +12,7 @@ class GameNotFoundException(Exception):
 
 class NoActiveSessionException(Exception):
     ...
+
+
+class NotEnoughPlayersException(Exception):
+    ...

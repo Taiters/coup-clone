@@ -89,3 +89,11 @@ class Table(Generic[T, TID], ABC):
     async def delete(self, cursor: Cursor, id: TID) -> None:
         query = f"DELETE FROM {self.TABLE_NAME} WHERE id = :id"
         await cursor.execute(query, {"id": id})
+
+    async def count(self, cursor: Cursor, **kwargs: Any) -> int:
+        matches = [f"{c} = :{c}" for c in kwargs.keys()]
+        where = f'WHERE {" AND ".join(matches)}'
+        query = f"SELECT COUNT(*) FROM {self.TABLE_NAME} {where}"
+        await cursor.execute(query, kwargs)
+        row = await cursor.fetchone()
+        return row[0]

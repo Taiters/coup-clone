@@ -7,8 +7,8 @@ from coup_clone.db.players import PlayersTable
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.handler import Handler
 from coup_clone.managers.game import GameManager
+from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import SessionManager
-from server.coup_clone.managers.notifications import NotificationsManager
 
 sio = socketio.AsyncServer(cors_allowed_origins="*", cookie="coup_session")
 
