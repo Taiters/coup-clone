@@ -1,5 +1,5 @@
 import GameLogEvent from "./GameLogEvent";
-import { Action, GameEvent, Outcome, PlayerInfluence } from "../types";
+import { GameEvent } from "../types";
 
 type Props = {
   events: GameEvent[];

@@ -77,6 +77,15 @@ class GameManager:
         random.shuffle(deck)
         await self.games_table.update(cursor, game.id, deck="".join(str(c) for c in deck))
 
+    async def _change_player_turn(self, cursor: Cursor, game_id: str) -> None:
+        game = await self.games_table.get(cursor, game_id)
+        players = await self.players_table.query(cursor, game_id=game_id)
+        current_turn = game.current_player_turn
+        player_ids = [p.id for p in players]
+        current_index = player_ids.index(current_turn)
+        next_turn = player_ids[(current_index + 1) % len(player_ids)]
+        await self.games_table.update(cursor, game_id, current_player_turn=next_turn)
+
     async def create(self, conn: Connection, session: ActiveSession) -> Tuple[str, PlayerRow]:
         async with conn.cursor() as cursor:
             current_player = await session.current_player(cursor)
@@ -163,6 +172,7 @@ class GameManager:
             await self.events_table.create(
                 cursor, game_id=player.game_id, actor_id=player.id, event_type=action.action_type
             )
+            await self._change_player_turn(cursor, player.game_id)
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
         await self.notifications_manager.broadcast_game_events(conn, player.game_id)

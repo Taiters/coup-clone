@@ -1,8 +1,18 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Game, GameEvent, Player, PlayerInfluence } from "../types";
+import {
+  Action,
+  Game,
+  GameEvent,
+  GameState,
+  Outcome,
+  Player,
+  PlayerInfluence,
+  PlayerState,
+} from "../types";
 import { socket } from "../socket";
 import { useOutletContext } from "react-router-dom";
 import { ActiveSession } from "./SessionManager";
+import { nullthrows } from "../utils";
 
 type Props = {
   initializing: ReactNode;
@@ -19,11 +29,33 @@ type Props = {
   }) => ReactNode;
 };
 
+type GameNotification = {
+  id: string;
+  state: GameState;
+  player_turn_id: number | null;
+};
+
+type PlayerNotification = {
+  id: number;
+  name: string | null;
+  state: PlayerState;
+  coins: number;
+  influence: PlayerInfluence[];
+  host: boolean;
+};
+
+type EventNotification = {
+  id: number;
+  timestamp: number;
+  actor_id: number;
+  action: Action;
+};
+
 function GameManager({ initializing, children }: Props) {
   const session = useOutletContext<ActiveSession>();
-  const [game, setGame] = useState<Game | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [events, setEvents] = useState<GameEvent[]>([]);
+  const [game, setGame] = useState<GameNotification | null>(null);
+  const [players, setPlayers] = useState<PlayerNotification[]>([]);
+  const [events, setEvents] = useState<EventNotification[]>([]);
   const [hand, setHand] = useState<PlayerInfluence[]>([]);
 
   useEffect(() => {
@@ -37,9 +69,9 @@ function GameManager({ initializing, children }: Props) {
       events,
       hand,
     }: {
-      game: Game;
-      players: Player[];
-      events: GameEvent[];
+      game: GameNotification;
+      players: PlayerNotification[];
+      events: EventNotification[];
       hand: PlayerInfluence[];
     }) => {
       setGame(game);
@@ -48,15 +80,15 @@ function GameManager({ initializing, children }: Props) {
       setHand(hand);
     };
 
-    const handleGame = (game: Game) => {
+    const handleGame = (game: GameNotification) => {
       setGame(game);
     };
 
-    const handlePlayers = (players: Player[]) => {
+    const handlePlayers = (players: PlayerNotification[]) => {
       setPlayers(players);
     };
 
-    const handleEvents = (events: GameEvent[]) => {
+    const handleEvents = (events: EventNotification[]) => {
       setEvents(events);
     };
 
@@ -73,15 +105,50 @@ function GameManager({ initializing, children }: Props) {
     };
   }, [setGame, setPlayers, setEvents, setHand]);
 
-  players.forEach((p) => (p.isCurrentTurn = p.id === game?.playerTurnID));
-  const currentPlayer = players.find((p) => p.id === session.playerID);
+  const gamePlayers = players.map((p) => ({
+    id: p.id,
+    name: p.name ?? "",
+    state: p.state,
+    coins: p.coins,
+    influence: p.influence,
+    host: p.host,
+    isCurrentTurn: p.id === game?.player_turn_id,
+  }));
+  const currentTurn = gamePlayers.find((p) => p.id === game?.player_turn_id);
+  const currentPlayer = gamePlayers.find((p) => p.id === session.playerID);
 
-  if (game == null || currentPlayer == null) {
+  const gameEvents = events.map((e) => ({
+    id: e.id,
+    timestamp: e.timestamp,
+    actor: nullthrows(gamePlayers.find((p) => p.id === e.actor_id)),
+    action: e.action,
+    target: null,
+    response: null,
+    outcome: Outcome.PENDING,
+    targetRevealed: null,
+    coinsReceived: null,
+    coinsSpent: null,
+  }));
+
+  if (game == null || currentPlayer == null || currentTurn == null) {
     return <>{initializing}</>;
   }
 
   currentPlayer.influence = hand;
-  return <>{children({ game, players, events, currentPlayer })}</>;
+  return (
+    <>
+      {children({
+        game: {
+          id: game.id,
+          state: game.state,
+          currentTurn,
+        },
+        players: gamePlayers,
+        events: gameEvents,
+        currentPlayer,
+      })}
+    </>
+  );
 }
 
 export default GameManager;

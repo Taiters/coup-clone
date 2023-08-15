@@ -48,7 +48,7 @@ export type Player = {
 export type Game = {
   id: string;
   state: GameState;
-  playerTurnID: number | null;
+  currentTurn: Player;
 };
 
 export type GameEvent = {

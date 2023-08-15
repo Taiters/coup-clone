@@ -12,33 +12,32 @@ export type ActiveSession = {
   playerID: number;
 };
 
+type SessionNotification = {
+  session: {
+    id: string;
+    player_id: number;
+  };
+  game_id: string;
+};
+
 function SessionManager({ children, initializing }: Props) {
   const navigate = useNavigate();
   const { game } = useParams();
-  const [activeSession, setActiveSession] = useState<ActiveSession | null>(
-    null,
-  );
+  const [session, setSession] = useState<SessionNotification | null>(null);
 
   useEffect(() => {
-    const handleSession = ({
-      session,
-      gameID,
-    }: {
-      session: ActiveSession;
-      gameID: string;
-    }) => {
-      console.log("session");
-      console.log({ session, gameID });
+    const handleSession = (sessionNotification: SessionNotification) => {
+      const { session, game_id } = sessionNotification;
       localStorage.setItem("session", session.id);
       socket.auth = { ...socket.auth, session: session.id };
 
-      if (gameID != null) {
-        navigate("/game/" + gameID);
+      if (game_id != null) {
+        navigate("/game/" + game_id);
       } else {
         navigate("/");
       }
 
-      setActiveSession(session);
+      setSession(sessionNotification);
     };
 
     socket.on("session", handleSession);
@@ -46,7 +45,7 @@ function SessionManager({ children, initializing }: Props) {
     return () => {
       socket.off("session", handleSession);
     };
-  }, [navigate, setActiveSession]);
+  }, [navigate, setSession]);
 
   useEffect(() => {
     const session = localStorage.getItem("session");
@@ -56,8 +55,6 @@ function SessionManager({ children, initializing }: Props) {
     };
 
     const handleConnectionError = (e: Error) => {
-      console.log("connection error");
-      console.log(e);
       if (e.message === "invalid game id") {
         socket.auth = {
           session,
@@ -67,7 +64,6 @@ function SessionManager({ children, initializing }: Props) {
     };
 
     const handleDisconnect = () => {
-      console.log("disconnect");
       socket.connect();
     };
 
@@ -81,11 +77,18 @@ function SessionManager({ children, initializing }: Props) {
     };
   }, [game]);
 
-  if (activeSession == null) {
+  if (session == null) {
     return <>{initializing}</>;
   }
 
-  return <>{children(activeSession)}</>;
+  return (
+    <>
+      {children({
+        id: session.session.id,
+        playerID: session.session.player_id,
+      })}
+    </>
+  );
 }
 
 export default SessionManager;
