@@ -1,17 +1,20 @@
 import random
 import string
+from dataclasses import dataclass
 from sqlite3 import IntegrityError
 from typing import Tuple
 
 from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
+from coup_clone.db.events import EventsTable, EventType
 from coup_clone.db.games import GamesTable, GameState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
     GameFullException,
     GameNotFoundException,
     NotEnoughPlayersException,
+    NotPlayerTurnException,
     PlayerAlreadyInGameException,
     PlayerNotInGameException,
 )
@@ -37,6 +40,11 @@ DECK = [
 ]
 
 
+@dataclass
+class GameAction:
+    action_type: EventType
+
+
 class GameManager:
     def __init__(
         self,
@@ -44,11 +52,13 @@ class GameManager:
         notifications_manager: NotificationsManager,
         games_table: GamesTable,
         players_table: PlayersTable,
+        events_table: EventsTable,
     ):
         self.socket_server = socket_server
         self.notifications_manager = notifications_manager
         self.games_table = games_table
         self.players_table = players_table
+        self.events_table = events_table
 
     async def _take_from_deck(self, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
         game = await self.games_table.get(cursor, game_id)
@@ -141,3 +151,18 @@ class GameManager:
             await self.games_table.update(cursor, player.game_id, state=GameState.RUNNING)
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
+
+    async def take_action(self, conn: Connection, session: ActiveSession, action: GameAction) -> None:
+        async with conn.cursor() as cursor:
+            player = await session.current_player(cursor)
+            if player is None:
+                raise PlayerNotInGameException()
+            game = await self.games_table.get(cursor, player.game_id)
+            if game.current_player_turn != player.id:
+                raise NotPlayerTurnException()
+            await self.events_table.create(
+                cursor, game_id=player.game_id, actor_id=player.id, event_type=action.action_type
+            )
+            await conn.commit()
+        await self.notifications_manager.broadcast_game(conn, player.game_id)
+        await self.notifications_manager.broadcast_game_events(conn, player.game_id)

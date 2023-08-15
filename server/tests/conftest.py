@@ -6,6 +6,7 @@ from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
 from coup_clone import db
+from coup_clone.db.events import EventsTable
 from coup_clone.db.games import GameRow, GamesTable
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
@@ -44,6 +45,11 @@ def players_table():
 @pytest.fixture
 def sessions_table():
     return SessionsTable()
+
+
+@pytest.fixture
+def events_table():
+    return EventsTable()
 
 
 @pytest_asyncio.fixture
@@ -94,8 +100,9 @@ def notifications_manager(
     socket_server: AsyncServer,
     games_table: GamesTable,
     players_table: PlayersTable,
+    events_table: EventsTable,
 ):
-    return NotificationsManager(socket_server, games_table, players_table)
+    return NotificationsManager(socket_server, games_table, players_table, events_table)
 
 
 @pytest.fixture
@@ -114,5 +121,6 @@ def game_manager(
     notifications_manager: NotificationsManager,
     games_table: GamesTable,
     players_table: PlayersTable,
+    events_table: EventsTable,
 ):
-    return GameManager(socket_server, notifications_manager, games_table, players_table)
+    return GameManager(socket_server, notifications_manager, games_table, players_table, events_table)

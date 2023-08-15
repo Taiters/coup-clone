@@ -56,14 +56,20 @@ function GameManager({ initializing, children }: Props) {
       setPlayers(players);
     };
 
+    const handleEvents = (events: GameEvent[]) => {
+      setEvents(events);
+    };
+
     socket.on("game:all", handleAll);
     socket.on("game:game", handleGame);
     socket.on("game:players", handlePlayers);
+    socket.on("game:events", handleEvents);
 
     return () => {
       socket.off("game", handleAll);
       socket.off("game:game", handleGame);
       socket.off("game:players", handlePlayers);
+      socket.off("game:events", handleEvents);
     };
   }, [setGame, setPlayers, setEvents, setHand]);
 
@@ -75,7 +81,6 @@ function GameManager({ initializing, children }: Props) {
   }
 
   currentPlayer.influence = hand;
-
   return <>{children({ game, players, events, currentPlayer })}</>;
 }
 

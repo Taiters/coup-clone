@@ -10,6 +10,10 @@ class GameNotFoundException(Exception):
     ...
 
 
+class NotPlayerTurnException(Exception):
+    ...
+
+
 class GameFullException(Exception):
     ...
 

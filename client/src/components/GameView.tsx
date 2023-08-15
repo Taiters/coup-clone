@@ -1,12 +1,13 @@
 import Container from "./layout/Container";
 import TopBar from "./ui/TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { Game, GameEvent, Player } from "../types";
+import { Action, Game, GameEvent, Player } from "../types";
 import VGroup from "./layout/VGroup";
 import styles from "./GameView.module.css";
 import Button from "./ui/Button";
 import HGroup from "./layout/HGroup";
 import GameLog from "./GameLog";
+import { socket } from "../socket";
 
 type Props = {
   game: Game;
@@ -35,7 +36,7 @@ function GameView({ game, players, events, currentPlayer }: Props) {
       </div>
       <div className={styles.log}>
         <Container>
-          <GameLog />
+          <GameLog events={events} />
         </Container>
       </div>
       <div className={styles.controls}>
@@ -43,7 +44,12 @@ function GameView({ game, players, events, currentPlayer }: Props) {
           <VGroup>
             <HGroup>
               <VGroup className={styles.buttonStack}>
-                <Button label="Income" />
+                <Button
+                  label="Income"
+                  onClick={() =>
+                    socket.emit("take_action", { action: Action.INCOME })
+                  }
+                />
                 <Button label="Tax" />
                 <Button label="Exchange" />
               </VGroup>

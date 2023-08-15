@@ -3,11 +3,12 @@ from socketio import AsyncNamespace
 from socketio.exceptions import ConnectionRefusedError
 
 from coup_clone import db
+from coup_clone.db.events import EventType
 from coup_clone.managers.exceptions import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
 )
-from coup_clone.managers.game import GameManager
+from coup_clone.managers.game import GameAction, GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import NoActiveSessionException, SessionManager
 from coup_clone.session import ActiveSession
@@ -92,3 +93,12 @@ class Handler(AsyncNamespace):
         async with db.open() as conn:
             session = await self._get_session(conn, sid)
             await self.game_manager.start(conn, session)
+
+    async def on_take_action(self, sid: str, action: dict) -> None:
+        print("on_take_action: ", sid, action)
+        game_action = GameAction(
+            action_type=EventType(action["action"]),
+        )
+        async with db.open() as conn:
+            session = await self._get_session(conn, sid)
+            await self.game_manager.take_action(conn, session, game_action)
