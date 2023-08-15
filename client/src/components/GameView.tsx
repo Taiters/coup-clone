@@ -1,7 +1,7 @@
 import Container from "./layout/Container";
 import TopBar from "./ui/TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { Game, GameEvent, Player, PlayerInfluence } from "../types";
+import { Game, GameEvent, Player } from "../types";
 import VGroup from "./layout/VGroup";
 import styles from "./GameView.module.css";
 import Button from "./ui/Button";

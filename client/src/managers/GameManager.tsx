@@ -26,8 +26,6 @@ function GameManager({ initializing, children }: Props) {
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [hand, setHand] = useState<PlayerInfluence[]>([]);
 
-  const currentPlayer = players.find((p) => p.id === session.playerID);
-
   useEffect(() => {
     socket.emit("initialize_game");
   }, []);
@@ -51,14 +49,10 @@ function GameManager({ initializing, children }: Props) {
     };
 
     const handleGame = (game: Game) => {
-      console.log("game");
-      console.log(game);
       setGame(game);
     };
 
     const handlePlayers = (players: Player[]) => {
-      console.log("players");
-      console.log(players);
       setPlayers(players);
     };
 
@@ -72,6 +66,9 @@ function GameManager({ initializing, children }: Props) {
       socket.off("game:players", handlePlayers);
     };
   }, [setGame, setPlayers, setEvents, setHand]);
+
+  players.forEach((p) => (p.isCurrentTurn = p.id === game?.playerTurnID));
+  const currentPlayer = players.find((p) => p.id === session.playerID);
 
   if (game == null || currentPlayer == null) {
     return <>{initializing}</>;

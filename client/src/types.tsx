@@ -42,12 +42,13 @@ export type Player = {
   coins: number;
   influence: PlayerInfluence[];
   host: boolean;
+  isCurrentTurn: boolean;
 };
 
 export type Game = {
   id: string;
   state: GameState;
-  currentPlayerTurn: Player | null;
+  playerTurnID: number | null;
 };
 
 export type GameEvent = {

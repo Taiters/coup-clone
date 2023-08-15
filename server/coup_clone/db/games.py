@@ -15,6 +15,7 @@ class GameState(enum.IntEnum):
 class GameRow(TableRow[str]):
     state: GameState
     deck: str
+    current_player_turn: int
 
 
 class GamesTable(Table[GameRow, str]):
@@ -23,13 +24,16 @@ class GamesTable(Table[GameRow, str]):
         CREATE TABLE IF NOT EXISTS games (
             id TEXT PRIMARY KEY,
             state INTEGER NOT NULL DEFAULT(0),
-            deck TEXT NOT NULL
+            deck TEXT NOT NULL,
+            current_player_turn INTEGER REFERENCES players
+                ON DELETE RESTRICT
         );
     """
     COLUMNS = [
         "id",
         "state",
         "deck",
+        "current_player_turn",
     ]
 
     @staticmethod
@@ -38,4 +42,5 @@ class GamesTable(Table[GameRow, str]):
             id=row[0],
             state=GameState(row[1]),
             deck=row[2],
+            current_player_turn=row[3],
         )

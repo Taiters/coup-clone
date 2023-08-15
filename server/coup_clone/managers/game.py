@@ -81,6 +81,7 @@ class GameManager:
             player = await self.players_table.create(
                 cursor, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1]
             )
+            await self.games_table.update(cursor, game.id, current_player_turn=player.id)
             await session.set_current_player(cursor, player.id)
             await conn.commit()
         self.socket_server.enter_room(session.sid, game.id)

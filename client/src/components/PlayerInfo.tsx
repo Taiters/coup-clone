@@ -2,7 +2,7 @@ import Coins from "./ui/Coins";
 import HGroup from "./layout/HGroup";
 import Influence from "./ui/Influence";
 import PlayerName from "./ui/PlayerName";
-import { Player, PlayerInfluence } from "../types";
+import { Player } from "../types";
 
 type Props = {
   player: Player;
@@ -12,7 +12,7 @@ function PlayerInfo({ player }: Props) {
   return (
     <HGroup>
       <div style={{ width: "45%" }}>
-        <PlayerName name={player.name} />
+        <PlayerName name={player.name} isCurrentTurn={player.isCurrentTurn} />
       </div>
       <Coins value={player.coins} />
       <div style={{ width: "25%" }}>

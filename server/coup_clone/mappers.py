@@ -25,4 +25,5 @@ def map_game(game: GameRow) -> dict:
     return {
         "id": game.id,
         "state": game.state,
+        "playerTurnID": game.current_player_turn,
     }
