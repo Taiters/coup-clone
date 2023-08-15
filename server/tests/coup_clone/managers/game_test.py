@@ -3,7 +3,7 @@ from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
 from coup_clone.db.games import GameRow, GamesTable, GameState
-from coup_clone.db.players import PlayersTable
+from coup_clone.db.players import Influence, PlayersTable
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.managers.game import (
     GameManager,
@@ -63,6 +63,7 @@ async def test_join(
     cursor: Cursor,
     sessions_table: SessionsTable,
     players_table: PlayersTable,
+    games_table: GamesTable,
     game: GameRow,
 ):
     session = await sessions_table.create(cursor, id="1234")
@@ -77,9 +78,13 @@ async def test_join(
 
     created_player = await players_table.get(cursor, player.id)
     current_player = await active_session.current_player(cursor)
+    joined_game = await games_table.get(cursor, game_id)
 
     assert game_id == game.id
     assert created_player.game_id == game.id
+    assert created_player.influence_a == Influence(int(game.deck[-2]))
+    assert created_player.influence_b == Influence(int(game.deck[-1]))
+    assert joined_game.deck == game.deck[0:-2]
     assert active_session.session.player_id == created_player.id
     assert current_player.id == created_player.id
     socket_server.enter_room.assert_called_with("sid", game.id)
@@ -124,6 +129,7 @@ async def test_join_when_game_not_exists(
 @pytest.mark.asyncio
 async def test_leave(
     game_manager: GameManager,
+    games_table: GamesTable,
     socket_server: AsyncServer,
     active_session: ActiveSession,
     db_connection: Connection,
@@ -132,11 +138,18 @@ async def test_leave(
 ):
     current_player = await active_session.current_player(cursor)
     assert current_player.game_id is not None
+    player_influence = [
+        str(current_player.influence_a.value),
+        str(current_player.influence_b.value),
+    ]
+    game_deck = list(game.deck)
 
     await game_manager.leave(db_connection, active_session)
 
     current_player = await active_session.current_player(cursor)
+    game = await games_table.get(cursor, game.id)
 
     assert current_player is None
     assert active_session.session.player_id is None
+    assert sorted(list(game.deck)) == sorted(game_deck + player_influence)
     socket_server.leave_room.assert_called_with(active_session.sid, game.id)

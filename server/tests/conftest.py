@@ -7,9 +7,9 @@ from socketio import AsyncServer
 
 from coup_clone import db
 from coup_clone.db.games import GameRow, GamesTable
-from coup_clone.db.players import PlayerRow, PlayersTable
+from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
-from coup_clone.managers.game import GameManager
+from coup_clone.managers.game import DECK, GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import ActiveSession, SessionManager
 
@@ -48,12 +48,14 @@ def sessions_table():
 
 @pytest_asyncio.fixture
 async def game(games_table: GamesTable, cursor: Cursor):
-    return await games_table.create(cursor, id=str(uuid4()), deck="abcd")
+    return await games_table.create(cursor, id=str(uuid4()), deck="".join(str(c.value) for c in DECK))
 
 
 @pytest_asyncio.fixture
 async def player(players_table: PlayersTable, game: GameRow, cursor: Cursor):
-    return await players_table.create(cursor, game_id=game.id)
+    return await players_table.create(
+        cursor, game_id=game.id, influence_a=Influence.CAPTAIN, influence_b=Influence.AMBASSADOR
+    )
 
 
 @pytest_asyncio.fixture

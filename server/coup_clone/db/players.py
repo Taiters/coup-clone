@@ -27,8 +27,8 @@ class PlayerRow(TableRow[int]):
     state: PlayerState
     name: Optional[str]
     coins: int
-    influence_a: Optional[Influence]
-    influence_b: Optional[Influence]
+    influence_a: Influence
+    influence_b: Influence
     revealed_influence_a: bool
     revealed_influence_b: bool
     host: bool
@@ -45,8 +45,8 @@ class PlayersTable(Table[PlayerRow, int]):
             state INTEGER NOT NULL DEFAULT(0),
             name TEXT,
             coins INTEGER NOT NULL DEFAULT(3),
-            influence_a INTEGER,
-            influence_b INTEGER,
+            influence_a INTEGER NOT NULL,
+            influence_b INTEGER NOT NULL,
             revealed_influence_a INTEGER NOT NULL DEFAULT(0),
             revealed_influence_b INTEGER NOT NULL DEFAULT(0),
             host INTEGER NOT NULL DEFAULT(0)
@@ -73,8 +73,8 @@ class PlayersTable(Table[PlayerRow, int]):
             state=PlayerState(row[2]),
             name=row[3],
             coins=row[4],
-            influence_a=Influence(row[5]) if row[5] is not None else None,
-            influence_b=Influence(row[6]) if row[6] is not None else None,
+            influence_a=Influence(row[5]),
+            influence_b=Influence(row[6]),
             revealed_influence_a=row[7],
             revealed_influence_b=row[8],
             host=row[9],

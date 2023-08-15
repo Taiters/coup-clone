@@ -96,4 +96,6 @@ class Table(Generic[T, TID], ABC):
         query = f"SELECT COUNT(*) FROM {self.TABLE_NAME} {where}"
         await cursor.execute(query, kwargs)
         row = await cursor.fetchone()
+        if row is None:
+            return 0
         return row[0]
