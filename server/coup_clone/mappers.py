@@ -7,24 +7,16 @@ def map_session(session: ActiveSession) -> dict:
     return {"id": session.id, "playerID": session.session.player_id}
 
 
-def map_player(player: PlayerRow, session: ActiveSession) -> dict:
-    influence = (
-        [
-            player.influence_a,
-            player.influence_b,
-        ]
-        if session.session.player_id == player.id
-        else [
-            player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
-            player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
-        ]
-    )
+def map_player(player: PlayerRow) -> dict:
     return {
         "id": player.id,
         "name": player.name,
         "state": player.state,
         "coins": player.coins,
-        "influence": influence,
+        "influence": [
+            player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
+            player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
+        ],
         "host": player.host,
     }
 

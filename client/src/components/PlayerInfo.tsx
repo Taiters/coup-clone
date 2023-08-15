@@ -2,26 +2,24 @@ import Coins from "./ui/Coins";
 import HGroup from "./layout/HGroup";
 import Influence from "./ui/Influence";
 import PlayerName from "./ui/PlayerName";
-import { PlayerInfluence } from "../types";
+import { Player, PlayerInfluence } from "../types";
 
 type Props = {
-  name: string;
-  coins: number;
-  influence: PlayerInfluence[];
+  player: Player,
 };
 
-function PlayerInfo({ name, coins, influence }: Props) {
+function PlayerInfo({ player }: Props) {
   return (
     <HGroup>
       <div style={{ width: "45%" }}>
-        <PlayerName name={name} />
+        <PlayerName name={player.name} />
       </div>
-      <Coins value={coins} />
+      <Coins value={player.coins} />
       <div style={{ width: "25%" }}>
-        <Influence influence={influence[0]} />
+        <Influence influence={player.influence[0]} />
       </div>
       <div style={{ width: "25%" }}>
-        <Influence influence={influence[1]} />
+        <Influence influence={player.influence[1]} />
       </div>
     </HGroup>
   );

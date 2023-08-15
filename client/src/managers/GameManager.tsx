@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Game, GameEvent, Player } from "../types";
+import { Game, GameEvent, Player, PlayerInfluence } from "../types";
 import { socket } from "../socket";
 import { useOutletContext } from "react-router-dom";
 import { ActiveSession } from "./SessionManager";
@@ -24,6 +24,7 @@ function GameManager({ initializing, children }: Props) {
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [events, setEvents] = useState<GameEvent[]>([]);
+  const [hand, setHand] = useState<PlayerInfluence[]>([]);
 
   const currentPlayer = players.find((p) => p.id === session.playerID);
 
@@ -36,14 +37,17 @@ function GameManager({ initializing, children }: Props) {
       game,
       players,
       events,
+      hand,
     }: {
-      game: Game;
-      players: Player[];
-      events: GameEvent[];
+      game: Game,
+      players: Player[],
+      events: GameEvent[],
+      hand: PlayerInfluence[],
     }) => {
       setGame(game);
       setPlayers(players);
       setEvents(events);
+      setHand(hand);
     };
 
     const handleGame = (game: Game) => {
@@ -67,11 +71,13 @@ function GameManager({ initializing, children }: Props) {
       socket.off("game:game", handleGame);
       socket.off("game:players", handlePlayers);
     };
-  }, [setGame, setPlayers, setEvents]);
+  }, [setGame, setPlayers, setEvents, setHand]);
 
   if (game == null || currentPlayer == null) {
     return <>{initializing}</>;
   }
+
+  currentPlayer.influence = hand
 
   return <>{children({ game, players, events, currentPlayer })}</>;
 }

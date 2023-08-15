@@ -3,10 +3,7 @@ from aiosqlite import Connection
 from socketio import AsyncServer
 
 from coup_clone.db.sessions import SessionRow
-from coup_clone.managers.session import (
-    NoActiveSessionException,
-    SessionManager,
-)
+from coup_clone.managers.session import NoActiveSessionException, SessionManager
 
 
 @pytest.mark.parametrize(

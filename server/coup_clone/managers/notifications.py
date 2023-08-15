@@ -43,8 +43,12 @@ class NotificationsManager:
             "game:all",
             {
                 "game": map_game(game),
-                "players": [map_player(p, session) for p in players],
+                "players": [map_player(p) for p in players],
                 "events": [],
+                "hand": [
+                    player.influence_a,
+                    player.influence_b,
+                ]
             },
             room=session.session.id,
         )
@@ -58,11 +62,11 @@ class NotificationsManager:
             room=game_id,
         )
 
-    async def broadcast_game_players(self, conn: Connection, game_id: str, session: ActiveSession) -> None:
+    async def broadcast_game_players(self, conn: Connection, game_id: str) -> None:
         async with conn.cursor() as cursor:
             players = await self.players_table.query(cursor, game_id=game_id)
         await self.socket_server.emit(
             "game:players",
-            [map_player(p, session) for p in players],
+            [map_player(p) for p in players],
             room=game_id,
         )
