@@ -31,8 +31,8 @@ export enum Outcome {
 }
 
 export enum PlayerState {
-  JOINING,
-  JOINED,
+  PENDING,
+  READY,
 }
 
 export type Player = {

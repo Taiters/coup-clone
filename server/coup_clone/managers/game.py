@@ -92,7 +92,7 @@ class GameManager:
             player = await session.current_player(cursor)
             if player is None:
                 raise PlayerNotInGameException()
-            player_count = await self.players_table.count(cursor, game_id=player.game_id)
+            player_count = await self.players_table.count(cursor, game_id=player.game_id, state=PlayerState.READY)
             if player_count < 2:
                 raise NotEnoughPlayersException()
             await self.games_table.update(cursor, player.game_id, state=GameState.RUNNING)

@@ -11,7 +11,7 @@ type Props = {
 };
 
 function GameContainer({ game, players, events, currentPlayer }: Props) {
-  if (currentPlayer.state === PlayerState.JOINING) {
+  if (currentPlayer.state === PlayerState.PENDING) {
     return <Join />;
   }
 
@@ -24,16 +24,16 @@ function GameContainer({ game, players, events, currentPlayer }: Props) {
           onStart={() => socket.emit("start_game")}
         />
       );
+    case GameState.RUNNING:
+      return (
+        <ul>
+          <li>{JSON.stringify(game)}</li>
+          <li>{JSON.stringify(players)}</li>
+          <li>{JSON.stringify(events)}</li>
+          <li>{JSON.stringify(currentPlayer)}</li>
+        </ul>
+      );
   }
-
-  return (
-    <ul>
-      <li>{JSON.stringify(game)}</li>
-      <li>{JSON.stringify(players)}</li>
-      <li>{JSON.stringify(events)}</li>
-      <li>{JSON.stringify(currentPlayer)}</li>
-    </ul>
-  );
 }
 
 export default GameContainer;

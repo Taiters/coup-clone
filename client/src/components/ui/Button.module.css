@@ -7,3 +7,8 @@
   color: white;
   height: 2.5em;
 }
+
+.disabled {
+  background-color: #B1B59A;
+  cursor: auto;
+}

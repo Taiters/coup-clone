@@ -4,7 +4,7 @@ import LobbyPlayer from "./LobbyPlayer";
 import PageTitle from "./ui/PageTitle";
 import VGroup from "./layout/VGroup";
 import styles from "./Lobby.module.css";
-import { Player } from "../types";
+import { Player, PlayerState } from "../types";
 import LeaveButton from "./LeaveButton";
 
 type Props = {
@@ -21,13 +21,15 @@ function Lobby({ players, currentPlayer, onStart }: Props) {
     lobbyPlayers.push(<LobbyPlayer key={lobbyPlayers.length} />);
   }
 
+  const readyToStart = players.filter(p => p.state === PlayerState.READY).length >= 2;
+
   return (
     <Container>
       <PageTitle heading="Lobby" subheading="Code: 123ABC" />
       <VGroup className={styles.players}>{lobbyPlayers}</VGroup>
       <VGroup>
         {currentPlayer.host ? (
-          <Button label="Start" onClick={onStart} />
+          <Button disabled={!readyToStart} label="Start" onClick={onStart} />
         ) : (
           <p className={styles.waiting}>Waiting for host...</p>
         )}

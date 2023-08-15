@@ -2,11 +2,12 @@ import styles from "./Button.module.css";
 
 type Props = {
   label: string;
+  disabled?: boolean,
   onClick?: () => void;
 };
-function Button({ label, onClick }: Props) {
+function Button({ label, onClick, disabled=false }: Props) {
   return (
-    <button className={styles.button} onClick={onClick}>
+    <button disabled={disabled} className={`${styles.button} ${disabled ? styles.disabled : null}`} onClick={onClick}>
       {label}
     </button>
   );
