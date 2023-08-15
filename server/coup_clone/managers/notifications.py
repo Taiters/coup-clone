@@ -48,7 +48,7 @@ class NotificationsManager:
                 "hand": [
                     player.influence_a,
                     player.influence_b,
-                ]
+                ],
             },
             room=session.session.id,
         )

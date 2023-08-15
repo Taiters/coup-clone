@@ -27,7 +27,12 @@ function GameContainer({ game, players, events, currentPlayer }: Props) {
       );
     case GameState.RUNNING:
       return (
-        <GameView game={game} players={players} events={events} currentPlayer={currentPlayer} />
+        <GameView
+          game={game}
+          players={players}
+          events={events}
+          currentPlayer={currentPlayer}
+        />
       );
   }
 }

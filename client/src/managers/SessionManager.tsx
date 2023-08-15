@@ -20,9 +20,15 @@ function SessionManager({ children, initializing }: Props) {
   );
 
   useEffect(() => {
-    const handleSession = ({session, gameID}: {session: ActiveSession, gameID: string}) => {
-      console.log('session');
-      console.log({session, gameID});
+    const handleSession = ({
+      session,
+      gameID,
+    }: {
+      session: ActiveSession;
+      gameID: string;
+    }) => {
+      console.log("session");
+      console.log({ session, gameID });
       localStorage.setItem("session", session.id);
       socket.auth = { ...socket.auth, session: session.id };
 
@@ -50,7 +56,7 @@ function SessionManager({ children, initializing }: Props) {
     };
 
     const handleConnectionError = (e: Error) => {
-      console.log('connection error');
+      console.log("connection error");
       console.log(e);
       if (e.message === "invalid game id") {
         socket.auth = {
@@ -61,7 +67,7 @@ function SessionManager({ children, initializing }: Props) {
     };
 
     const handleDisconnect = () => {
-      console.log('disconnect');
+      console.log("disconnect");
       socket.connect();
     };
 

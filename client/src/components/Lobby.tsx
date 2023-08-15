@@ -21,7 +21,8 @@ function Lobby({ players, currentPlayer, onStart }: Props) {
     lobbyPlayers.push(<LobbyPlayer key={lobbyPlayers.length} />);
   }
 
-  const readyToStart = players.filter(p => p.state === PlayerState.READY).length >= 2;
+  const readyToStart =
+    players.filter((p) => p.state === PlayerState.READY).length >= 2;
 
   return (
     <Container>

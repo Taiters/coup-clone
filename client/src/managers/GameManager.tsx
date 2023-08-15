@@ -39,10 +39,10 @@ function GameManager({ initializing, children }: Props) {
       events,
       hand,
     }: {
-      game: Game,
-      players: Player[],
-      events: GameEvent[],
-      hand: PlayerInfluence[],
+      game: Game;
+      players: Player[];
+      events: GameEvent[];
+      hand: PlayerInfluence[];
     }) => {
       setGame(game);
       setPlayers(players);
@@ -51,16 +51,16 @@ function GameManager({ initializing, children }: Props) {
     };
 
     const handleGame = (game: Game) => {
-      console.log('game');
+      console.log("game");
       console.log(game);
       setGame(game);
-    }
+    };
 
     const handlePlayers = (players: Player[]) => {
-      console.log('players');
+      console.log("players");
       console.log(players);
       setPlayers(players);
-    }
+    };
 
     socket.on("game:all", handleAll);
     socket.on("game:game", handleGame);
@@ -77,7 +77,7 @@ function GameManager({ initializing, children }: Props) {
     return <>{initializing}</>;
   }
 
-  currentPlayer.influence = hand
+  currentPlayer.influence = hand;
 
   return <>{children({ game, players, events, currentPlayer })}</>;
 }

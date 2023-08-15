@@ -5,7 +5,7 @@ import PlayerName from "./ui/PlayerName";
 import { Player, PlayerInfluence } from "../types";
 
 type Props = {
-  player: Player,
+  player: Player;
 };
 
 function PlayerInfo({ player }: Props) {

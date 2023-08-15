@@ -1,26 +1,26 @@
 .verticalContainer {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .players {
-    padding: 1em 0;
-    background-color: #E8CFA9;
+  padding: 1em 0;
+  background-color: #e8cfa9;
 }
 
 .log {
-    border-bottom: 1px solid #584528;
-    border-top: 1px solid #584528;
-    background-color: #D9BE94;
-    flex-grow: 1;
-    overflow-y: auto;
+  border-bottom: 1px solid #584528;
+  border-top: 1px solid #584528;
+  background-color: #d9be94;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .controls {
-    padding: 0.5em 0;
+  padding: 0.5em 0;
 }
 
 .buttonStack {
-    width: 100%;
+  width: 100%;
 }

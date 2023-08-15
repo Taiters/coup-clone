@@ -3,11 +3,11 @@ import string
 from sqlite3 import IntegrityError
 from typing import Tuple
 
-from aiosqlite import Connection
+from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
-from coup_clone.db.games import GamesTable, GameState
-from coup_clone.db.players import PlayerRow, PlayersTable, PlayerState, Influence
+from coup_clone.db.games import GameRow, GamesTable, GameState
+from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
     GameNotFoundException,
     NotEnoughPlayersException,
@@ -42,6 +42,15 @@ class GameManager:
         self.games_table = games_table
         self.players_table = players_table
 
+    async def _pop_from_deck(self, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
+        game = await self.games_table.get(cursor, game_id)
+        if game is None:
+            raise GameNotFoundException()
+        deck = list(game.deck)
+        popped = [Influence(int(deck.pop())) for i in range(n)]
+        await self.games_table.update(cursor, game.id, deck="".join(deck))
+        return popped
+
     async def create(self, conn: Connection, session: ActiveSession) -> Tuple[str, PlayerRow]:
         async with conn.cursor() as cursor:
             current_player = await session.current_player(cursor)
@@ -49,13 +58,12 @@ class GameManager:
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
             game_id = "".join([random.choice(string.ascii_lowercase) for _ in range(6)])
-            deck = random.sample(DECK, k=len(DECK))
-            influence_a = Influence(deck.pop())
-            influence_b = Influence(deck.pop())
-
-            game = await self.games_table.create(cursor, id=game_id, deck="".join([str(c.value) for c in deck]))
+            game = await self.games_table.create(
+                cursor, id=game_id, deck="".join([str(c.value) for c in random.sample(DECK, k=len(DECK))])
+            )
+            hand = await self._pop_from_deck(cursor, game_id)
             player = await self.players_table.create(
-                cursor, game_id=game.id, host=True, influence_a=influence_a, influence_b=influence_b
+                cursor, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1]
             )
             await session.set_current_player(cursor, player.id)
             await conn.commit()
@@ -69,18 +77,8 @@ class GameManager:
             if current_player is not None:
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
-            game = await self.games_table.get(cursor, game_id)
-            if game is None:
-                raise GameNotFoundException()
-
-            deck = list(game.deck)
-            influence_a = Influence(int(deck.pop()))
-            influence_b = Influence(int(deck.pop()))
-            player = await self.players_table.create(
-                cursor, game_id=game_id, influence_a=influence_a, influence_b=influence_b
-            )
-
-            await self.games_table.update(cursor, game_id, deck="".join(deck))
+            hand = await self._pop_from_deck(cursor, game_id)
+            player = await self.players_table.create(cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1])
             await session.set_current_player(cursor, player.id)
             await conn.commit()
 
