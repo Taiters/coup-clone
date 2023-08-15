@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
@@ -5,7 +7,9 @@ from socketio import AsyncServer
 from coup_clone.db.games import GameRow, GamesTable, GameState
 from coup_clone.db.players import Influence, PlayersTable
 from coup_clone.db.sessions import SessionsTable
+from coup_clone.managers.exceptions import GameFullException
 from coup_clone.managers.game import (
+    DECK,
     GameManager,
     GameNotFoundException,
     PlayerAlreadyInGameException,
@@ -106,12 +110,51 @@ async def test_join_when_already_in_game(
 
 
 @pytest.mark.asyncio
+async def test_join_limits_up_to_6_players(
+    game_manager: GameManager,
+    db_connection: Connection,
+    cursor: Cursor,
+    sessions_table: SessionsTable,
+    players_table: PlayersTable,
+    games_table: GamesTable,
+    active_session: ActiveSession,
+):
+    new_game = await games_table.create(cursor, id=str(uuid4()), deck="".join(str(c.value) for c in DECK))
+    await db_connection.commit()
+    session_rows = [await sessions_table.create(cursor, id=str(uuid4())) for _ in range(7)]
+    sessions = [
+        ActiveSession(
+            str(uuid4()),
+            r,
+            sessions_table,
+            players_table,
+        )
+        for r in session_rows
+    ]
+
+    for s in sessions[:6]:
+        await game_manager.join(db_connection, new_game.id, s)
+
+    with pytest.raises(GameFullException):
+        await game_manager.join(db_connection, new_game.id, sessions[-1])
+
+    players = await players_table.query(cursor, game_id=new_game.id)
+    assert len(players) == 6
+
+    await game_manager.leave(db_connection, sessions[1])
+    await game_manager.join(db_connection, new_game.id, sessions[-1])
+
+    players = await players_table.query(cursor, game_id=new_game.id)
+    assert len(players) == 6
+
+
+@pytest.mark.asyncio
 async def test_join_when_game_not_exists(
     game_manager: GameManager,
     socket_server: AsyncServer,
     db_connection: Connection,
     cursor: Cursor,
-    sessions_table: GamesTable,
+    sessions_table: SessionsTable,
     players_table: PlayersTable,
 ):
     session = await sessions_table.create(cursor, id="1234")

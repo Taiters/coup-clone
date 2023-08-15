@@ -10,6 +10,10 @@ class GameNotFoundException(Exception):
     ...
 
 
+class GameFullException(Exception):
+    ...
+
+
 class NoActiveSessionException(Exception):
     ...
 

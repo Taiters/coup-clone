@@ -1,5 +1,6 @@
 import random
 import string
+from sqlite3 import IntegrityError
 from typing import Tuple
 
 from aiosqlite import Connection, Cursor
@@ -8,6 +9,7 @@ from socketio import AsyncServer
 from coup_clone.db.games import GamesTable, GameState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
+    GameFullException,
     GameNotFoundException,
     NotEnoughPlayersException,
     PlayerAlreadyInGameException,
@@ -92,7 +94,13 @@ class GameManager:
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
             hand = await self._take_from_deck(cursor, game_id)
-            player = await self.players_table.create(cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1])
+            try:
+                player = await self.players_table.create(
+                    cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1]
+                )
+            except IntegrityError as e:
+                if str(e) == "Game full":
+                    raise GameFullException()
             await session.set_current_player(cursor, player.id)
             await conn.commit()
 

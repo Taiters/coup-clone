@@ -17,6 +17,18 @@ TABLE_DEFINITIONS = [
     SessionsTable.TABLE_DEFINITION,
 ]
 
+TRIGGERS = [
+    """
+    CREATE TRIGGER IF NOT EXISTS check_player_count_in_game
+    BEFORE INSERT
+    ON players
+    WHEN (SELECT COUNT(id) FROM players WHERE game_id = NEW.game_id) >= 6
+    BEGIN
+        SELECT RAISE(FAIL, "Game full");
+    END;
+    """,
+]
+
 
 @asynccontextmanager
 async def open() -> AsyncIterator[Connection]:
@@ -28,4 +40,6 @@ async def open() -> AsyncIterator[Connection]:
 async def init(db: Connection) -> None:
     for table in TABLE_DEFINITIONS:
         await db.execute(table)
+    for trigger in TRIGGERS:
+        await db.execute(trigger)
     await db.commit()
