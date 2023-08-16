@@ -3,7 +3,6 @@ from socketio import AsyncNamespace
 from socketio.exceptions import ConnectionRefusedError
 
 from coup_clone import db
-from coup_clone.db.events import EventType
 from coup_clone.managers.exceptions import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
@@ -97,7 +96,7 @@ class Handler(AsyncNamespace):
     async def on_take_action(self, sid: str, action: dict) -> None:
         print("on_take_action: ", sid, action)
         game_action = GameAction(
-            action_type=EventType(action["action"]),
+            action_type=action["action"],
         )
         async with db.open() as conn:
             session = await self._get_session(conn, sid)

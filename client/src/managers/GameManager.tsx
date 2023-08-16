@@ -1,10 +1,8 @@
 import { ReactNode, useEffect, useState } from "react";
 import {
-  Action,
   Game,
   GameEvent,
   GameState,
-  Outcome,
   Player,
   PlayerInfluence,
   PlayerState,
@@ -48,7 +46,7 @@ type EventNotification = {
   id: number;
   timestamp: number;
   actor_id: number;
-  action: Action;
+  message: string;
 };
 
 function GameManager({ initializing, children }: Props) {
@@ -98,7 +96,7 @@ function GameManager({ initializing, children }: Props) {
     socket.on("game:events", handleEvents);
 
     return () => {
-      socket.off("game", handleAll);
+      socket.off("game:all", handleAll);
       socket.off("game:game", handleGame);
       socket.off("game:players", handlePlayers);
       socket.off("game:events", handleEvents);
@@ -121,13 +119,7 @@ function GameManager({ initializing, children }: Props) {
     id: e.id,
     timestamp: e.timestamp,
     actor: nullthrows(gamePlayers.find((p) => p.id === e.actor_id)),
-    action: e.action,
-    target: null,
-    response: null,
-    outcome: Outcome.PENDING,
-    targetRevealed: null,
-    coinsReceived: null,
-    coinsSpent: null,
+    message: e.message,
   }));
 
   if (game == null || currentPlayer == null || currentTurn == null) {

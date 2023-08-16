@@ -7,7 +7,7 @@ from typing import Tuple
 from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
-from coup_clone.db.events import EventsTable, EventType
+from coup_clone.db.events import EventsTable
 from coup_clone.db.games import GamesTable, GameState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
@@ -42,7 +42,7 @@ DECK = [
 
 @dataclass
 class GameAction:
-    action_type: EventType
+    action_type: str
 
 
 class GameManager:
@@ -170,7 +170,7 @@ class GameManager:
             if game.current_player_turn != player.id:
                 raise NotPlayerTurnException()
             await self.events_table.create(
-                cursor, game_id=player.game_id, actor_id=player.id, event_type=action.action_type
+                cursor, game_id=player.game_id, actor_id=player.id, message=action.action_type
             )
             await self._change_player_turn(cursor, player.game_id)
             await conn.commit()

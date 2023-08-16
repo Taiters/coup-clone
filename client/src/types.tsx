@@ -55,11 +55,5 @@ export type GameEvent = {
   id: number;
   timestamp: number;
   actor: Player;
-  target: Player | null;
-  action: Action;
-  response: GameEvent | null;
-  outcome: Outcome;
-  targetRevealed: PlayerInfluence | null;
-  coinsReceived: number | null;
-  coinsSpent: number | null;
+  message: string;
 };
