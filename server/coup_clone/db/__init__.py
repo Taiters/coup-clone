@@ -8,6 +8,7 @@ from .events import EventsTable
 from .games import GamesTable
 from .players import PlayersTable
 from .sessions import SessionsTable
+from .turns import TurnsTable
 
 DB_FILE = "./test.db"
 TABLE_DEFINITIONS = [
@@ -15,6 +16,7 @@ TABLE_DEFINITIONS = [
     EventsTable.TABLE_DEFINITION,
     GamesTable.TABLE_DEFINITION,
     SessionsTable.TABLE_DEFINITION,
+    TurnsTable.TABLE_DEFINITION,
 ]
 
 TRIGGERS = [
