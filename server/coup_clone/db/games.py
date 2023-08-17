@@ -1,5 +1,6 @@
 import enum
 from dataclasses import dataclass
+from typing import Optional
 
 from aiosqlite import Cursor, Row
 
@@ -11,11 +12,34 @@ class GameState(enum.IntEnum):
     RUNNING = 1
 
 
+class TurnState(enum.IntEnum):
+    START = 0
+    BLOCKED = 1
+    CHALLENGED = 2
+    BLOCK_CHALLENGED = 3
+
+
+class TurnAction(enum.IntEnum):
+    INCOME = 0
+    FOREIGN_AID = 1
+    TAX = 2
+    STEAL = 3
+    EXCHANGE = 4
+    ASSASSINATE = 5
+    COUP = 6
+
+
 @dataclass()
 class GameRow(TableRow[str]):
     state: GameState
     deck: str
-    current_player_turn: int
+    player_turn_id: Optional[int]
+    turn_action: Optional[TurnAction]
+    turn_state: Optional[TurnState]
+    target_id: Optional[int]
+    challenged_by_id: Optional[int]
+    blocked_by_id: Optional[int]
+    block_challenged_by_id: Optional[int]
 
 
 class GamesTable(Table[GameRow, str]):
@@ -25,15 +49,24 @@ class GamesTable(Table[GameRow, str]):
             id TEXT PRIMARY KEY,
             state INTEGER NOT NULL DEFAULT(0),
             deck TEXT NOT NULL,
-            current_player_turn INTEGER REFERENCES players
-                ON DELETE RESTRICT
+            player_turn_id INTEGER REFERENCES players,
+            turn_action INTEGER,
+            turn_state INTEGER,
+            challenged_by_id INTEGER REFERENCES players,
+            blocked_by_id INTEGER REFERENCES players,
+            block_challenged_by_id INTEGER REFERENCES players
         );
     """
     COLUMNS = [
         "id",
         "state",
         "deck",
-        "current_player_turn",
+        "player_turn_id",
+        "turn_action",
+        "turn_state",
+        "challenged_by_id",
+        "blocked_by_id",
+        "block_challenged_by_id",
     ]
 
     @staticmethod
@@ -42,5 +75,11 @@ class GamesTable(Table[GameRow, str]):
             id=row[0],
             state=GameState(row[1]),
             deck=row[2],
-            current_player_turn=row[3],
+            player_turn_id=row[3],
+            turn_action=TurnAction(row[4]) if row[4] else None,
+            turn_state=TurnState(row[5]) if row[5] else None,
+            target_id=row[3],
+            challenged_by_id=row[6],
+            blocked_by_id=row[7],
+            block_challenged_by_id=row[8],
         )

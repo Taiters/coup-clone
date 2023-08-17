@@ -80,11 +80,14 @@ class GameManager:
     async def _change_player_turn(self, cursor: Cursor, game_id: str) -> None:
         game = await self.games_table.get(cursor, game_id)
         players = await self.players_table.query(cursor, game_id=game_id)
-        current_turn = game.current_player_turn
+        current_turn = game.player_turn_id
         player_ids = [p.id for p in players]
-        current_index = player_ids.index(current_turn)
-        next_turn = player_ids[(current_index + 1) % len(player_ids)]
-        await self.games_table.update(cursor, game_id, current_player_turn=next_turn)
+        if current_turn is None:
+            next_turn = player_ids[0]
+        else:
+            current_index = player_ids.index(current_turn)
+            next_turn = player_ids[(current_index + 1) % len(player_ids)]
+        await self.games_table.update(cursor, game_id, player_turn_id=next_turn)
 
     async def create(self, conn: Connection, session: ActiveSession) -> Tuple[str, PlayerRow]:
         async with conn.cursor() as cursor:
@@ -100,7 +103,7 @@ class GameManager:
             player = await self.players_table.create(
                 cursor, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1]
             )
-            await self.games_table.update(cursor, game.id, current_player_turn=player.id)
+            await self.games_table.update(cursor, game.id, player_turn_id=player.id)
             await session.set_current_player(cursor, player.id)
             await conn.commit()
         self.socket_server.enter_room(session.sid, game.id)
@@ -167,7 +170,7 @@ class GameManager:
             if player is None:
                 raise PlayerNotInGameException()
             game = await self.games_table.get(cursor, player.game_id)
-            if game.current_player_turn != player.id:
+            if game.player_turn_id != player.id:
                 raise NotPlayerTurnException()
             await self.events_table.create(
                 cursor, game_id=player.game_id, actor_id=player.id, message=action.action_type
