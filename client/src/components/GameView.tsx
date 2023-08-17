@@ -8,6 +8,7 @@ import Button from "./ui/Button";
 import HGroup from "./layout/HGroup";
 import GameLog from "./GameLog";
 import { socket } from "../socket";
+import Countdown from "./ui/Coutdown";
 
 type Props = {
   game: Game;
@@ -18,6 +19,7 @@ type Props = {
 
 function GameView({ game, players, events, currentPlayer }: Props) {
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
+  const deadline = game.turnStateDeadline;
   return (
     <div className={styles.verticalContainer}>
       <TopBar>
@@ -32,6 +34,7 @@ function GameView({ game, players, events, currentPlayer }: Props) {
               <PlayerInfo key={p.id} player={p} />
             ))}
           </VGroup>
+        <p>Countdown: {deadline ? <Countdown to={deadline} /> : 'N/A'}</p>
         </Container>
       </div>
       <div className={styles.log}>
@@ -50,16 +53,46 @@ function GameView({ game, players, events, currentPlayer }: Props) {
                     socket.emit("take_action", { action: Action.INCOME })
                   }
                 />
-                <Button label="Tax" />
-                <Button label="Exchange" />
+                <Button
+                  label="Tax"
+                  onClick={() =>
+                    socket.emit("take_action", { action: Action.TAX })
+                  }
+                />
+                <Button
+                  label="Exchange"
+                  onClick={() =>
+                    socket.emit("take_action", { action: Action.EXCHANGE })
+                  }
+                />
               </VGroup>
               <VGroup className={styles.buttonStack}>
-                <Button label="Foreign Aid" />
-                <Button label="Assassinate" />
-                <Button label="Steal" />
+                <Button
+                  label="Foreign Aid"
+                  onClick={() =>
+                    socket.emit("take_action", { action: Action.FOREIGN_AID })
+                  }
+                />
+                <Button
+                  label="Assassinate"
+                  onClick={() =>
+                    socket.emit("take_action", { action: Action.ASSASSINATE })
+                  }
+                />
+                <Button
+                  label="Steal"
+                  onClick={() =>
+                    socket.emit("take_action", { action: Action.STEAL })
+                  }
+                />
               </VGroup>
             </HGroup>
-            <Button label="Coup" />
+            <Button
+              label="Coup"
+              onClick={() =>
+                socket.emit("take_action", { action: Action.COUP })
+              }
+            />
           </VGroup>
         </Container>
       </div>

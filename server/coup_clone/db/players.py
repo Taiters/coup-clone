@@ -94,6 +94,16 @@ class PlayersTable(Table[PlayerRow, int]):
             UPDATE players
             SET coins = coins + :amount
             WHERE id = :id
-        """,
+            """,
+            {"id": player_id, "amount": amount},
+        )
+
+    async def decrement_coins(self, cursor: Cursor, player_id: int, amount: int = 1) -> None:
+        await cursor.execute(
+            """
+            UPDATE players
+            SET coins = coins - :amount
+            WHERE id = :id
+            """,
             {"id": player_id, "amount": amount},
         )

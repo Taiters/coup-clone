@@ -31,6 +31,7 @@ type GameNotification = {
   id: string;
   state: GameState;
   player_turn_id: number | null;
+  turn_state_deadline: number | null;
 };
 
 type PlayerNotification = {
@@ -133,6 +134,7 @@ function GameManager({ initializing, children }: Props) {
         game: {
           id: game.id,
           state: game.state,
+          turnStateDeadline: game.turn_state_deadline != null ? new Date(nullthrows(game.turn_state_deadline) * 1000) : null,
           currentTurn,
         },
         players: gamePlayers,

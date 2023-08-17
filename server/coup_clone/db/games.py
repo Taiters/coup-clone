@@ -1,6 +1,7 @@
 import enum
 import random
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 from aiosqlite import Cursor, Row
@@ -17,9 +18,10 @@ class GameState(enum.IntEnum):
 
 class TurnState(enum.IntEnum):
     START = 0
-    BLOCKED = 1
-    CHALLENGED = 2
-    BLOCK_CHALLENGED = 3
+    ATTEMPTED = 1
+    BLOCKED = 2
+    CHALLENGED = 3
+    BLOCK_CHALLENGED = 4
 
 
 class TurnAction(enum.IntEnum):
@@ -43,6 +45,7 @@ class GameRow(TableRow[str]):
     challenged_by_id: Optional[int]
     blocked_by_id: Optional[int]
     block_challenged_by_id: Optional[int]
+    turn_state_deadline: Optional[datetime]
 
 
 class GamesTable(Table[GameRow, str]):
@@ -55,9 +58,11 @@ class GamesTable(Table[GameRow, str]):
             player_turn_id INTEGER REFERENCES players,
             turn_action INTEGER,
             turn_state INTEGER,
+            target_id INTEGER REFERENCES players,
             challenged_by_id INTEGER REFERENCES players,
             blocked_by_id INTEGER REFERENCES players,
-            block_challenged_by_id INTEGER REFERENCES players
+            block_challenged_by_id INTEGER REFERENCES players,
+            turn_state_deadline DATETIME
         );
     """
     COLUMNS = [
@@ -67,9 +72,11 @@ class GamesTable(Table[GameRow, str]):
         "player_turn_id",
         "turn_action",
         "turn_state",
+        "target_id",
         "challenged_by_id",
         "blocked_by_id",
         "block_challenged_by_id",
+        "turn_state_deadline",
     ]
 
     @staticmethod
@@ -79,12 +86,13 @@ class GamesTable(Table[GameRow, str]):
             state=GameState(row[1]),
             deck=row[2],
             player_turn_id=row[3],
-            turn_action=TurnAction(row[4]) if row[4] else None,
-            turn_state=TurnState(row[5]) if row[5] else None,
-            target_id=row[3],
-            challenged_by_id=row[6],
-            blocked_by_id=row[7],
-            block_challenged_by_id=row[8],
+            turn_action=TurnAction(row[4]) if row[4] is not None else None,
+            turn_state=TurnState(row[5]) if row[5] is not None else None,
+            target_id=row[6],
+            challenged_by_id=row[7],
+            blocked_by_id=row[8],
+            block_challenged_by_id=row[9],
+            turn_state_deadline=datetime.strptime(row[10], "%Y-%m-%d %H:%M:%S") if row[10] is not None else None,
         )
 
     async def reset_turn_state(self, cursor: Cursor, game_id: str, player_id: int) -> None:
@@ -98,6 +106,7 @@ class GamesTable(Table[GameRow, str]):
             challenged_by_id=None,
             blocked_by_id=None,
             block_challenged_by_id=None,
+            turn_state_deadline=None,
         )
 
     async def take_from_deck(self, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
@@ -116,3 +125,23 @@ class GamesTable(Table[GameRow, str]):
         deck = list(game.deck) + [i.value for i in influence]
         random.shuffle(deck)
         await self.update(cursor, game.id, deck="".join(str(c) for c in deck))
+
+    async def set_action_deadline(
+        self, cursor: Cursor, game_id: str, action: TurnAction, seconds_from_now: int = 10
+    ) -> None:
+        await cursor.execute(
+            """
+            UPDATE games
+            SET
+                turn_state_deadline = DATETIME('now', :seconds_from_now),
+                turn_action = :action,
+                turn_state = :state
+            WHERE id = :id
+            """,
+            {
+                "id": game_id,
+                "action": action,
+                "seconds_from_now": f"+{seconds_from_now} seconds",
+                "state": TurnState.ATTEMPTED,
+            },
+        )

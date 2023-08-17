@@ -28,3 +28,7 @@ class NotEnoughPlayersException(Exception):
 
 class UnsupportedActionException(Exception):
     ...
+
+
+class InvalidActionException(Exception):
+    ...

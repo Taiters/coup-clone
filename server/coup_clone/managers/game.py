@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
-from coup_clone.actions import Action, Income
+from coup_clone.actions import Action, ForeignAid, Income, Tax
 from coup_clone.db.events import EventsTable
 from coup_clone.db.games import GamesTable, GameState, TurnAction
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
@@ -64,8 +64,12 @@ class GameManager:
         match action:
             case TurnAction.INCOME:
                 return Income(session, self.games_table, self.players_table)
+            case TurnAction.FOREIGN_AID:
+                return ForeignAid(session, self.games_table, self.players_table)
+            case TurnAction.TAX:
+                return Tax(session, self.games_table, self.players_table)
             case _:
-                raise UnsupportedActionException()
+                raise UnsupportedActionException("Unsupported action: " + str(action))
 
     async def create(self, conn: Connection, session: ActiveSession) -> Tuple[str, PlayerRow]:
         async with conn.cursor() as cursor:
@@ -153,10 +157,11 @@ class GameManager:
             game = await self.games_table.get(cursor, player.game_id)
             if game.player_turn_id != player.id:
                 raise NotPlayerTurnException()
-            await self._next_player_turn(cursor, player.game_id)
             action = self._get_action(session, turn_action, target)
-            await action.execute(cursor)
-            print(action.log_message())
+            turn_complete = await action.execute(cursor)
+            if turn_complete:
+                await self._next_player_turn(cursor, game.id)
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
         await self.notifications_manager.broadcast_game_events(conn, player.game_id)
+        await self.notifications_manager.broadcast_game_players(conn, player.game_id)

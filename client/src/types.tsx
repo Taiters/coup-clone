@@ -16,12 +16,10 @@ export enum Action {
   INCOME,
   FOREIGN_AID,
   TAX,
+  STEAL,
   EXCHANGE,
   ASSASSINATE,
   COUP,
-  STEAL,
-  CHALLENGE,
-  BLOCK,
 }
 
 export enum Outcome {
@@ -49,6 +47,7 @@ export type Game = {
   id: string;
   state: GameState;
   currentTurn: Player;
+  turnStateDeadline: Date | null;
 };
 
 export type GameEvent = {
