@@ -24,3 +24,7 @@ class NoActiveSessionException(Exception):
 
 class NotEnoughPlayersException(Exception):
     ...
+
+
+class UnsupportedActionException(Exception):
+    ...

@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
+from coup_clone.actions import Action, Income
 from coup_clone.db.events import EventsTable
 from coup_clone.db.games import GamesTable, GameState, TurnAction
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
@@ -15,6 +16,7 @@ from coup_clone.managers.exceptions import (
     NotPlayerTurnException,
     PlayerAlreadyInGameException,
     PlayerNotInGameException,
+    UnsupportedActionException,
 )
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.session import ActiveSession
@@ -57,6 +59,13 @@ class GameManager:
         game = await self.games_table.get(cursor, game_id)
         next_player = await self.players_table.get_next_player_turn(cursor, game_id, game.player_turn_id)
         await self.games_table.reset_turn_state(cursor, game.id, next_player.id)
+
+    def _get_action(self, session: ActiveSession, action: TurnAction, target: Optional[int]) -> Action:
+        match action:
+            case TurnAction.INCOME:
+                return Income(session, self.games_table, self.players_table)
+            case _:
+                raise UnsupportedActionException()
 
     async def create(self, conn: Connection, session: ActiveSession) -> Tuple[str, PlayerRow]:
         async with conn.cursor() as cursor:
@@ -135,7 +144,7 @@ class GameManager:
         await self.notifications_manager.broadcast_game(conn, player.game_id)
 
     async def take_action(
-        self, conn: Connection, session: ActiveSession, action: TurnAction, target: Optional[int]
+        self, conn: Connection, session: ActiveSession, turn_action: TurnAction, target: Optional[int]
     ) -> None:
         async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
@@ -145,7 +154,9 @@ class GameManager:
             if game.player_turn_id != player.id:
                 raise NotPlayerTurnException()
             await self._next_player_turn(cursor, player.game_id)
-
+            action = self._get_action(session, turn_action, target)
+            await action.execute(cursor)
+            print(action.log_message())
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
         await self.notifications_manager.broadcast_game_events(conn, player.game_id)

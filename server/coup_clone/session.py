@@ -44,3 +44,7 @@ class ActiveSession:
     @property
     def id(self) -> str:
         return self.session.id
+
+    @property
+    def player_id(self) -> Optional[int]:
+        return self.session.player_id

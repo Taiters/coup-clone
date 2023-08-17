@@ -87,3 +87,13 @@ class PlayersTable(Table[PlayerRow, int]):
         else:
             current_index = [p.id for p in players].index(current_player_id)
             return players[(current_index + 1) % len(players)]
+
+    async def increment_coins(self, cursor: Cursor, player_id: int, amount: int = 1) -> None:
+        await cursor.execute(
+            """
+            UPDATE players
+            SET coins = coins + :amount
+            WHERE id = :id
+        """,
+            {"id": player_id, "amount": amount},
+        )
