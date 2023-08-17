@@ -79,3 +79,11 @@ class PlayersTable(Table[PlayerRow, int]):
             revealed_influence_b=row[8],
             host=row[9],
         )
+
+    async def get_next_player_turn(self, cursor: Cursor, game_id: str, current_player_id: Optional[int]) -> PlayerRow:
+        players = await self.query(cursor, game_id=game_id)
+        if current_player_id is None:
+            return players[0]
+        else:
+            current_index = [p.id for p in players].index(current_player_id)
+            return players[(current_index + 1) % len(players)]

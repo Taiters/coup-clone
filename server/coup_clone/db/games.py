@@ -1,10 +1,13 @@
 import enum
+import random
 from dataclasses import dataclass
 from typing import Optional
 
 from aiosqlite import Cursor, Row
 
+from coup_clone.db.players import Influence
 from coup_clone.db.table import Table, TableRow
+from coup_clone.managers.exceptions import GameNotFoundException
 
 
 class GameState(enum.IntEnum):
@@ -83,3 +86,33 @@ class GamesTable(Table[GameRow, str]):
             blocked_by_id=row[7],
             block_challenged_by_id=row[8],
         )
+
+    async def reset_turn_state(self, cursor: Cursor, game_id: str, player_id: int) -> None:
+        await self.update(
+            cursor,
+            game_id,
+            player_turn_id=player_id,
+            turn_state=TurnState.START,
+            turn_action=None,
+            target_id=None,
+            challenged_by_id=None,
+            blocked_by_id=None,
+            block_challenged_by_id=None,
+        )
+
+    async def take_from_deck(self, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
+        game = await self.get(cursor, game_id)
+        if game is None:
+            raise GameNotFoundException()
+        deck = list(game.deck)
+        popped = [Influence(int(deck.pop())) for i in range(n)]
+        await self.update(cursor, game.id, deck="".join(deck))
+        return popped
+
+    async def return_to_deck(self, cursor: Cursor, game_id: str, influence: list[Influence]) -> None:
+        game = await self.get(cursor, game_id)
+        if game is None:
+            raise GameNotFoundException()
+        deck = list(game.deck) + [i.value for i in influence]
+        random.shuffle(deck)
+        await self.update(cursor, game.id, deck="".join(str(c) for c in deck))

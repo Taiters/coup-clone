@@ -4,11 +4,11 @@ from socketio import AsyncServer
 
 from coup_clone.db.games import GameRow
 from coup_clone.handler import Handler
-from coup_clone.managers.game import (
-    GameManager,
+from coup_clone.managers.exceptions import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
 )
+from coup_clone.managers.game import GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import ActiveSession, SessionManager
 

@@ -7,13 +7,12 @@ from socketio import AsyncServer
 from coup_clone.db.games import GameRow, GamesTable, GameState
 from coup_clone.db.players import Influence, PlayersTable
 from coup_clone.db.sessions import SessionsTable
-from coup_clone.managers.exceptions import GameFullException
-from coup_clone.managers.game import (
-    DECK,
-    GameManager,
+from coup_clone.managers.exceptions import (
+    GameFullException,
     GameNotFoundException,
     PlayerAlreadyInGameException,
 )
+from coup_clone.managers.game import DECK, GameManager
 from coup_clone.managers.session import ActiveSession
 
 

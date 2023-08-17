@@ -1,18 +1,16 @@
 import random
 import string
-from dataclasses import dataclass
 from sqlite3 import IntegrityError
-from typing import Tuple
+from typing import Optional, Tuple
 
 from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
 from coup_clone.db.events import EventsTable
-from coup_clone.db.games import GamesTable, GameState
+from coup_clone.db.games import GamesTable, GameState, TurnAction
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
     GameFullException,
-    GameNotFoundException,
     NotEnoughPlayersException,
     NotPlayerTurnException,
     PlayerAlreadyInGameException,
@@ -40,11 +38,6 @@ DECK = [
 ]
 
 
-@dataclass
-class GameAction:
-    action_type: str
-
-
 class GameManager:
     def __init__(
         self,
@@ -60,34 +53,10 @@ class GameManager:
         self.players_table = players_table
         self.events_table = events_table
 
-    async def _take_from_deck(self, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
+    async def _next_player_turn(self, cursor: Cursor, game_id: str) -> None:
         game = await self.games_table.get(cursor, game_id)
-        if game is None:
-            raise GameNotFoundException()
-        deck = list(game.deck)
-        popped = [Influence(int(deck.pop())) for i in range(n)]
-        await self.games_table.update(cursor, game.id, deck="".join(deck))
-        return popped
-
-    async def _return_to_deck(self, cursor: Cursor, game_id: str, influence: list[Influence]) -> None:
-        game = await self.games_table.get(cursor, game_id)
-        if game is None:
-            raise GameNotFoundException()
-        deck = list(game.deck) + [i.value for i in influence]
-        random.shuffle(deck)
-        await self.games_table.update(cursor, game.id, deck="".join(str(c) for c in deck))
-
-    async def _change_player_turn(self, cursor: Cursor, game_id: str) -> None:
-        game = await self.games_table.get(cursor, game_id)
-        players = await self.players_table.query(cursor, game_id=game_id)
-        current_turn = game.player_turn_id
-        player_ids = [p.id for p in players]
-        if current_turn is None:
-            next_turn = player_ids[0]
-        else:
-            current_index = player_ids.index(current_turn)
-            next_turn = player_ids[(current_index + 1) % len(player_ids)]
-        await self.games_table.update(cursor, game_id, player_turn_id=next_turn)
+        next_player = await self.players_table.get_next_player_turn(cursor, game_id, game.player_turn_id)
+        await self.games_table.reset_turn_state(cursor, game.id, next_player.id)
 
     async def create(self, conn: Connection, session: ActiveSession) -> Tuple[str, PlayerRow]:
         async with conn.cursor() as cursor:
@@ -99,7 +68,7 @@ class GameManager:
             game = await self.games_table.create(
                 cursor, id=game_id, deck="".join(str(c.value) for c in random.sample(DECK, k=len(DECK)))
             )
-            hand = await self._take_from_deck(cursor, game_id)
+            hand = await self.games_table.take_from_deck(cursor, game_id)
             player = await self.players_table.create(
                 cursor, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1]
             )
@@ -116,7 +85,7 @@ class GameManager:
             if current_player is not None:
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
-            hand = await self._take_from_deck(cursor, game_id)
+            hand = await self.games_table.take_from_deck(cursor, game_id)
             try:
                 player = await self.players_table.create(
                     cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1]
@@ -136,7 +105,7 @@ class GameManager:
         async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             if player is not None:
-                await self._return_to_deck(cursor, player.game_id, [player.influence_a, player.influence_b])
+                await self.games_table.return_to_deck(cursor, player.game_id, [player.influence_a, player.influence_b])
                 await session.clear_current_player(cursor)
                 await conn.commit()
                 self.socket_server.leave_room(session.sid, player.game_id)
@@ -161,10 +130,13 @@ class GameManager:
             if player_count < 2:
                 raise NotEnoughPlayersException()
             await self.games_table.update(cursor, player.game_id, state=GameState.RUNNING)
+            await self._next_player_turn(cursor, player.game_id)
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
 
-    async def take_action(self, conn: Connection, session: ActiveSession, action: GameAction) -> None:
+    async def take_action(
+        self, conn: Connection, session: ActiveSession, action: TurnAction, target: Optional[int]
+    ) -> None:
         async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             if player is None:
@@ -172,10 +144,8 @@ class GameManager:
             game = await self.games_table.get(cursor, player.game_id)
             if game.player_turn_id != player.id:
                 raise NotPlayerTurnException()
-            await self.events_table.create(
-                cursor, game_id=player.game_id, actor_id=player.id, message=action.action_type
-            )
-            await self._change_player_turn(cursor, player.game_id)
+            await self._next_player_turn(cursor, player.game_id)
+
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
         await self.notifications_manager.broadcast_game_events(conn, player.game_id)
