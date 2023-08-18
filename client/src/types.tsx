@@ -47,6 +47,7 @@ export type Game = {
   id: string;
   state: GameState;
   currentTurn: Player;
+  turnStateModified: Date | null;
   turnStateDeadline: Date | null;
 };
 

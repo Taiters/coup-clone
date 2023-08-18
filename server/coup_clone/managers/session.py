@@ -46,6 +46,9 @@ class SessionManager:
                     self.sessions_table,
                     self.players_table,
                 )
+                current_player = await active_session.current_player(cursor)
+                if current_player:
+                    self.socket_server.enter_room(sid, current_player.game_id)
 
         self.socket_server.enter_room(sid, session.id)
         await self.notifications_manager.notify_session(conn, active_session)

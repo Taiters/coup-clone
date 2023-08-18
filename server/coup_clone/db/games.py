@@ -45,6 +45,7 @@ class GameRow(TableRow[str]):
     challenged_by_id: Optional[int]
     blocked_by_id: Optional[int]
     block_challenged_by_id: Optional[int]
+    turn_state_modified: Optional[datetime]
     turn_state_deadline: Optional[datetime]
 
 
@@ -62,6 +63,7 @@ class GamesTable(Table[GameRow, str]):
             challenged_by_id INTEGER REFERENCES players,
             blocked_by_id INTEGER REFERENCES players,
             block_challenged_by_id INTEGER REFERENCES players,
+            turn_state_modified DATETIME,
             turn_state_deadline DATETIME
         );
     """
@@ -76,6 +78,7 @@ class GamesTable(Table[GameRow, str]):
         "challenged_by_id",
         "blocked_by_id",
         "block_challenged_by_id",
+        "turn_state_modified",
         "turn_state_deadline",
     ]
 
@@ -92,7 +95,8 @@ class GamesTable(Table[GameRow, str]):
             challenged_by_id=row[7],
             blocked_by_id=row[8],
             block_challenged_by_id=row[9],
-            turn_state_deadline=datetime.strptime(row[10], "%Y-%m-%d %H:%M:%S") if row[10] is not None else None,
+            turn_state_modified=datetime.strptime(row[10], "%Y-%m-%d %H:%M:%S") if row[10] is not None else None,
+            turn_state_deadline=datetime.strptime(row[11], "%Y-%m-%d %H:%M:%S") if row[11] is not None else None,
         )
 
     async def reset_turn_state(self, cursor: Cursor, game_id: str, player_id: int) -> None:
@@ -106,6 +110,7 @@ class GamesTable(Table[GameRow, str]):
             challenged_by_id=None,
             blocked_by_id=None,
             block_challenged_by_id=None,
+            turn_state_modified=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
             turn_state_deadline=None,
         )
 
@@ -133,6 +138,7 @@ class GamesTable(Table[GameRow, str]):
             """
             UPDATE games
             SET
+                turn_state_modified = DATETIME('now'),
                 turn_state_deadline = DATETIME('now', :seconds_from_now),
                 turn_action = :action,
                 turn_state = :state
