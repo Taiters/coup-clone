@@ -6,6 +6,8 @@ import {
   Player,
   PlayerInfluence,
   PlayerState,
+  TurnAction,
+  TurnState,
 } from "../types";
 import { socket } from "../socket";
 import { useOutletContext } from "react-router-dom";
@@ -31,6 +33,8 @@ type GameNotification = {
   id: string;
   state: GameState;
   player_turn_id: number | null;
+  turn_state: TurnState,
+  turn_action: TurnAction,
   turn_state_modified: number | null;
   turn_state_deadline: number | null;
 };
@@ -63,45 +67,30 @@ function GameManager({ initializing, children }: Props) {
   }, []);
 
   useEffect(() => {
-    const handleAll = ({
+    const handleGame = ({
       game,
       players,
       events,
-      hand,
     }: {
       game: GameNotification;
       players: PlayerNotification[];
       events: EventNotification[];
-      hand: PlayerInfluence[];
     }) => {
       setGame(game);
       setPlayers(players);
       setEvents(events);
+    };
+
+    const handleHand = (hand: PlayerInfluence[]) => {
       setHand(hand);
     };
 
-    const handleGame = (game: GameNotification) => {
-      setGame(game);
-    };
-
-    const handlePlayers = (players: PlayerNotification[]) => {
-      setPlayers(players);
-    };
-
-    const handleEvents = (events: EventNotification[]) => {
-      setEvents(events);
-    };
-
-    socket.on("game:all", handleAll);
-    socket.on("game:game", handleGame);
-    socket.on("game:players", handlePlayers);
-    socket.on("game:events", handleEvents);
+    socket.on("game", handleGame);
+    socket.on("hand", handleHand);
 
     return () => {
-      socket.off("game:all", handleAll);
-      socket.off("game:game", handleGame);
-      socket.off("game:players", handlePlayers);
-      socket.off("game:events", handleEvents);
+      socket.off("game", handleGame);
+      socket.off("hand", handleHand);
     };
   }, [setGame, setPlayers, setEvents, setHand]);
 
@@ -135,6 +124,8 @@ function GameManager({ initializing, children }: Props) {
         game: {
           id: game.id,
           state: game.state,
+          turnState: game.turn_state,
+          turnAction: game.turn_action,
           turnStateModified:
             game.turn_state_modified != null
               ? new Date(nullthrows(game.turn_state_modified) * 1000)

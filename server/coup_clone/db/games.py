@@ -110,7 +110,7 @@ class GamesTable(Table[GameRow, str]):
             challenged_by_id=None,
             blocked_by_id=None,
             block_challenged_by_id=None,
-            turn_state_modified=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+            turn_state_modified=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             turn_state_deadline=None,
         )
 

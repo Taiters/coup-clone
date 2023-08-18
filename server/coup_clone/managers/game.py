@@ -110,7 +110,7 @@ class GameManager:
             await conn.commit()
 
         self.socket_server.enter_room(session.sid, game_id)
-        await self.notifications_manager.broadcast_game_players(conn, game_id)
+        await self.notifications_manager.broadcast_game(conn, game_id)
         await self.notifications_manager.notify_session(conn, session)
         return (game_id, player)
 
@@ -122,7 +122,7 @@ class GameManager:
                 await session.clear_current_player(cursor)
                 await conn.commit()
                 self.socket_server.leave_room(session.sid, player.game_id)
-                await self.notifications_manager.broadcast_game_players(conn, player.game_id)
+                await self.notifications_manager.broadcast_game(conn, player.game_id)
         await self.notifications_manager.notify_session(conn, session)
 
     async def set_name(self, conn: Connection, session: ActiveSession, name: str) -> None:
@@ -132,7 +132,7 @@ class GameManager:
                 raise PlayerNotInGameException()
             await self.players_table.update(cursor, player.id, name=name, state=PlayerState.READY)
             await conn.commit()
-        await self.notifications_manager.broadcast_game_players(conn, player.game_id)
+        await self.notifications_manager.broadcast_game(conn, player.game_id)
 
     async def start(self, conn: Connection, session: ActiveSession) -> None:
         async with conn.cursor() as cursor:
@@ -163,5 +163,3 @@ class GameManager:
                 await self._next_player_turn(cursor, game.id)
             await conn.commit()
         await self.notifications_manager.broadcast_game(conn, player.game_id)
-        await self.notifications_manager.broadcast_game_events(conn, player.game_id)
-        await self.notifications_manager.broadcast_game_players(conn, player.game_id)

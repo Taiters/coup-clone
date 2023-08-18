@@ -79,7 +79,7 @@ class Handler(AsyncNamespace):
         print("on_initialize_game: ", sid)
         async with db.open() as conn:
             session = await self._get_session(conn, sid)
-            await self.notifications_manager.notify_game_full(conn, session)
+            await self.notifications_manager.notify_game(conn, session)
 
     async def on_set_name(self, sid: str, name: str) -> None:
         print("on_set_name: ", sid, name)

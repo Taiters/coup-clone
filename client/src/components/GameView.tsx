@@ -1,15 +1,12 @@
 import Container from "./layout/Container";
 import TopBar from "./ui/TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { Action, Game, GameEvent, Player } from "../types";
+import { Game, GameEvent, Player } from "../types";
 import VGroup from "./layout/VGroup";
 import styles from "./GameView.module.css";
-import Button from "./ui/Button";
-import HGroup from "./layout/HGroup";
 import GameLog from "./GameLog";
-import { socket } from "../socket";
 import Countdown from "./ui/Countdown";
-import ActionMenu from "./ActionMenu";
+import ActionMenuContainer from "../containers/ActionMenuContainer";
 
 type Props = {
   game: Game;
@@ -18,11 +15,13 @@ type Props = {
   currentPlayer: Player;
 };
 
+
 function GameView({ game, players, events, currentPlayer }: Props) {
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
 
   const turnStateModified = game.turnStateModified;
   const turnStateDeadline = game.turnStateDeadline;
+
   return (
     <>
       <div className={styles.verticalContainer}>
@@ -47,11 +46,13 @@ function GameView({ game, players, events, currentPlayer }: Props) {
         </div>
         <div className={styles.controls}>
           <Container>
-            <ActionMenu />
+            <ActionMenuContainer game={game} players={players} currentPlayer={currentPlayer} />
           </Container>
         </div>
       </div>
-      {turnStateModified && turnStateDeadline && <Countdown from={turnStateModified} to={turnStateDeadline} />}
+      {turnStateModified && turnStateDeadline && (
+        <Countdown from={turnStateModified} to={turnStateDeadline} />
+      )}
     </>
   );
 }

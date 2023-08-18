@@ -189,4 +189,4 @@ async def test_on_initialize_game(
 
     await handler.on_initialize_game("1234")
 
-    notifications_manager.notify_game_full.assert_called_with(db_connection, active_session)
+    notifications_manager.notify_game.assert_called_with(db_connection, active_session)

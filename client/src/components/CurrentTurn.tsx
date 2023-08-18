@@ -1,11 +1,11 @@
 import HGroup from "./layout/HGroup";
 import VGroup from "./layout/VGroup";
-import styles from "./ActionMenu.module.css";
+import styles from "./CurrentTurn.module.css";
 import Button from "./ui/Button";
 import { socket } from "../socket";
-import { Action } from "../types";
+import { TurnAction } from "../types";
 
-function ActionMenu() {
+function CurrentTurn() {
   return (
     <VGroup>
       <HGroup>
@@ -13,17 +13,17 @@ function ActionMenu() {
           <Button
             label="Income"
             onClick={() =>
-              socket.emit("take_action", { action: Action.INCOME })
+              socket.emit("take_action", { action: TurnAction.INCOME })
             }
           />
           <Button
             label="Tax"
-            onClick={() => socket.emit("take_action", { action: Action.TAX })}
+            onClick={() => socket.emit("take_action", { action: TurnAction.TAX })}
           />
           <Button
             label="Exchange"
             onClick={() =>
-              socket.emit("take_action", { action: Action.EXCHANGE })
+              socket.emit("take_action", { action: TurnAction.EXCHANGE })
             }
           />
         </VGroup>
@@ -31,27 +31,27 @@ function ActionMenu() {
           <Button
             label="Foreign Aid"
             onClick={() =>
-              socket.emit("take_action", { action: Action.FOREIGN_AID })
+              socket.emit("take_action", { action: TurnAction.FOREIGN_AID })
             }
           />
           <Button
             label="Assassinate"
             onClick={() =>
-              socket.emit("take_action", { action: Action.ASSASSINATE })
+              socket.emit("take_action", { action: TurnAction.ASSASSINATE })
             }
           />
           <Button
             label="Steal"
-            onClick={() => socket.emit("take_action", { action: Action.STEAL })}
+            onClick={() => socket.emit("take_action", { action: TurnAction.STEAL })}
           />
         </VGroup>
       </HGroup>
       <Button
         label="Coup"
-        onClick={() => socket.emit("take_action", { action: Action.COUP })}
+        onClick={() => socket.emit("take_action", { action: TurnAction.COUP })}
       />
     </VGroup>
   );
 }
 
-export default ActionMenu;
+export default CurrentTurn;

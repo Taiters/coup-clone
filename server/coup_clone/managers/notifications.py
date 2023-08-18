@@ -40,6 +40,8 @@ def map_game(game: GameRow) -> dict:
         "id": game.id,
         "state": game.state,
         "player_turn_id": game.player_turn_id,
+        "turn_action": game.turn_action,
+        "turn_state": game.turn_state,
         "turn_state_modified": game.turn_state_modified.timestamp() if game.turn_state_modified is not None else None,
         "turn_state_deadline": game.turn_state_deadline.timestamp() if game.turn_state_deadline is not None else None,
     }
@@ -58,6 +60,22 @@ class NotificationsManager:
         self.players_table = players_table
         self.events_table = events_table
 
+    async def _send_game(self, conn: Connection, game_id: str, to: str) -> None:
+        async with conn.cursor() as cursor:
+            game = await self.games_table.get(cursor, game_id)
+            players = await self.players_table.query(cursor, game_id=game.id)
+            events = await self.events_table.query(cursor, game_id=game.id)
+
+        await self.socket_server.emit(
+            "game",
+            {
+                "game": map_game(game),
+                "players": [map_player(p) for p in players],
+                "events": [map_event(e) for e in events],
+            },
+            room=to,
+        )
+
     async def notify_session(self, conn: Connection, session: ActiveSession) -> None:
         async with conn.cursor() as cursor:
             current_player = await session.current_player(cursor)
@@ -70,52 +88,20 @@ class NotificationsManager:
             room=session.session.id,
         )
 
-    async def notify_game_full(self, conn: Connection, session: ActiveSession) -> None:
+    async def notify_game(self, conn: Connection, session: ActiveSession) -> None:
         async with conn.cursor() as cursor:
             player = await session.current_player(cursor)
             if player is None:
                 raise PlayerNotInGameException()
-            game = await self.games_table.get(cursor, player.game_id)
-            players = await self.players_table.query(cursor, game_id=game.id)
-            events = await self.events_table.query(cursor, game_id=game.id)
 
+        await self._send_game(conn, player.game_id, to=session.id)
         await self.socket_server.emit(
-            "game:all",
-            {
-                "game": map_game(game),
-                "players": [map_player(p) for p in players],
-                "events": [map_event(e) for e in events],
-                "hand": [
-                    player.influence_a,
-                    player.influence_b,
-                ],
-            },
-            room=session.session.id,
+            "hand",
+            [
+                player.influence_a,
+                player.influence_b,
+            ],
         )
 
     async def broadcast_game(self, conn: Connection, game_id: str) -> None:
-        async with conn.cursor() as cursor:
-            game = await self.games_table.get(cursor, game_id)
-        await self.socket_server.emit(
-            "game:game",
-            map_game(game),
-            room=game_id,
-        )
-
-    async def broadcast_game_players(self, conn: Connection, game_id: str) -> None:
-        async with conn.cursor() as cursor:
-            players = await self.players_table.query(cursor, game_id=game_id)
-        await self.socket_server.emit(
-            "game:players",
-            [map_player(p) for p in players],
-            room=game_id,
-        )
-
-    async def broadcast_game_events(self, conn: Connection, game_id: str) -> None:
-        async with conn.cursor() as cursor:
-            events = await self.events_table.query(cursor, game_id=game_id)
-        await self.socket_server.emit(
-            "game:events",
-            [map_event(e) for e in events],
-            room=game_id,
-        )
+        await self._send_game(conn, game_id, to=game_id)
