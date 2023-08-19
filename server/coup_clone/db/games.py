@@ -99,8 +99,9 @@ class GamesTable(Table[GameRow, str]):
             turn_state_deadline=datetime.strptime(row[11], "%Y-%m-%d %H:%M:%S") if row[11] is not None else None,
         )
 
-    async def reset_turn_state(self, cursor: Cursor, game_id: str, player_id: int) -> None:
-        await self.update(
+    @classmethod
+    async def reset_turn_state(cls, cursor: Cursor, game_id: str, player_id: int) -> None:
+        await cls.update(
             cursor,
             game_id,
             player_turn_id=player_id,
@@ -114,25 +115,28 @@ class GamesTable(Table[GameRow, str]):
             turn_state_deadline=None,
         )
 
-    async def take_from_deck(self, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
-        game = await self.get(cursor, game_id)
+    @classmethod
+    async def take_from_deck(cls, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
+        game = await cls.get(cursor, game_id)
         if game is None:
             raise GameNotFoundException()
         deck = list(game.deck)
         popped = [Influence(int(deck.pop())) for i in range(n)]
-        await self.update(cursor, game.id, deck="".join(deck))
+        await cls.update(cursor, game.id, deck="".join(deck))
         return popped
 
-    async def return_to_deck(self, cursor: Cursor, game_id: str, influence: list[Influence]) -> None:
-        game = await self.get(cursor, game_id)
+    @classmethod
+    async def return_to_deck(cls, cursor: Cursor, game_id: str, influence: list[Influence]) -> None:
+        game = await cls.get(cursor, game_id)
         if game is None:
             raise GameNotFoundException()
         deck = list(game.deck) + [i.value for i in influence]
         random.shuffle(deck)
-        await self.update(cursor, game.id, deck="".join(str(c) for c in deck))
+        await cls.update(cursor, game.id, deck="".join(str(c) for c in deck))
 
+    @classmethod
     async def set_action_deadline(
-        self, cursor: Cursor, game_id: str, action: TurnAction, seconds_from_now: int = 10
+        cls, cursor: Cursor, game_id: str, action: TurnAction, seconds_from_now: int = 10
     ) -> None:
         await cursor.execute(
             """

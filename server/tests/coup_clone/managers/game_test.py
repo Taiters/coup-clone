@@ -22,22 +22,17 @@ async def test_create(
     socket_server: AsyncServer,
     db_connection: Connection,
     cursor: Cursor,
-    sessions_table: SessionsTable,
-    players_table: PlayersTable,
-    games_table: GamesTable,
 ):
-    session = await sessions_table.create(cursor, id="1234")
+    session = await SessionsTable.create(cursor, id="1234")
     active_session = ActiveSession(
         "sid",
         session,
-        sessions_table,
-        players_table,
     )
 
     (game_id, player) = await game_manager.create(db_connection, active_session)
 
-    created_game = await games_table.get(cursor, game_id)
-    created_player = await players_table.get(cursor, player.id)
+    created_game = await GamesTable.get(cursor, game_id)
+    created_player = await PlayersTable.get(cursor, player.id)
     current_player = await active_session.current_player(cursor)
 
     assert created_game.state == GameState.LOBBY
@@ -64,24 +59,19 @@ async def test_join(
     socket_server: AsyncServer,
     db_connection: Connection,
     cursor: Cursor,
-    sessions_table: SessionsTable,
-    players_table: PlayersTable,
-    games_table: GamesTable,
     game: GameRow,
 ):
-    session = await sessions_table.create(cursor, id="1234")
+    session = await SessionsTable.create(cursor, id="1234")
     active_session = ActiveSession(
         "sid",
         session,
-        sessions_table,
-        players_table,
     )
 
     (game_id, player) = await game_manager.join(db_connection, game.id, active_session)
 
-    created_player = await players_table.get(cursor, player.id)
+    created_player = await PlayersTable.get(cursor, player.id)
     current_player = await active_session.current_player(cursor)
-    joined_game = await games_table.get(cursor, game_id)
+    joined_game = await GamesTable.get(cursor, game_id)
 
     assert game_id == game.id
     assert created_player.game_id == game.id
@@ -99,10 +89,9 @@ async def test_join_when_already_in_game(
     socket_server: AsyncServer,
     db_connection: Connection,
     cursor: Cursor,
-    games_table: GamesTable,
     active_session: ActiveSession,
 ):
-    new_game = await games_table.create(cursor, deck="abcd")
+    new_game = await GamesTable.create(cursor, deck="abcd")
 
     with pytest.raises(PlayerAlreadyInGameException):
         await game_manager.join(db_connection, new_game.id, active_session)
@@ -113,20 +102,15 @@ async def test_join_limits_up_to_6_players(
     game_manager: GameManager,
     db_connection: Connection,
     cursor: Cursor,
-    sessions_table: SessionsTable,
-    players_table: PlayersTable,
-    games_table: GamesTable,
     active_session: ActiveSession,
 ):
-    new_game = await games_table.create(cursor, id=str(uuid4()), deck="".join(str(c.value) for c in DECK))
+    new_game = await GamesTable.create(cursor, id=str(uuid4()), deck="".join(str(c.value) for c in DECK))
     await db_connection.commit()
-    session_rows = [await sessions_table.create(cursor, id=str(uuid4())) for _ in range(7)]
+    session_rows = [await SessionsTable.create(cursor, id=str(uuid4())) for _ in range(7)]
     sessions = [
         ActiveSession(
             str(uuid4()),
             r,
-            sessions_table,
-            players_table,
         )
         for r in session_rows
     ]
@@ -137,13 +121,13 @@ async def test_join_limits_up_to_6_players(
     with pytest.raises(GameFullException):
         await game_manager.join(db_connection, new_game.id, sessions[-1])
 
-    players = await players_table.query(cursor, game_id=new_game.id)
+    players = await PlayersTable.query(cursor, game_id=new_game.id)
     assert len(players) == 6
 
     await game_manager.leave(db_connection, sessions[1])
     await game_manager.join(db_connection, new_game.id, sessions[-1])
 
-    players = await players_table.query(cursor, game_id=new_game.id)
+    players = await PlayersTable.query(cursor, game_id=new_game.id)
     assert len(players) == 6
 
 
@@ -153,15 +137,11 @@ async def test_join_when_game_not_exists(
     socket_server: AsyncServer,
     db_connection: Connection,
     cursor: Cursor,
-    sessions_table: SessionsTable,
-    players_table: PlayersTable,
 ):
-    session = await sessions_table.create(cursor, id="1234")
+    session = await SessionsTable.create(cursor, id="1234")
     active_session = ActiveSession(
         "sid",
         session,
-        sessions_table,
-        players_table,
     )
 
     with pytest.raises(GameNotFoundException):
@@ -171,7 +151,6 @@ async def test_join_when_game_not_exists(
 @pytest.mark.asyncio
 async def test_leave(
     game_manager: GameManager,
-    games_table: GamesTable,
     socket_server: AsyncServer,
     active_session: ActiveSession,
     db_connection: Connection,
@@ -189,7 +168,7 @@ async def test_leave(
     await game_manager.leave(db_connection, active_session)
 
     current_player = await active_session.current_player(cursor)
-    game = await games_table.get(cursor, game.id)
+    game = await GamesTable.get(cursor, game.id)
 
     assert current_player is None
     assert active_session.session.player_id is None

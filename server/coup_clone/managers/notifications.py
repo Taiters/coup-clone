@@ -51,20 +51,14 @@ class NotificationsManager:
     def __init__(
         self,
         socket_server: AsyncServer,
-        games_table: GamesTable,
-        players_table: PlayersTable,
-        events_table: EventsTable,
     ):
         self.socket_server = socket_server
-        self.games_table = games_table
-        self.players_table = players_table
-        self.events_table = events_table
 
     async def _send_game(self, conn: Connection, game_id: str, to: str) -> None:
         async with conn.cursor() as cursor:
-            game = await self.games_table.get(cursor, game_id)
-            players = await self.players_table.query(cursor, game_id=game.id)
-            events = await self.events_table.query(cursor, game_id=game.id)
+            game = await GamesTable.get(cursor, game_id)
+            players = await PlayersTable.query(cursor, game_id=game.id)
+            events = await EventsTable.query(cursor, game_id=game.id)
 
         await self.socket_server.emit(
             "game",

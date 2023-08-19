@@ -3,7 +3,6 @@ from uuid import uuid4
 from aiosqlite import Connection
 from socketio import AsyncServer
 
-from coup_clone.db.players import PlayersTable
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.managers.exceptions import NoActiveSessionException
 from coup_clone.managers.notifications import NotificationsManager
@@ -17,13 +16,9 @@ class SessionManager:
         self,
         socket_server: AsyncServer,
         notifications_manager: NotificationsManager,
-        sessions_table: SessionsTable,
-        players_table: PlayersTable,
     ):
         self.socket_server = socket_server
         self.notifications_manager = notifications_manager
-        self.sessions_table = sessions_table
-        self.players_table = players_table
 
     async def setup(self, conn: Connection, sid: str, auth: dict) -> ActiveSession:
         async with self.socket_server.session(sid) as socket_session:
@@ -32,10 +27,10 @@ class SessionManager:
 
             async with conn.cursor() as cursor:
                 if session_id:
-                    session = await self.sessions_table.get(cursor, session_id)
+                    session = await SessionsTable.get(cursor, session_id)
 
                 if session is None:
-                    session = await self.sessions_table.create(cursor, id=str(uuid4()))
+                    session = await SessionsTable.create(cursor, id=str(uuid4()))
                     await conn.commit()
 
                 socket_session[SESSION_KEY] = session.id
@@ -43,8 +38,6 @@ class SessionManager:
                 active_session = ActiveSession(
                     sid,
                     session,
-                    self.sessions_table,
-                    self.players_table,
                 )
                 current_player = await active_session.current_player(cursor)
                 if current_player:
@@ -62,7 +55,7 @@ class SessionManager:
             raise NoActiveSessionException("session is not present in socket connection")
 
         async with conn.cursor() as cursor:
-            existing_session = await self.sessions_table.get(cursor, session_id)
+            existing_session = await SessionsTable.get(cursor, session_id)
 
         if existing_session is None:
             raise NoActiveSessionException("session not found in database")
@@ -70,6 +63,4 @@ class SessionManager:
         return ActiveSession(
             sid,
             existing_session,
-            self.sessions_table,
-            self.players_table,
         )

@@ -6,7 +6,6 @@ from aiosqlite import Connection, Cursor
 from socketio import AsyncServer
 
 from coup_clone import db
-from coup_clone.db.events import EventsTable
 from coup_clone.db.games import GameRow, GamesTable
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
@@ -32,41 +31,21 @@ async def cursor(db_connection: Connection):
         yield cursor
 
 
-@pytest.fixture
-def games_table():
-    return GamesTable()
-
-
-@pytest.fixture
-def players_table():
-    return PlayersTable()
-
-
-@pytest.fixture
-def sessions_table():
-    return SessionsTable()
-
-
-@pytest.fixture
-def events_table():
-    return EventsTable()
+@pytest_asyncio.fixture
+async def game(cursor: Cursor):
+    return await GamesTable.create(cursor, id=str(uuid4()), deck="".join(str(c.value) for c in DECK))
 
 
 @pytest_asyncio.fixture
-async def game(games_table: GamesTable, cursor: Cursor):
-    return await games_table.create(cursor, id=str(uuid4()), deck="".join(str(c.value) for c in DECK))
-
-
-@pytest_asyncio.fixture
-async def player(players_table: PlayersTable, game: GameRow, cursor: Cursor):
-    return await players_table.create(
+async def player(game: GameRow, cursor: Cursor):
+    return await PlayersTable.create(
         cursor, game_id=game.id, influence_a=Influence.CAPTAIN, influence_b=Influence.AMBASSADOR
     )
 
 
 @pytest_asyncio.fixture
-async def session(sessions_table: SessionsTable, player: PlayerRow, cursor: Cursor):
-    return await sessions_table.create(cursor, id=str(uuid4()), player_id=player.id)
+async def session(player: PlayerRow, cursor: Cursor):
+    return await SessionsTable.create(cursor, id=str(uuid4()), player_id=player.id)
 
 
 @pytest.fixture
@@ -85,42 +64,32 @@ def socket_session(socket_server):
 
 
 @pytest.fixture
-def active_session(socket_session, session, sessions_table, players_table):
+def active_session(socket_session, session):
     socket_session["session"] = session.id
     return ActiveSession(
         sid="1234",
         session=session,
-        sessions_table=sessions_table,
-        players_table=players_table,
     )
 
 
 @pytest.fixture
 def notifications_manager(
     socket_server: AsyncServer,
-    games_table: GamesTable,
-    players_table: PlayersTable,
-    events_table: EventsTable,
 ):
-    return NotificationsManager(socket_server, games_table, players_table, events_table)
+    return NotificationsManager(socket_server)
 
 
 @pytest.fixture
 def session_manager(
     socket_server: AsyncServer,
     notifications_manager: NotificationsManager,
-    sessions_table: SessionsTable,
-    players_table: PlayersTable,
 ):
-    return SessionManager(socket_server, notifications_manager, sessions_table, players_table)
+    return SessionManager(socket_server, notifications_manager)
 
 
 @pytest.fixture
 def game_manager(
     socket_server: AsyncServer,
     notifications_manager: NotificationsManager,
-    games_table: GamesTable,
-    players_table: PlayersTable,
-    events_table: EventsTable,
 ):
-    return GameManager(socket_server, notifications_manager, games_table, players_table, events_table)
+    return GameManager(socket_server, notifications_manager)

@@ -80,15 +80,17 @@ class PlayersTable(Table[PlayerRow, int]):
             host=row[9],
         )
 
-    async def get_next_player_turn(self, cursor: Cursor, game_id: str, current_player_id: Optional[int]) -> PlayerRow:
-        players = await self.query(cursor, game_id=game_id)
+    @classmethod
+    async def get_next_player_turn(cls, cursor: Cursor, game_id: str, current_player_id: Optional[int]) -> PlayerRow:
+        players = await cls.query(cursor, game_id=game_id)
         if current_player_id is None:
             return players[0]
         else:
             current_index = [p.id for p in players].index(current_player_id)
             return players[(current_index + 1) % len(players)]
 
-    async def increment_coins(self, cursor: Cursor, player_id: int, amount: int = 1) -> None:
+    @classmethod
+    async def increment_coins(cls, cursor: Cursor, player_id: int, amount: int = 1) -> None:
         await cursor.execute(
             """
             UPDATE players
@@ -98,7 +100,8 @@ class PlayersTable(Table[PlayerRow, int]):
             {"id": player_id, "amount": amount},
         )
 
-    async def decrement_coins(self, cursor: Cursor, player_id: int, amount: int = 1) -> None:
+    @classmethod
+    async def decrement_coins(cls, cursor: Cursor, player_id: int, amount: int = 1) -> None:
         await cursor.execute(
             """
             UPDATE players
