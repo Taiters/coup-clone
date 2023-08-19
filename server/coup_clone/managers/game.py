@@ -11,6 +11,7 @@ from coup_clone.db.games import GamesTable, GameState, TurnAction
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
     GameFullException,
+    GameNotFoundException,
     NotEnoughPlayersException,
     NotPlayerTurnException,
     PlayerAlreadyInGameException,
@@ -53,14 +54,14 @@ class GameManager:
         next_player = await game.get_next_player_turn()
         await game.reset_turn_state(next_player.id)
 
-    def _get_action(self, request: Request, action: TurnAction, target: Optional[int]) -> Action:
+    def _get_action(self, conn: Connection, request: Request, action: TurnAction, target: Optional[int]) -> Action:
         match action:
             case TurnAction.INCOME:
-                return Income(request)
+                return Income(conn, request)
             case TurnAction.FOREIGN_AID:
-                return ForeignAid(request)
+                return ForeignAid(conn, request)
             case TurnAction.TAX:
-                return Tax(request)
+                return Tax(conn, request)
             case _:
                 raise UnsupportedActionException("Unsupported action: " + str(action))
 
@@ -74,12 +75,13 @@ class GameManager:
             game_row = await GamesTable.create(
                 cursor, id=game_id, deck="".join(str(c.value) for c in random.sample(DECK, k=len(DECK)))
             )
-            game = Game(cursor, game_row)
+            game = Game(conn, game_row)
             hand = await game.take_from_deck()
             player = await PlayersTable.create(
                 cursor, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1]
             )
             await request.session.set_player(player.id)
+            await game.reset_turn_state(player.id)
             await conn.commit()
         self.socket_server.enter_room(request.sid, game.id)
         await self.notifications_manager.notify_session(request.session)
@@ -90,8 +92,10 @@ class GameManager:
             current_player = await request.session.get_player()
             if current_player is not None:
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
-
-            game = Game(cursor, await GamesTable.get(cursor, game_id))
+            game_row = await GamesTable.get(cursor, game_id)
+            if game_row is None:
+                raise GameNotFoundException()
+            game = Game(conn, await GamesTable.get(cursor, game_id))
             hand = await game.take_from_deck()
             try:
                 player = await PlayersTable.create(cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1])
@@ -150,8 +154,8 @@ class GameManager:
             game = await player.get_game()
             if game.row.player_turn_id != player.id:
                 raise NotPlayerTurnException()
-            action = self._get_action(request, turn_action, target)
-            turn_complete = await action.execute(cursor)
+            action = self._get_action(conn, request, turn_action, target)
+            turn_complete = await action.execute()
             if turn_complete:
                 await self._next_player_turn(game)
             await conn.commit()

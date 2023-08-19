@@ -92,6 +92,6 @@ class GamesTable(Table[GameRow, str]):
             challenged_by_id=row[7],
             blocked_by_id=row[8],
             block_challenged_by_id=row[9],
-            turn_state_modified=datetime.strptime(row[10], "%Y-%m-%d %H:%M:%S") if row[10] is not None else None,
-            turn_state_deadline=datetime.strptime(row[11], "%Y-%m-%d %H:%M:%S") if row[11] is not None else None,
+            turn_state_modified=datetime.fromisoformat(row[10]) if row[10] is not None else None,
+            turn_state_deadline=datetime.fromisoformat(row[11]) if row[11] is not None else None,
         )

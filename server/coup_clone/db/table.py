@@ -54,7 +54,7 @@ class Table(Generic[T, TID], ABC):
         select = f'SELECT {", ".join(cls.COLUMNS)}'
         from_table = f"FROM {cls.TABLE_NAME}"
         where = f'WHERE {" AND ".join(matches)}'
-        order = f'ORDER BY {", ".join(order_by)}' if order_by is not None else None
+        order = f'ORDER BY {", ".join(order_by)}' if order_by is not None else ""
         query = f"{select} {from_table} {where} {order};"
         async with cls.wrap_row_factory(cursor):
             await cursor.execute(query, kwargs)

@@ -11,8 +11,10 @@ sio = socketio.AsyncServer(cors_allowed_origins="*", cookie="coup_session")
 
 
 async def app_factory():
-    async with db.open() as con:
-        await db.init(con)
+    async with db.open() as conn:
+        await db.init(conn)
+        await conn.commit()
+
 
     notifications_manager = NotificationsManager(sio)
     session_manager = SessionManager(sio, notifications_manager)

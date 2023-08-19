@@ -35,7 +35,7 @@ class SessionManager:
 
                 socket_session[SESSION_KEY] = session.id
 
-                active_session = Session(cursor, session)
+                active_session = Session(conn, session)
                 current_player = await active_session.get_player()
                 if current_player:
                     self.socket_server.enter_room(sid, current_player.game_id)
@@ -58,6 +58,6 @@ class SessionManager:
                 raise NoActiveSessionException("session not found in database")
 
             return Session(
-                cursor,
+                conn,
                 existing_session,
             )
