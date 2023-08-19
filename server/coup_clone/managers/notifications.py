@@ -5,11 +5,11 @@ from coup_clone.db.events import EventRow, EventsTable
 from coup_clone.db.games import GameRow, GamesTable
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.managers.exceptions import PlayerNotInGameException
-from coup_clone.session import ActiveSession
+from coup_clone.models import Session
 
 
-def map_session(session: ActiveSession) -> dict:
-    return {"id": session.id, "player_id": session.session.player_id}
+def map_session(session: Session) -> dict:
+    return {"id": session.id, "player_id": session.player_id}
 
 
 def map_player(player: PlayerRow) -> dict:
@@ -70,23 +70,21 @@ class NotificationsManager:
             room=to,
         )
 
-    async def notify_session(self, conn: Connection, session: ActiveSession) -> None:
-        async with conn.cursor() as cursor:
-            current_player = await session.current_player(cursor)
+    async def notify_session(self, session: Session) -> None:
+        current_player = await session.get_player()
         await self.socket_server.emit(
             "session",
             {
                 "session": map_session(session),
                 "game_id": current_player.game_id if current_player else None,
             },
-            room=session.session.id,
+            room=session.id,
         )
 
-    async def notify_game(self, conn: Connection, session: ActiveSession) -> None:
-        async with conn.cursor() as cursor:
-            player = await session.current_player(cursor)
-            if player is None:
-                raise PlayerNotInGameException()
+    async def notify_game(self, conn: Connection, session: Session) -> None:
+        player = await session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
 
         await self._send_game(conn, player.game_id, to=session.id)
         await self.socket_server.emit(

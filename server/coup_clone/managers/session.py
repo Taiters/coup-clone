@@ -6,7 +6,7 @@ from socketio import AsyncServer
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.managers.exceptions import NoActiveSessionException
 from coup_clone.managers.notifications import NotificationsManager
-from coup_clone.session import ActiveSession
+from coup_clone.models import Session
 
 SESSION_KEY = "session"
 
@@ -20,7 +20,7 @@ class SessionManager:
         self.socket_server = socket_server
         self.notifications_manager = notifications_manager
 
-    async def setup(self, conn: Connection, sid: str, auth: dict) -> ActiveSession:
+    async def setup(self, conn: Connection, sid: str, auth: dict) -> Session:
         async with self.socket_server.session(sid) as socket_session:
             session = None
             session_id = auth.get(SESSION_KEY, None) if auth else None
@@ -35,16 +35,13 @@ class SessionManager:
 
                 socket_session[SESSION_KEY] = session.id
 
-                active_session = ActiveSession(
-                    sid,
-                    session,
-                )
-                current_player = await active_session.current_player(cursor)
+                active_session = Session(cursor, session)
+                current_player = await active_session.get_player()
                 if current_player:
                     self.socket_server.enter_room(sid, current_player.game_id)
 
         self.socket_server.enter_room(sid, session.id)
-        await self.notifications_manager.notify_session(conn, active_session)
+        await self.notifications_manager.notify_session(active_session)
         return active_session
 
     async def get(self, conn: Connection, sid: str) -> ActiveSession:

@@ -79,34 +79,3 @@ class PlayersTable(Table[PlayerRow, int]):
             revealed_influence_b=row[8],
             host=row[9],
         )
-
-    @classmethod
-    async def get_next_player_turn(cls, cursor: Cursor, game_id: str, current_player_id: Optional[int]) -> PlayerRow:
-        players = await cls.query(cursor, game_id=game_id)
-        if current_player_id is None:
-            return players[0]
-        else:
-            current_index = [p.id for p in players].index(current_player_id)
-            return players[(current_index + 1) % len(players)]
-
-    @classmethod
-    async def increment_coins(cls, cursor: Cursor, player_id: int, amount: int = 1) -> None:
-        await cursor.execute(
-            """
-            UPDATE players
-            SET coins = coins + :amount
-            WHERE id = :id
-            """,
-            {"id": player_id, "amount": amount},
-        )
-
-    @classmethod
-    async def decrement_coins(cls, cursor: Cursor, player_id: int, amount: int = 1) -> None:
-        await cursor.execute(
-            """
-            UPDATE players
-            SET coins = coins - :amount
-            WHERE id = :id
-            """,
-            {"id": player_id, "amount": amount},
-        )

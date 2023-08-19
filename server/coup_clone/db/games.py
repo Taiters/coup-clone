@@ -1,14 +1,11 @@
 import enum
-import random
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 from aiosqlite import Cursor, Row
 
-from coup_clone.db.players import Influence
 from coup_clone.db.table import Table, TableRow
-from coup_clone.managers.exceptions import GameNotFoundException
 
 
 class GameState(enum.IntEnum):
@@ -97,61 +94,4 @@ class GamesTable(Table[GameRow, str]):
             block_challenged_by_id=row[9],
             turn_state_modified=datetime.strptime(row[10], "%Y-%m-%d %H:%M:%S") if row[10] is not None else None,
             turn_state_deadline=datetime.strptime(row[11], "%Y-%m-%d %H:%M:%S") if row[11] is not None else None,
-        )
-
-    @classmethod
-    async def reset_turn_state(cls, cursor: Cursor, game_id: str, player_id: int) -> None:
-        await cls.update(
-            cursor,
-            game_id,
-            player_turn_id=player_id,
-            turn_state=TurnState.START,
-            turn_action=None,
-            target_id=None,
-            challenged_by_id=None,
-            blocked_by_id=None,
-            block_challenged_by_id=None,
-            turn_state_modified=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-            turn_state_deadline=None,
-        )
-
-    @classmethod
-    async def take_from_deck(cls, cursor: Cursor, game_id: str, n: int = 2) -> list[Influence]:
-        game = await cls.get(cursor, game_id)
-        if game is None:
-            raise GameNotFoundException()
-        deck = list(game.deck)
-        popped = [Influence(int(deck.pop())) for i in range(n)]
-        await cls.update(cursor, game.id, deck="".join(deck))
-        return popped
-
-    @classmethod
-    async def return_to_deck(cls, cursor: Cursor, game_id: str, influence: list[Influence]) -> None:
-        game = await cls.get(cursor, game_id)
-        if game is None:
-            raise GameNotFoundException()
-        deck = list(game.deck) + [i.value for i in influence]
-        random.shuffle(deck)
-        await cls.update(cursor, game.id, deck="".join(str(c) for c in deck))
-
-    @classmethod
-    async def set_action_deadline(
-        cls, cursor: Cursor, game_id: str, action: TurnAction, seconds_from_now: int = 10
-    ) -> None:
-        await cursor.execute(
-            """
-            UPDATE games
-            SET
-                turn_state_modified = DATETIME('now'),
-                turn_state_deadline = DATETIME('now', :seconds_from_now),
-                turn_action = :action,
-                turn_state = :state
-            WHERE id = :id
-            """,
-            {
-                "id": game_id,
-                "action": action,
-                "seconds_from_now": f"+{seconds_from_now} seconds",
-                "state": TurnState.ATTEMPTED,
-            },
         )

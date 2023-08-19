@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, AsyncIterator, Generic, TypeVar
+from typing import Any, AsyncIterator, Generic, Optional, TypeVar
 
 from aiosqlite import Cursor, Row
 
@@ -49,12 +49,13 @@ class Table(Generic[T, TID], ABC):
             return await cursor.fetchone()  # type: ignore[return-value]
 
     @classmethod
-    async def query(cls, cursor: Cursor, **kwargs: Any) -> list[T]:
+    async def query(cls, cursor: Cursor, order_by: Optional[list[str]] = None, **kwargs: Any) -> list[T]:
         matches = [f"{c} = :{c}" for c in kwargs.keys()]
         select = f'SELECT {", ".join(cls.COLUMNS)}'
         from_table = f"FROM {cls.TABLE_NAME}"
         where = f'WHERE {" AND ".join(matches)}'
-        query = f"{select} {from_table} {where};"
+        order = f'ORDER BY {", ".join(order_by)}' if order_by is not None else None
+        query = f"{select} {from_table} {where} {order};"
         async with cls.wrap_row_factory(cursor):
             await cursor.execute(query, kwargs)
             return await cursor.fetchall()  # type: ignore[return-value]

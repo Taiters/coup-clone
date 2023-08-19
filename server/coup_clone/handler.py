@@ -10,7 +10,7 @@ from coup_clone.managers.exceptions import (
 from coup_clone.managers.game import GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import NoActiveSessionException, SessionManager
-from coup_clone.session import ActiveSession
+from coup_clone.request import Request
 
 
 class Handler(AsyncNamespace):
@@ -25,9 +25,13 @@ class Handler(AsyncNamespace):
         self.notifications_manager = notifications_manager
         super().__init__()
 
-    async def _get_session(self, conn: Connection, sid: str) -> ActiveSession:
+    async def _get_request_with_session(self, conn: Connection, sid: str) -> Request:
         try:
-            return await self.session_manager.get(conn, sid)
+            session = await self.session_manager.get(conn, sid)
+            return Request(
+                sid=sid,
+                session=session,
+            )
         except NoActiveSessionException:
             await self.disconnect(sid)
             raise
@@ -38,23 +42,22 @@ class Handler(AsyncNamespace):
             session = await self.session_manager.setup(conn, sid, auth)
             game = auth.get("game", None) if auth else None
             if game:
-                async with conn.cursor() as cursor:
-                    player = await session.current_player(cursor)
+                player = await session.get_player()
                 if player:
                     if player.game_id != game:
                         raise ConnectionRefusedError("invalid game id")
                 else:
                     try:
-                        await self.game_manager.join(conn, game, session)
+                        await self.game_manager.join(conn, game, Request(sid=sid, session=session))
                     except GameNotFoundException:
                         raise ConnectionRefusedError("invalid game id")
 
     async def on_create_game(self, sid: str) -> None:
         print("on_create_game: ", sid)
         async with db.open() as conn:
-            session = await self._get_session(conn, sid)
+            request = await self._get_request_with_session(conn, sid)
             try:
-                await self.game_manager.create(conn, session)
+                await self.game_manager.create(conn, request)
             except PlayerAlreadyInGameException:
                 await self.disconnect(sid)
                 raise

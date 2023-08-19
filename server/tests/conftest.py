@@ -11,7 +11,9 @@ from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionsTable
 from coup_clone.managers.game import DECK, GameManager
 from coup_clone.managers.notifications import NotificationsManager
-from coup_clone.managers.session import ActiveSession, SessionManager
+from coup_clone.managers.session import SessionManager
+from coup_clone.models import Session
+from coup_clone.request import Request
 
 
 @pytest_asyncio.fixture
@@ -19,6 +21,7 @@ async def db_connection(mocker):
     mocker.patch("coup_clone.db.DB_FILE", ":memory:")
     async with db.open() as conn:
         await db.init(conn)
+        await conn.commit()
         open_mock = mocker.MagicMock()
         open_mock.__aenter__.return_value = conn
         mocker.patch("coup_clone.handler.db.open", return_value=open_mock)
@@ -64,11 +67,11 @@ def socket_session(socket_server):
 
 
 @pytest.fixture
-def active_session(socket_session, session):
+def request(socket_session, session, cursor):
     socket_session["session"] = session.id
-    return ActiveSession(
+    return Request(
         sid="1234",
-        session=session,
+        session=Session(cursor, session),
     )
 
 

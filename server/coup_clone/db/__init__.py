@@ -42,4 +42,3 @@ async def init(db: Connection) -> None:
         await db.execute(table)
     for trigger in TRIGGERS:
         await db.execute(trigger)
-    await db.commit()
