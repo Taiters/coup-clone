@@ -10,7 +10,8 @@ from coup_clone.managers.exceptions import (
 )
 from coup_clone.managers.game import GameManager
 from coup_clone.managers.notifications import NotificationsManager
-from coup_clone.managers.session import ActiveSession, SessionManager
+from coup_clone.managers.session import SessionManager
+from coup_clone.request import Request
 
 
 @pytest.fixture
@@ -43,10 +44,10 @@ def handler(socket_server, session_manager, game_manager, notifications_manager)
 async def test_on_connect_without_game_id(
     session_manager: SessionManager,
     game_manager: GameManager,
-    active_session: ActiveSession,
+    current_request: Request,
     handler: Handler,
 ):
-    session_manager.setup.return_value = active_session
+    session_manager.setup.return_value = current_request.session
 
     await handler.on_connect("1234", {}, {})
 
@@ -100,15 +101,15 @@ async def test_on_connect_with_game_id(
 async def test_on_create_game(
     game_manager: GameManager,
     session_manager: SessionManager,
-    active_session: ActiveSession,
+    current_request: Request,
     handler: Handler,
     db_connection: Connection,
 ):
-    session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
+    session_manager.get.side_effect = lambda _, sid: current_request.session if sid == "1234" else None
 
     await handler.on_create_game("1234")
 
-    game_manager.create.assert_called_with(db_connection, active_session)
+    game_manager.create.assert_called_with(db_connection, Request(sid="1234", session=current_request.session))
 
 
 @pytest.mark.asyncio
@@ -129,15 +130,15 @@ async def test_on_create_game_disconnects_if_already_in_game(
 async def test_on_join_game(
     game_manager: GameManager,
     session_manager: SessionManager,
-    active_session: ActiveSession,
+    current_request: Request,
     handler: Handler,
     db_connection: Connection,
 ):
-    session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
+    session_manager.get.side_effect = lambda _, sid: current_request.session if sid == "1234" else None
 
     await handler.on_join_game("1234", "5678")
 
-    game_manager.join.assert_called_with(db_connection, "5678", active_session)
+    game_manager.join.assert_called_with(db_connection, "5678", Request(sid="1234", session=current_request.session))
 
 
 @pytest.mark.parametrize(
@@ -166,27 +167,29 @@ async def test_on_join_game_disconnects_on_error(
 async def test_on_leave_game(
     game_manager: GameManager,
     session_manager: SessionManager,
-    active_session: ActiveSession,
+    current_request: Request,
     handler: Handler,
     db_connection: Connection,
 ):
-    session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
+    session_manager.get.side_effect = lambda _, sid: current_request.session if sid == "1234" else None
 
     await handler.on_leave_game("1234")
 
-    game_manager.leave.assert_called_with(db_connection, active_session)
+    game_manager.leave.assert_called_with(db_connection, Request(sid="1234", session=current_request.session))
 
 
 @pytest.mark.asyncio
 async def test_on_initialize_game(
     session_manager: SessionManager,
     notifications_manager: NotificationsManager,
-    active_session: ActiveSession,
+    current_request: Request,
     handler: Handler,
     db_connection: Connection,
 ):
-    session_manager.get.side_effect = lambda _, sid: active_session if sid == "1234" else None
+    session_manager.get.side_effect = lambda _, sid: current_request.session if sid == "1234" else None
 
     await handler.on_initialize_game("1234")
 
-    notifications_manager.notify_game.assert_called_with(db_connection, active_session)
+    notifications_manager.notify_game.assert_called_with(
+        db_connection, Request(sid="1234", session=current_request.session)
+    )

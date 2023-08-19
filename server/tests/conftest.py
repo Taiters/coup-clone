@@ -67,7 +67,7 @@ def socket_session(socket_server):
 
 
 @pytest.fixture
-def request(socket_session, session, cursor):
+def current_request(socket_session, session, cursor):
     socket_session["session"] = session.id
     return Request(
         sid="1234",

@@ -2,8 +2,8 @@ import random
 import string
 from sqlite3 import IntegrityError
 from typing import Optional, Tuple
-from aiosqlite import Connection
 
+from aiosqlite import Connection
 from socketio import AsyncServer
 
 from coup_clone.actions import Action, ForeignAid, Income, Tax

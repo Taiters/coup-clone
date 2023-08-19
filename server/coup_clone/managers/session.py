@@ -44,7 +44,7 @@ class SessionManager:
         await self.notifications_manager.notify_session(active_session)
         return active_session
 
-    async def get(self, conn: Connection, sid: str) -> ActiveSession:
+    async def get(self, conn: Connection, sid: str) -> Session:
         async with self.socket_server.session(sid) as socket_session:
             session_id = socket_session.get(SESSION_KEY, None)
 
@@ -54,10 +54,10 @@ class SessionManager:
         async with conn.cursor() as cursor:
             existing_session = await SessionsTable.get(cursor, session_id)
 
-        if existing_session is None:
-            raise NoActiveSessionException("session not found in database")
+            if existing_session is None:
+                raise NoActiveSessionException("session not found in database")
 
-        return ActiveSession(
-            sid,
-            existing_session,
-        )
+            return Session(
+                cursor,
+                existing_session,
+            )
