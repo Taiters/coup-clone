@@ -15,7 +15,6 @@ async def app_factory():
         await db.init(conn)
         await conn.commit()
 
-
     notifications_manager = NotificationsManager(sio)
     session_manager = SessionManager(sio, notifications_manager)
     game_manager = GameManager(sio, notifications_manager)

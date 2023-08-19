@@ -1,4 +1,5 @@
-from aiosqlite import Connection
+import functools
+
 from socketio import AsyncNamespace
 from socketio.exceptions import ConnectionRefusedError
 
@@ -10,7 +11,7 @@ from coup_clone.managers.exceptions import (
 from coup_clone.managers.game import GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import NoActiveSessionException, SessionManager
-from coup_clone.request import Request
+from coup_clone.request import Request, with_request
 
 
 class Handler(AsyncNamespace):
@@ -25,17 +26,6 @@ class Handler(AsyncNamespace):
         self.notifications_manager = notifications_manager
         super().__init__()
 
-    async def _get_request_with_session(self, conn: Connection, sid: str) -> Request:
-        try:
-            session = await self.session_manager.get(conn, sid)
-            return Request(
-                sid=sid,
-                session=session,
-            )
-        except NoActiveSessionException:
-            await self.disconnect(sid)
-            raise
-
     async def on_connect(self, sid: str, environ: dict, auth: dict) -> None:
         print("on_connect: ", sid)
         async with db.open() as conn:
@@ -48,19 +38,18 @@ class Handler(AsyncNamespace):
                         raise ConnectionRefusedError("invalid game id")
                 else:
                     try:
-                        await self.game_manager.join(conn, game, Request(sid=sid, session=session))
+                        await self.game_manager.join(conn, game, Request(sid=sid, conn=conn, session=session))
                     except GameNotFoundException:
                         raise ConnectionRefusedError("invalid game id")
 
-    async def on_create_game(self, sid: str) -> None:
-        print("on_create_game: ", sid)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            try:
-                await self.game_manager.create(conn, request)
-            except PlayerAlreadyInGameException:
-                await self.disconnect(sid)
-                raise
+    @with_request
+    async def on_create_game(self, request: Request) -> None:
+        print("on_create_game: ", request.sid)
+        try:
+            await self.game_manager.create(request)
+        except PlayerAlreadyInGameException:
+            await self.disconnect(request.sid)
+            raise
 
     async def on_join_game(self, sid: str, game_id: str) -> None:
         print("on_join_game: ", sid, game_id)
