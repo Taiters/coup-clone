@@ -87,15 +87,15 @@ class GameManager:
         await self.notifications_manager.notify_session(request.session)
         return (game.id, player)
 
-    async def join(self, conn: Connection, game_id: str, request: Request) -> Tuple[str, PlayerRow]:
-        async with conn.cursor() as cursor:
+    async def join(self, request: Request, game_id: str) -> Tuple[str, PlayerRow]:
+        async with request.conn.cursor() as cursor:
             current_player = await request.session.get_player()
             if current_player is not None:
                 raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
             game_row = await GamesTable.get(cursor, game_id)
             if game_row is None:
                 raise GameNotFoundException()
-            game = Game(conn, await GamesTable.get(cursor, game_id))
+            game = Game(request.conn, await GamesTable.get(cursor, game_id))
             hand = await game.take_from_deck()
             try:
                 player = await PlayersTable.create(cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1])
@@ -103,35 +103,35 @@ class GameManager:
                 if str(e) == "Game full":
                     raise GameFullException()
             await request.session.set_player(player.id)
-            await conn.commit()
+            await request.conn.commit()
 
         self.socket_server.enter_room(request.sid, game_id)
-        await self.notifications_manager.broadcast_game(conn, game_id)
+        await self.notifications_manager.broadcast_game(request.conn, game_id)
         await self.notifications_manager.notify_session(request.session)
         return (game_id, player)
 
-    async def leave(self, conn: Connection, request: Request) -> None:
+    async def leave(self, request: Request) -> None:
         player = await request.session.get_player()
         if player is not None:
             game = await player.get_game()
             await game.return_to_deck([player.influence_a, player.influence_b])
             await request.session.clear_current_player()
-            await conn.commit()
+            await request.conn.commit()
             self.socket_server.leave_room(request.sid, game.id)
-            await self.notifications_manager.broadcast_game(conn, game.id)
+            await self.notifications_manager.broadcast_game(request.conn, game.id)
         await self.notifications_manager.notify_session(request.session)
 
-    async def set_name(self, conn: Connection, request: Request, name: str) -> None:
-        async with conn.cursor() as cursor:
+    async def set_name(self, request: Request, name: str) -> None:
+        async with request.conn.cursor() as cursor:
             player = await request.session.get_player()
             if player is None:
                 raise PlayerNotInGameException()
             await PlayersTable.update(cursor, player.id, name=name, state=PlayerState.READY)
-            await conn.commit()
-        await self.notifications_manager.broadcast_game(conn, player.game_id)
+            await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
-    async def start(self, conn: Connection, request: Request) -> None:
-        async with conn.cursor() as cursor:
+    async def start(self, request: Request) -> None:
+        async with request.conn.cursor() as cursor:
             player = await request.session.get_player()
             if player is None:
                 raise PlayerNotInGameException()
@@ -141,21 +141,19 @@ class GameManager:
                 raise NotEnoughPlayersException()
             await GamesTable.update(cursor, player.game_id, state=GameState.RUNNING)
             await self._next_player_turn(game)
-            await conn.commit()
-        await self.notifications_manager.broadcast_game(conn, player.game_id)
+            await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
-    async def take_action(
-        self, conn: Connection, request: Request, turn_action: TurnAction, target: Optional[int]
-    ) -> None:
+    async def take_action(self, request: Request, turn_action: TurnAction, target: Optional[int]) -> None:
         player = await request.session.get_player()
         if player is None:
             raise PlayerNotInGameException()
         game = await player.get_game()
         if game.row.player_turn_id != player.id:
             raise NotPlayerTurnException()
-        action = self._get_action(conn, request, turn_action, target)
+        action = self._get_action(request.conn, request, turn_action, target)
         turn_complete = await action.execute()
         if turn_complete:
             await self._next_player_turn(game)
-        await conn.commit()
-        await self.notifications_manager.broadcast_game(conn, player.game_id)
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)

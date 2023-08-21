@@ -15,9 +15,9 @@ from coup_clone.managers.session import NoActiveSessionException, SessionManager
 from coup_clone.request import Request
 
 
-async def with_request(f: Callable[..., Any]) -> Callable[..., Any]:
+def with_request(f: Callable[..., Any]) -> Callable[..., Any]:
     @functools.wraps(f)
-    async def wrapper(self: Handler, sid: str, *args: Any) -> None:
+    async def wrapper(self: "Handler", sid: str, *args: Any) -> None:
         async with db.open() as conn:
             try:
                 session = await self.session_manager.get(conn, sid)
@@ -61,7 +61,7 @@ class Handler(AsyncNamespace):
                         raise ConnectionRefusedError("invalid game id")
                 else:
                     try:
-                        await self.game_manager.join(conn, game, Request(sid=sid, conn=conn, session=session))
+                        await self.game_manager.join(Request(sid, conn=conn, session=session), game)
                     except GameNotFoundException:
                         raise ConnectionRefusedError("invalid game id")
 
@@ -74,42 +74,36 @@ class Handler(AsyncNamespace):
             await self.disconnect(request.sid)
             raise
 
-    async def on_join_game(self, sid: str, game_id: str) -> None:
-        print("on_join_game: ", sid, game_id)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            try:
-                await self.game_manager.join(conn, game_id, request)
-            except (PlayerAlreadyInGameException, GameNotFoundException):
-                await self.disconnect(sid)
-                raise
+    @with_request
+    async def on_join_game(self, request: Request, game_id: str) -> None:
+        print("on_join_game: ", request.sid, game_id)
+        try:
+            await self.game_manager.join(request, game_id)
+        except (PlayerAlreadyInGameException, GameNotFoundException):
+            await self.disconnect(request.sid)
+            raise
 
-    async def on_leave_game(self, sid: str) -> None:
-        print("on_leave_game: ", sid)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            await self.game_manager.leave(conn, request)
+    @with_request
+    async def on_leave_game(self, request: Request) -> None:
+        print("on_leave_game: ", request.sid)
+        await self.game_manager.leave(request)
 
-    async def on_initialize_game(self, sid: str) -> None:
-        print("on_initialize_game: ", sid)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            await self.notifications_manager.notify_game(conn, request.session)
+    @with_request
+    async def on_initialize_game(self, request: Request) -> None:
+        print("on_initialize_game: ", request.sid)
+        await self.notifications_manager.notify_game(request.conn, request.session)
 
-    async def on_set_name(self, sid: str, name: str) -> None:
-        print("on_set_name: ", sid, name)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            await self.game_manager.set_name(conn, request, name)
+    @with_request
+    async def on_set_name(self, request: Request, name: str) -> None:
+        print("on_set_name: ", request.sid, name)
+        await self.game_manager.set_name(request, name)
 
-    async def on_start_game(self, sid: str) -> None:
-        print("on_start_game: ", sid)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            await self.game_manager.start(conn, request)
+    @with_request
+    async def on_start_game(self, request: Request) -> None:
+        print("on_start_game: ", request.sid)
+        await self.game_manager.start(request)
 
-    async def on_take_action(self, sid: str, action: dict) -> None:
-        print("on_take_action: ", sid, action)
-        async with db.open() as conn:
-            request = await self._get_request_with_session(conn, sid)
-            await self.game_manager.take_action(conn, request, action["action"], action.get("target", None))
+    @with_request
+    async def on_take_action(self, request: Request, action: dict) -> None:
+        print("on_take_action: ", request.sid, action)
+        await self.game_manager.take_action(request, action["action"], action.get("target", None))
