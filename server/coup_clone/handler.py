@@ -1,4 +1,5 @@
 import functools
+from typing import Any, Callable
 
 from socketio import AsyncNamespace
 from socketio.exceptions import ConnectionRefusedError
@@ -11,7 +12,29 @@ from coup_clone.managers.exceptions import (
 from coup_clone.managers.game import GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import NoActiveSessionException, SessionManager
-from coup_clone.request import Request, with_request
+from coup_clone.request import Request
+
+
+async def with_request(f: Callable[..., Any]) -> Callable[..., Any]:
+    @functools.wraps(f)
+    async def wrapper(self: Handler, sid: str, *args: Any) -> None:
+        async with db.open() as conn:
+            try:
+                session = await self.session_manager.get(conn, sid)
+                await f(
+                    self,
+                    Request(
+                        sid=sid,
+                        conn=conn,
+                        session=session,
+                    ),
+                    *args
+                )
+            except NoActiveSessionException:
+                await self.disconnect(sid)
+                raise
+
+    return wrapper
 
 
 class Handler(AsyncNamespace):
