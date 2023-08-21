@@ -33,8 +33,8 @@ type GameNotification = {
   id: string;
   state: GameState;
   player_turn_id: number | null;
-  turn_state: TurnState,
-  turn_action: TurnAction,
+  turn_state: TurnState;
+  turn_action: TurnAction;
   turn_state_modified: number | null;
   turn_state_deadline: number | null;
 };

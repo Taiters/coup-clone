@@ -13,21 +13,21 @@ export enum GameState {
 }
 
 export enum TurnState {
-    START,
-    ATTEMPTED,
-    BLOCKED,
-    CHALLENGED,
-    BLOCK_CHALLENGED,
+  START,
+  ATTEMPTED,
+  BLOCKED,
+  CHALLENGED,
+  BLOCK_CHALLENGED,
 }
 
 export enum TurnAction {
-    INCOME,
-    FOREIGN_AID,
-    TAX,
-    STEAL,
-    EXCHANGE,
-    ASSASSINATE,
-    COUP,
+  INCOME,
+  FOREIGN_AID,
+  TAX,
+  STEAL,
+  EXCHANGE,
+  ASSASSINATE,
+  COUP,
 }
 
 export enum Outcome {
@@ -55,8 +55,8 @@ export type Game = {
   id: string;
   state: GameState;
   currentTurn: Player;
-  turnState: TurnState,
-  turnAction: TurnAction,
+  turnState: TurnState;
+  turnAction: TurnAction;
   turnStateModified: Date | null;
   turnStateDeadline: Date | null;
 };

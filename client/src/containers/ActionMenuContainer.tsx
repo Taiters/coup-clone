@@ -1,7 +1,8 @@
 import CurrentTurn from "../components/CurrentTurn";
 import WaitingForPlayer from "../components/WaitingForPlayer";
+import Button from "../components/ui/Button";
+import { socket } from "../socket";
 import { Game, Player, TurnAction, TurnState } from "../types";
-
 
 type Props = {
   game: Game;
@@ -9,18 +10,25 @@ type Props = {
   currentPlayer: Player;
 };
 
-function ActionMenuContainer({game, players, currentPlayer}: Props) {
+function ActionMenuContainer({ game, players, currentPlayer }: Props) {
   if (currentPlayer.isCurrentTurn) {
-    return <CurrentTurn />
+    return <CurrentTurn />;
   }
 
   switch (game.turnState) {
     case TurnState.START:
       return <WaitingForPlayer player={game.currentTurn} />;
     case TurnState.ATTEMPTED:
-      return <p>{game.currentTurn.name} has attempted {TurnAction[game.turnAction]}</p>
+      return (
+        <>
+          <p>
+            {game.currentTurn.name} has attempted {TurnAction[game.turnAction]}
+          </p>
+          <Button label="accept" onClick={() => socket.emit("accept_action")} />
+        </>
+      );
     default:
-      return <p>Hmm...</p>
+      return <p>Hmm...</p>;
   }
 }
 

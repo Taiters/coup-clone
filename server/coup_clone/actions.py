@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 from aiosqlite import Connection
 
-from coup_clone.db.games import TurnAction
 from coup_clone.managers.exceptions import (
     NotPlayerTurnException,
     PlayerNotInGameException,
@@ -39,17 +38,17 @@ class Action(ABC):
 
 class Income(Action):
     async def executeImpl(self, current_player: Player, _: Game) -> bool:
-        await current_player.increment_coins()
+        # await current_player.increment_coins()
         return True
 
 
 class ForeignAid(Action):
     async def executeImpl(self, current_player: Player, game: Game) -> bool:
-        await game.set_action_deadline(TurnAction.FOREIGN_AID)
+        # await game.set_action_deadline(TurnAction.FOREIGN_AID)
         return False
 
 
 class Tax(Action):
     async def executeImpl(self, current_player: Player, game: Game) -> bool:
-        await game.set_action_deadline(TurnAction.TAX)
+        # await game.set_action_deadline(TurnAction.TAX)
         return False

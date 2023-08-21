@@ -1,11 +1,11 @@
 import { Player } from "../types";
 
 type Props = {
-    player: Player;
-}
+  player: Player;
+};
 
-function WaitingForPlayer({player}: Props) {
-    return <span>Waiting for {player.name}</span>
+function WaitingForPlayer({ player }: Props) {
+  return <span>Waiting for {player.name}</span>;
 }
 
 export default WaitingForPlayer;

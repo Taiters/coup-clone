@@ -18,7 +18,9 @@ function CurrentTurn() {
           />
           <Button
             label="Tax"
-            onClick={() => socket.emit("take_action", { action: TurnAction.TAX })}
+            onClick={() =>
+              socket.emit("take_action", { action: TurnAction.TAX })
+            }
           />
           <Button
             label="Exchange"
@@ -42,7 +44,9 @@ function CurrentTurn() {
           />
           <Button
             label="Steal"
-            onClick={() => socket.emit("take_action", { action: TurnAction.STEAL })}
+            onClick={() =>
+              socket.emit("take_action", { action: TurnAction.STEAL })
+            }
           />
         </VGroup>
       </HGroup>

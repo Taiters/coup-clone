@@ -7,7 +7,7 @@ from aiosqlite import Connection
 from socketio import AsyncServer
 
 from coup_clone.actions import Action, ForeignAid, Income, Tax
-from coup_clone.db.games import GamesTable, GameState, TurnAction
+from coup_clone.db.games import GamesTable, GameState, TurnAction, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
     GameFullException,
@@ -146,9 +146,84 @@ class GameManager:
         game = await player.get_game()
         if game.row.player_turn_id != player.id:
             raise NotPlayerTurnException()
-        action = self._get_action(request.conn, request, turn_action, target)
-        turn_complete = await action.execute()
-        if turn_complete:
-            await self._next_player_turn(game)
+
+        match turn_action:
+            case TurnAction.INCOME:
+                await player.increment_coins()
+                await self._next_player_turn(game)
+            case TurnAction.FOREIGN_AID:
+                await game.update(
+                    turn_action=TurnAction.FOREIGN_AID,
+                    turn_state=TurnState.ATTEMPTED,
+                )
+            case TurnAction.TAX:
+                await game.update(
+                    turn_action=TurnAction.TAX,
+                    turn_state=TurnState.ATTEMPTED,
+                )
+            case TurnAction.STEAL:
+                await game.update(
+                    turn_action=TurnAction.STEAL,
+                    turn_state=TurnState.ATTEMPTED,
+                    target_id=target,
+                )
+            case TurnAction.EXCHANGE:
+                await game.update(
+                    turn_action=TurnAction.EXCHANGE,
+                    turn_state=TurnState.ATTEMPTED,
+                )
+            case TurnAction.ASSASSINATE:
+                await game.update(
+                    turn_action=TurnAction.ASSASSINATE,
+                    turn_state=TurnState.ATTEMPTED,
+                )
+            case TurnAction.COUP:
+                await game.update(
+                    turn_action=TurnAction.COUP,
+                    turn_state=TurnState.TARGET_REVEALING,
+                    target_id=target,
+                )
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+
+    async def accept_action(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        await player.update(accepts_action=True)
+
+        game = await player.get_game()
+
+        all_players_accepted = await game.all_players_accepted()
+        if not all_players_accepted:
+            return None
+
+        current_player = await game.get_current_player()
+        if current_player is None:
+            raise Exception("Get a better exception..")
+
+        match game.row.turn_action:
+            case TurnAction.FOREIGN_AID:
+                await current_player.increment_coins(amount=2)
+                await self._next_player_turn(game)
+            case TurnAction.TAX:
+                await current_player.increment_coins(amount=3)
+                await self._next_player_turn(game)
+            case TurnAction.STEAL:
+                target = await game.get_target_player()
+                if target is None:
+                    raise Exception("Find a better exception...")
+                await current_player.increment_coins(amount=2)
+                await target.decrement_coins(amount=2)
+                await self._next_player_turn(game)
+            case TurnAction.EXCHANGE:
+                # TODO: something
+                pass
+            case TurnAction.ASSASSINATE:
+                await game.update(
+                    turn_state=TurnState.TARGET_REVEALING,
+                )
+
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)

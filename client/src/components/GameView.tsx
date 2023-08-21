@@ -15,7 +15,6 @@ type Props = {
   currentPlayer: Player;
 };
 
-
 function GameView({ game, players, events, currentPlayer }: Props) {
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
 
@@ -46,7 +45,11 @@ function GameView({ game, players, events, currentPlayer }: Props) {
         </div>
         <div className={styles.controls}>
           <Container>
-            <ActionMenuContainer game={game} players={players} currentPlayer={currentPlayer} />
+            <ActionMenuContainer
+              game={game}
+              players={players}
+              currentPlayer={currentPlayer}
+            />
           </Container>
         </div>
       </div>

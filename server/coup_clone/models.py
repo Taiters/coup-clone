@@ -29,9 +29,32 @@ class Model(ABC, Generic[T, TID]):
             row = await cls.TABLE.create(cursor, **kwargs)
             return cls(conn, row)
 
+    @classmethod
+    async def get(cls, conn: Connection, id: TID) -> Optional[Self]:
+        async with conn.cursor() as cursor:
+            row = await cls.TABLE.get(cursor, id)
+            if row is not None:
+                return cls(conn, row)
+            return None
+
+    async def update(self, **kwargs: Any) -> None:
+        async with self.conn.cursor() as cursor:
+            await self.TABLE.update(cursor, self.id, **kwargs)
+            self.row = await self.TABLE.get(cursor, self.id)
+
 
 class Game(Model[GameRow, str]):
     TABLE = GamesTable
+
+    async def get_current_player(self) -> Optional["Player"]:
+        if self.row.player_turn_id is None:
+            return None
+        return await Player.get(self.conn, self.row.player_turn_id)
+
+    async def get_target_player(self) -> Optional["Player"]:
+        if self.row.target_id is None:
+            return None
+        return await Player.get(self.conn, self.row.target_id)
 
     async def take_from_deck(self, n: int = 2) -> list[Influence]:
         deck = list(self.row.deck)
@@ -63,6 +86,7 @@ class Game(Model[GameRow, str]):
                 turn_state_modified=datetime.utcnow(),
                 turn_state_deadline=None,
             )
+            await PlayersTable.reset_accepts_action(cursor, self.id)
             self.row = await GamesTable.get(cursor, self.id)
 
     async def set_action_deadline(self, action: TurnAction, seconds_from_now: int = 10) -> None:
@@ -89,6 +113,10 @@ class Game(Model[GameRow, str]):
         else:
             current_index = [p.id for p in players].index(self.row.player_turn_id)
             return players[(current_index + 1) % len(players)]
+
+    async def all_players_accepted(self) -> bool:
+        players = await self.get_players()
+        return all(p.id == self.row.player_turn_id or p.row.accepts_action for p in players)
 
 
 class Player(Model[PlayerRow, int]):

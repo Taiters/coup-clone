@@ -32,6 +32,7 @@ class PlayerRow(TableRow[int]):
     revealed_influence_a: bool
     revealed_influence_b: bool
     host: bool
+    accepts_action: bool
 
 
 class PlayersTable(Table[PlayerRow, int]):
@@ -49,7 +50,8 @@ class PlayersTable(Table[PlayerRow, int]):
             influence_b INTEGER NOT NULL,
             revealed_influence_a INTEGER NOT NULL DEFAULT(0),
             revealed_influence_b INTEGER NOT NULL DEFAULT(0),
-            host INTEGER NOT NULL DEFAULT(0)
+            host INTEGER NOT NULL DEFAULT(0),
+            accepts_action INTEGER DEFAULT(0)
         );
     """
     COLUMNS = [
@@ -63,6 +65,7 @@ class PlayersTable(Table[PlayerRow, int]):
         "revealed_influence_a",
         "revealed_influence_b",
         "host",
+        "accepts_action",
     ]
 
     @staticmethod
@@ -78,4 +81,16 @@ class PlayersTable(Table[PlayerRow, int]):
             revealed_influence_a=row[7],
             revealed_influence_b=row[8],
             host=row[9],
+            accepts_action=row[10],
+        )
+
+    @staticmethod
+    async def reset_accepts_action(cursor: Cursor, game_id: str) -> None:
+        await cursor.execute(
+            """
+        UPDATE players
+        SET accepts_action = 0
+        WHERE game_id = :game_id
+        """,
+            {"game_id": game_id},
         )

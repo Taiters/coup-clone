@@ -107,3 +107,8 @@ class Handler(AsyncNamespace):
     async def on_take_action(self, request: Request, action: dict) -> None:
         print("on_take_action: ", request.sid, action)
         await self.game_manager.take_action(request, action["action"], action.get("target", None))
+
+    @with_request
+    async def on_accept_action(self, request: Request) -> None:
+        print("on_accept_action: ", request.sid)
+        await self.game_manager.accept_action(request)
