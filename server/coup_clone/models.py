@@ -1,17 +1,20 @@
 import random
 from abc import ABC
 from datetime import datetime, timedelta
-from typing import Generic, Optional
+from typing import Any, Generic, Optional
 
 from aiosqlite import Connection
+from typing_extensions import Self
 
 from coup_clone.db.games import GameRow, GamesTable, TurnAction, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionRow, SessionsTable
-from coup_clone.db.table import TID, T
+from coup_clone.db.table import TID, T, Table
 
 
 class Model(ABC, Generic[T, TID]):
+    TABLE: type[Table[T, TID]]
+
     def __init__(self, conn: Connection, row: T):
         self.conn = conn
         self.row = row
@@ -20,8 +23,16 @@ class Model(ABC, Generic[T, TID]):
     def id(self) -> TID:
         return self.row.id
 
+    @classmethod
+    async def create(cls, conn: Connection, **kwargs: Any) -> Self:
+        async with conn.cursor() as cursor:
+            row = await cls.TABLE.create(cursor, **kwargs)
+            return cls(conn, row)
+
 
 class Game(Model[GameRow, str]):
+    TABLE = GamesTable
+
     async def take_from_deck(self, n: int = 2) -> list[Influence]:
         deck = list(self.row.deck)
         popped = [Influence(int(deck.pop())) for i in range(n)]
@@ -81,6 +92,8 @@ class Game(Model[GameRow, str]):
 
 
 class Player(Model[PlayerRow, int]):
+    TABLE = PlayersTable
+
     @property
     def game_id(self) -> str:
         return self.row.game_id
@@ -118,6 +131,8 @@ class Player(Model[PlayerRow, int]):
 
 
 class Session(Model[SessionRow, str]):
+    TABLE = SessionsTable
+
     @property
     def player_id(self) -> Optional[int]:
         return self.row.player_id

@@ -19,7 +19,7 @@ from coup_clone.managers.exceptions import (
     UnsupportedActionException,
 )
 from coup_clone.managers.notifications import NotificationsManager
-from coup_clone.models import Game
+from coup_clone.models import Game, Player
 from coup_clone.request import Request
 
 DECK = [
@@ -65,27 +65,22 @@ class GameManager:
             case _:
                 raise UnsupportedActionException("Unsupported action: " + str(action))
 
-    async def create(self, request: Request) -> Tuple[str, PlayerRow]:
-        async with request.conn.cursor() as cursor:
-            current_player = await request.session.get_player()
-            if current_player is not None:
-                raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
+    async def create(self, request: Request) -> None:
+        current_player = await request.session.get_player()
+        if current_player is not None:
+            raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
 
-            game_id = "".join(random.choice(string.ascii_lowercase) for _ in range(6))
-            game_row = await GamesTable.create(
-                cursor, id=game_id, deck="".join(str(c.value) for c in random.sample(DECK, k=len(DECK)))
-            )
-            game = Game(request.conn, game_row)
-            hand = await game.take_from_deck()
-            player = await PlayersTable.create(
-                cursor, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1]
-            )
-            await request.session.set_player(player.id)
-            await game.reset_turn_state(player.id)
-            await request.conn.commit()
+        game_id = "".join(random.choice(string.ascii_lowercase) for _ in range(6))
+        game = await Game.create(
+            request.conn, id=game_id, deck="".join(str(c.value) for c in random.sample(DECK, k=len(DECK)))
+        )
+        hand = await game.take_from_deck()
+        player = await Player.create(request.conn, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1])
+        await request.session.set_player(player.id)
+        await game.reset_turn_state(player.id)
+        await request.conn.commit()
         self.socket_server.enter_room(request.sid, game.id)
         await self.notifications_manager.notify_session(request.session)
-        return (game.id, player)
 
     async def join(self, request: Request, game_id: str) -> Tuple[str, PlayerRow]:
         async with request.conn.cursor() as cursor:
