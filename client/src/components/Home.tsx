@@ -8,6 +8,7 @@ import HGroup from "./layout/HGroup";
 import styles from "./Home.module.css";
 import { socket } from "../socket";
 import { useState } from "react";
+import Modal from "./ui/Modal";
 
 function Home() {
   const [gameID, setGameID] = useState("");
@@ -20,21 +21,28 @@ function Home() {
     socket.emit("join_game", gameID);
   };
 
+  const [showModal, setShowModal] = useState(true);
+
   return (
-    <Container>
-      <PageTitle heading="Coup" subheading="Another online Coup clone" />
-      <HGroup>
-        <TextInput
-          value={gameID}
-          onChange={setGameID}
-          placeholder="Enter game code..."
-        />
-        <Button label="Join" onClick={onJoinGame} />
-      </HGroup>
-      <a className={styles.create} href="#" onClick={onCreateGame}>
-        Create a new game
-      </a>
-    </Container>
+    <>
+      <Container>
+        <PageTitle heading="Coup" subheading="Another online Coup clone" />
+        <HGroup>
+          <TextInput
+            value={gameID}
+            onChange={setGameID}
+            placeholder="Enter game code..."
+          />
+          <Button label="Join" onClick={onJoinGame} />
+        </HGroup>
+        <a className={styles.create} href="#" onClick={onCreateGame}>
+          Create a new game
+        </a>
+      </Container>
+      {showModal && (
+        <Modal onClose={() => setShowModal(false)} heading="Test modal" />
+      )}
+    </>
   );
 }
 
