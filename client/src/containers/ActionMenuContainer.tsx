@@ -11,13 +11,13 @@ type Props = {
 };
 
 function ActionMenuContainer({ game, players, currentPlayer }: Props) {
-  if (currentPlayer.isCurrentTurn) {
-    return <CurrentTurn />;
-  }
-
   switch (game.turnState) {
     case TurnState.START:
-      return <WaitingForPlayer player={game.currentTurn} />;
+      return currentPlayer.isCurrentTurn ? (
+        <CurrentTurn currentPlayer={currentPlayer} players={players} />
+      ) : (
+        <WaitingForPlayer player={game.currentTurn} />
+      );
     case TurnState.ATTEMPTED:
       return (
         <>

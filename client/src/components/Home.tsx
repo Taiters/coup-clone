@@ -8,7 +8,6 @@ import HGroup from "./layout/HGroup";
 import styles from "./Home.module.css";
 import { socket } from "../socket";
 import { useState } from "react";
-import Modal from "./ui/Modal";
 
 function Home() {
   const [gameID, setGameID] = useState("");
@@ -20,8 +19,6 @@ function Home() {
   const onJoinGame = async () => {
     socket.emit("join_game", gameID);
   };
-
-  const [showModal, setShowModal] = useState(true);
 
   return (
     <>
@@ -39,9 +36,6 @@ function Home() {
           Create a new game
         </a>
       </Container>
-      {showModal && (
-        <Modal onClose={() => setShowModal(false)} heading="Test modal" />
-      )}
     </>
   );
 }

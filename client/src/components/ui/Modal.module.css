@@ -10,11 +10,10 @@
 
 .modal {
   position: relative;
-  width: 468px;
   background-color: #fffede;
   box-shadow: 0 1px 4px 0px #98754d;
   border: 1px solid #98754d;
-  margin: 0 auto;
+  margin: 0 1rem;
 }
 
 .header {
