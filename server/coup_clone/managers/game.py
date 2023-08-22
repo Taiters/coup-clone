@@ -176,6 +176,7 @@ class GameManager:
                 await game.update(
                     turn_action=TurnAction.ASSASSINATE,
                     turn_state=TurnState.ATTEMPTED,
+                    target_id=target,
                 )
             case TurnAction.COUP:
                 await game.update(

@@ -6,6 +6,7 @@
   height: 100%;
   display: flex;
   align-items: center;
+  background-color: #32220861;
 }
 
 .modal {

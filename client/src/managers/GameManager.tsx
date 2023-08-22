@@ -37,6 +37,7 @@ type GameNotification = {
   turn_action: TurnAction;
   turn_state_modified: number | null;
   turn_state_deadline: number | null;
+  turn_target: number | null;
 };
 
 type PlayerNotification = {
@@ -134,6 +135,8 @@ function GameManager({ initializing, children }: Props) {
             game.turn_state_deadline != null
               ? new Date(nullthrows(game.turn_state_deadline) * 1000)
               : null,
+          turnTarget:
+            gamePlayers.find((p) => p.id === game?.turn_target) ?? null,
           currentTurn,
         },
         players: gamePlayers,

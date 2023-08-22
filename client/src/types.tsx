@@ -18,6 +18,8 @@ export enum TurnState {
   BLOCKED,
   CHALLENGED,
   BLOCK_CHALLENGED,
+  REVEALING,
+  TARGET_REVEALING,
 }
 
 export enum TurnAction {
@@ -59,6 +61,7 @@ export type Game = {
   turnAction: TurnAction;
   turnStateModified: Date | null;
   turnStateDeadline: Date | null;
+  turnTarget: Player | null;
 };
 
 export type GameEvent = {

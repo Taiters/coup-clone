@@ -1,8 +1,9 @@
+import AttemptedActionMenu from "../components/AttemptedActionMenu";
 import CurrentTurn from "../components/CurrentTurn";
+import RevealingActionMenu from "../components/RevealingActionMenu";
 import WaitingForPlayer from "../components/WaitingForPlayer";
-import Button from "../components/ui/Button";
-import { socket } from "../socket";
-import { Game, Player, TurnAction, TurnState } from "../types";
+import { Game, Player, TurnState } from "../types";
+import { nullthrows } from "../utils";
 
 type Props = {
   game: Game;
@@ -19,13 +20,20 @@ function ActionMenuContainer({ game, players, currentPlayer }: Props) {
         <WaitingForPlayer player={game.currentTurn} />
       );
     case TurnState.ATTEMPTED:
+      return <AttemptedActionMenu game={game} currentPlayer={currentPlayer} />;
+    case TurnState.TARGET_REVEALING:
       return (
-        <>
-          <p>
-            {game.currentTurn.name} has attempted {TurnAction[game.turnAction]}
-          </p>
-          <Button label="accept" onClick={() => socket.emit("accept_action")} />
-        </>
+        <RevealingActionMenu
+          playerToReveal={nullthrows(game.turnTarget)}
+          currentPlayer={currentPlayer}
+        />
+      );
+    case TurnState.REVEALING:
+      return (
+        <RevealingActionMenu
+          playerToReveal={nullthrows(game.currentTurn)}
+          currentPlayer={currentPlayer}
+        />
       );
     default:
       return <p>Hmm...</p>;
