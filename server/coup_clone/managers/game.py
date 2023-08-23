@@ -236,22 +236,112 @@ class GameManager:
 
         game = await player.get_game()
 
-        if game.row.turn_state not in {TurnState.REVEALING, TurnState.TARGET_REVEALING}:
+        if game.row.turn_state not in {TurnState.REVEALING, TurnState.TARGET_REVEALING, TurnState.CHALLENGED}:
             raise Exception("Invalid turn state")
 
-        if game.row.turn_state == TurnState.REVEALING and player.id != game.row.player_turn_id:
+        if (game.row.turn_state == TurnState.REVEALING or game.row.turn_state == TurnState.CHALLENGED) \
+            and player.id != game.row.player_turn_id:
             raise Exception("Expecting current turn player to reveal")
 
         if game.row.turn_state == TurnState.TARGET_REVEALING and player.id != game.row.target_id:
             raise Exception("Expecting current turn target to reveal")
 
+        # This is all horrible, must refactor... writing this makes me feel better in the meantime
+        revealed = None
         if player.row.influence_a == influence and not player.row.revealed_influence_a:
+            revealed = 'A'
             await player.update(revealed_influence_a=True)
         elif player.row.influence_b == influence and not player.row.revealed_influence_b:
+            revealed = 'B'
             await player.update(revealed_influence_b=True)
         else:
             raise Exception("Invalid influence for reveal")
+        
+        if game.row.turn_state == TurnState.CHALLENGED:
+            action = game.row.turn_action
+            match action:
+                case TurnAction.TAX:
+                    if influence == Influence.DUKE:
+                        await player.increment_coins(amount=3)
+                        await game.return_to_deck([influence])
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case 'A':
+                                await player.update(influence_a=new_card, revealed_influence_a=False)
+                            case 'B':
+                                await player.update(influence_b=new_card, revealed_influence_b=False)
+                        await game.update(
+                            turn_state=TurnState.CHALLENGER_REVEALING,
+                        )
+                    else:
+                        await self._next_player_turn(game)
+                case TurnAction.STEAL:
+                    if influence == Influence.CAPTAIN:
+                        target = await game.get_target_player()
+                        if target is None:
+                            raise Exception("Whoa, where's the target!?")
+                        await player.increment_coins(amount=2)
+                        await target.decrement_coins(amount=2)
 
-        await self._next_player_turn(game)
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case 'A':
+                                await player.update(influence_a=new_card, revealed_influence_a=False)
+                            case 'B':
+                                await player.update(influence_b=new_card, revealed_influence_b=False)
+                        await game.update(
+                            turn_state=TurnState.CHALLENGER_REVEALING,
+                        )
+                    else:
+                        await self._next_player_turn(game)
+                case TurnAction.EXCHANGE:
+                    # Do something
+                    pass
+                case TurnAction.ASSASSINATE:
+                    if influence == Influence.ASSASSIN:
+                        await game.update(
+                            turn_state=TurnState.TARGET_REVEALING,
+                        )
+
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case 'A':
+                                await player.update(influence_a=new_card, revealed_influence_a=False)
+                            case 'B':
+                                await player.update(influence_b=new_card, revealed_influence_b=False)
+                        
+                        # Hmm, we already need to set the target revealing state
+                        # await game.update(
+                        #     turn_state=TurnState.CHALLENGER_REVEALING,
+                        # )
+                    else:
+                        await self._next_player_turn(game)
+                case _:
+                    raise Exception("Unexpected challenge")
+        else:
+            await self._next_player_turn(game)
+            
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+        # In case the hand changed...
+        await self.notifications_manager.notify_game(request.conn, request.session)
+
+    async def challenge(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        game = await player.get_game()
+
+        if game.row.turn_state != TurnState.ATTEMPTED:
+            raise Exception("Invalid turn state")
+        
+        if game.row.player_turn_id == player.id:
+            raise Exception("Cannot challenge self")
+        
+        await game.update(
+            turn_state=TurnState.CHALLENGED,
+            challenged_by_id=player.id
+        )
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)

@@ -1,5 +1,6 @@
 import { socket } from "../socket";
 import { Game, Player, TurnAction } from "../types";
+import HGroup from "./layout/HGroup";
 import VGroup from "./layout/VGroup";
 import Button from "./ui/Button";
 
@@ -24,7 +25,10 @@ function AttemptedActionMenu({ game, currentPlayer }: Props) {
         {game.currentTurn.name} has attempted {TurnAction[game.turnAction]}
         {game.turnTarget && ` against ${game.turnTarget.name}`}
       </p>
-      <Button label="accept" onClick={() => socket.emit("accept_action")} />
+      <HGroup>
+        <Button label="Accept" onClick={() => socket.emit("accept_action")} />
+        <Button label="Challenge" onClick={() => socket.emit("challenge")} />
+      </HGroup>
     </VGroup>
   );
 }
