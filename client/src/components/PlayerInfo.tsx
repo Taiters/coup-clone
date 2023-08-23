@@ -3,21 +3,20 @@ import HGroup from "./layout/HGroup";
 import Influence from "./ui/Influence";
 import PlayerName from "./ui/PlayerName";
 import { Player, PlayerInfluence } from "../types";
-import styles from './PlayerInfo.module.css';
+import styles from "./PlayerInfo.module.css";
 
 type Props = {
   player: Player;
 };
 
 function PlayerInfo({ player }: Props) {
-  const isOut = player.influenceA !== PlayerInfluence.UNKNOWN && player.influenceB !== PlayerInfluence.UNKNOWN;
+  const isOut =
+    player.influenceA !== PlayerInfluence.UNKNOWN &&
+    player.influenceB !== PlayerInfluence.UNKNOWN;
   return (
     <HGroup className={isOut ? styles.out : undefined}>
       <div style={{ width: "45%" }}>
-        <PlayerName
-          name={player.name}
-          isCurrentTurn={player.isCurrentTurn}
-        />
+        <PlayerName name={player.name} isCurrentTurn={player.isCurrentTurn} />
       </div>
       <Coins value={player.coins} />
       <div style={{ width: "25%" }}>

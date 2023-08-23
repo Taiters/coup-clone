@@ -4,16 +4,18 @@ import LobbyPlayer from "./LobbyPlayer";
 import PageTitle from "./ui/PageTitle";
 import VGroup from "./layout/VGroup";
 import styles from "./Lobby.module.css";
-import { Player, PlayerState } from "../types";
+import { Game, Player, PlayerState } from "../types";
 import LeaveButton from "./LeaveButton";
+import { FaShare } from "react-icons/fa6";
 
 type Props = {
+  game: Game;
   players: Player[];
   currentPlayer: Player;
   onStart: () => void;
 };
 
-function Lobby({ players, currentPlayer, onStart }: Props) {
+function Lobby({ game, players, currentPlayer, onStart }: Props) {
   const lobbyPlayers = players.map((p, i) => (
     <LobbyPlayer key={i} player={p} current={currentPlayer.id === p.id} />
   ));
@@ -24,9 +26,26 @@ function Lobby({ players, currentPlayer, onStart }: Props) {
   const readyToStart =
     players.filter((p) => p.state === PlayerState.READY).length >= 2;
 
+  const canShare = navigator.share != null;
+
+  const onShare = () => {
+    navigator.share({
+      url: window.location.href,
+      title: "Come play coup",
+      text: "Game Code: " + game.id,
+    });
+  };
+
   return (
     <Container>
-      <PageTitle heading="Lobby" subheading="Code: 123ABC" />
+      <PageTitle
+        heading="Lobby"
+        subheading={
+          <span>
+            Code: {game.id} {canShare && <FaShare onClick={onShare} />}
+          </span>
+        }
+      />
       <VGroup className={styles.players}>{lobbyPlayers}</VGroup>
       <VGroup>
         {currentPlayer.host ? (

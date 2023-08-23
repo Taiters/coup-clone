@@ -175,6 +175,8 @@ class Session(Model[SessionRow, str]):
 
         async with self.conn.cursor() as cursor:
             player = await PlayersTable.get(cursor, self.player_id)
+        if player is None:
+            return None
         return Player(self.conn, player)
 
     async def set_player(self, player_id: int) -> None:

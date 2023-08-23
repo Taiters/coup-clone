@@ -20,6 +20,7 @@ function GameContainer({ game, players, events, currentPlayer }: Props) {
     case GameState.LOBBY:
       return (
         <Lobby
+          game={game}
           players={players}
           currentPlayer={currentPlayer}
           onStart={() => socket.emit("start_game")}
