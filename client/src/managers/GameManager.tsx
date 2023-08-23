@@ -39,6 +39,8 @@ type GameNotification = {
   turn_state_deadline: number | null;
   turn_target: number | null;
   turn_challenger: number | null;
+  turn_blocker: number | null;
+  turn_block_challenger: number | null;
   winner: number | null;
 };
 
@@ -156,6 +158,11 @@ function GameManager({ initializing, children }: Props) {
             gamePlayers.find((p) => p.id === game?.turn_target) ?? null,
           turnChallenger:
             gamePlayers.find((p) => p.id === game?.turn_challenger) ?? null,
+          turnBlocker:
+            gamePlayers.find((p) => p.id === game?.turn_blocker) ?? null,
+          turnBlockChallenger:
+            gamePlayers.find((p) => p.id === game?.turn_block_challenger) ??
+            null,
           currentTurn,
           winner: gamePlayers.find((p) => p.id === game?.winner) ?? null,
         },

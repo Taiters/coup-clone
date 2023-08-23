@@ -23,6 +23,7 @@ class TurnState(enum.IntEnum):
     REVEALING = 5
     TARGET_REVEALING = 6
     CHALLENGER_REVEALING = 7
+    BLOCK_CHALLENGER_REVEALING = 8
 
 
 class TurnAction(enum.IntEnum):

@@ -56,6 +56,11 @@ class Game(Model[GameRow, str]):
             return None
         return await Player.get(self.conn, self.row.target_id)
 
+    async def get_blocking_player(self) -> Optional["Player"]:
+        if self.row.blocked_by_id is None:
+            return None
+        return await Player.get(self.conn, self.row.blocked_by_id)
+
     async def take_from_deck(self, n: int = 2) -> list[Influence]:
         deck = list(self.row.deck)
         popped = [Influence(int(deck.pop())) for i in range(n)]

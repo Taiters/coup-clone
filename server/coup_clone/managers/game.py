@@ -211,9 +211,11 @@ class GameManager:
         if player is None:
             raise PlayerNotInGameException()
 
-        await player.update(accepts_action=True)
-
         game = await player.get_game()
+        if game.row.turn_state != TurnState.ATTEMPTED:
+            raise Exception("Invalid turn state")
+
+        await player.update(accepts_action=True)
 
         all_players_accepted = await game.all_players_accepted()
         if not all_players_accepted:
@@ -265,11 +267,17 @@ class GameManager:
 
         game = await player.get_game()
 
+        current_player = await game.get_current_player()
+        if current_player is None:
+            raise Exception("Current player is missing")
+
         if game.row.turn_state not in {
             TurnState.REVEALING,
             TurnState.TARGET_REVEALING,
             TurnState.CHALLENGED,
             TurnState.CHALLENGER_REVEALING,
+            TurnState.BLOCK_CHALLENGED,
+            TurnState.BLOCK_CHALLENGER_REVEALING,
         }:
             raise Exception("Invalid turn state")
 
@@ -283,6 +291,12 @@ class GameManager:
 
         if game.row.turn_state == TurnState.CHALLENGER_REVEALING and player.id != game.row.challenged_by_id:
             raise Exception("Expecting current turn challenger to reveal")
+
+        if game.row.turn_state == TurnState.BLOCK_CHALLENGED and player.id != game.row.blocked_by_id:
+            raise Exception("Expecting blocker to reveal")
+
+        if game.row.turn_state == TurnState.BLOCK_CHALLENGER_REVEALING and player.id != game.row.block_challenged_by_id:
+            raise Exception("Expecting blocker to reveal")
 
         revealed = None
         if player.row.influence_a == influence and not player.row.revealed_influence_a:
@@ -361,7 +375,80 @@ class GameManager:
                         await self._next_player_turn(game)
                 case _:
                     raise Exception("Unexpected challenge")
-        elif game.row.turn_state == TurnState.CHALLENGER_REVEALING:
+
+        elif game.row.turn_state == TurnState.BLOCK_CHALLENGED:
+            action = game.row.turn_action
+            match action:
+                case TurnAction.FOREIGN_AID:
+                    if influence == Influence.DUKE:
+                        await self._add_log_message(game, f"{player.row.name} succesfully blocked Foreign Aid")
+                        await game.update(turn_state=TurnState.BLOCK_CHALLENGER_REVEALING)
+
+                        await game.return_to_deck([influence])
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
+                    else:
+                        await self._add_log_message(game, f"{current_player.row.name} succesfully took Foreign Aid")
+                        await current_player.increment_coins(amount=2)
+                        await self._next_player_turn(game)
+
+                case TurnAction.STEAL:
+                    target = await game.get_target_player()
+                    if target is None:
+                        raise Exception("Target missing")
+
+                    if influence in {Influence.AMBASSADOR, Influence.CAPTAIN}:
+                        await self._add_log_message(game, f"{player.row.name} succesfully blocked Foreign Aid")
+                        await game.update(turn_state=TurnState.BLOCK_CHALLENGER_REVEALING)
+
+                        await game.return_to_deck([influence])
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
+                    else:
+                        await self._add_log_message(
+                            game, f"{current_player.row.name} succesfully stole from {target.row.name}"
+                        )
+                        await current_player.increment_coins(amount=2)
+                        await target.decrement_coins(amount=2)
+                        await self._next_player_turn(game)
+
+                case TurnAction.ASSASSINATE:
+                    target = await game.get_target_player()
+                    if target is None:
+                        raise Exception("Target missing")
+
+                    if influence == Influence.CONTESSA:
+                        await self._add_log_message(game, f"{player.row.name} succesfully blocked Assassination")
+                        await game.update(turn_state=TurnState.BLOCK_CHALLENGER_REVEALING)
+
+                        await game.return_to_deck([influence])
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
+                    else:
+                        await self._add_log_message(
+                            game, f"{current_player.row.name} succesfully assassinates {target.row.name}"
+                        )
+                        await game.update(turn_state=TurnState.TARGET_REVEALING)
+
+                case _:
+                    raise Exception("Unexpected block challenge")
+
+        elif (
+            game.row.turn_state == TurnState.CHALLENGER_REVEALING
+            or game.row.turn_state == TurnState.BLOCK_CHALLENGER_REVEALING
+        ):
             if game.row.turn_action == TurnAction.ASSASSINATE:
                 await game.update(
                     turn_state=TurnState.TARGET_REVEALING,
@@ -411,5 +498,68 @@ class GameManager:
 
         await self._add_log_message(game, f"{player.row.name} challenges {current_player.row.name}")
         await game.update(turn_state=TurnState.CHALLENGED, challenged_by_id=player.id)
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+
+    async def block(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        game = await player.get_game()
+        current_player = await game.get_current_player()
+        if current_player is None:
+            raise Exception("No current player")
+
+        if game.row.turn_state != TurnState.ATTEMPTED:
+            raise Exception("Invalid turn state")
+
+        if game.row.player_turn_id == player.id:
+            raise Exception("Cannot block self")
+
+        if game.row.target_id is not None and game.row.target_id != player.id:
+            raise Exception("Invalid requester for blocking")
+
+        if game.row.turn_action not in {
+            TurnAction.FOREIGN_AID,
+            TurnAction.ASSASSINATE,
+            TurnAction.STEAL,
+        }:
+            raise Exception("Cannot block current action")
+
+        await game.update(turn_state=TurnState.BLOCKED, blocked_by_id=player.id)
+        await self._add_log_message(game, f"{player.row.name} blocks {current_player.row.name}")
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+
+    async def accept_block(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        game = await player.get_game()
+        if player.id != game.row.player_turn_id:
+            raise Exception("Current turn player can only accept blocks")
+
+        await self._add_log_message(game, f"{player.row.name} backs down")
+        await self._next_player_turn(game)
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+
+    async def challenge_block(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        game = await player.get_game()
+        if player.id == game.row.blocked_by_id:
+            raise Exception("Player can't challenge own block")
+
+        blocking = await game.get_blocking_player()
+        if blocking is None:
+            raise Exception("There's no blockign player")
+
+        await game.update(turn_state=TurnState.BLOCK_CHALLENGED, block_challenged_by_id=player.id)
+        await self._add_log_message(game, f"{player.row.name} challenged {blocking.row.name}")
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)

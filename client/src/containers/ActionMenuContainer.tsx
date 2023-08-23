@@ -1,4 +1,5 @@
 import AttemptedActionMenu from "../components/AttemptedActionMenu";
+import BlockedMenu from "../components/BlockedMenu";
 import CurrentTurn from "../components/CurrentTurn";
 import RevealingActionMenu from "../components/RevealingActionMenu";
 import WaitingForPlayer from "../components/WaitingForPlayer";
@@ -61,6 +62,22 @@ function ActionMenuContainer({ game, players, currentPlayer }: Props) {
             currentPlayer={currentPlayer}
           />
         </>
+      );
+    case TurnState.BLOCKED:
+      return <BlockedMenu game={game} currentPlayer={currentPlayer} />;
+    case TurnState.BLOCK_CHALLENGED:
+      return (
+        <RevealingActionMenu
+          playerToReveal={nullthrows(game.turnBlocker)}
+          currentPlayer={currentPlayer}
+        />
+      );
+    case TurnState.BLOCK_CHALLENGER_REVEALING:
+      return (
+        <RevealingActionMenu
+          playerToReveal={nullthrows(game.turnBlockChallenger)}
+          currentPlayer={currentPlayer}
+        />
       );
     default:
       return <p>Hmm...</p>;

@@ -43,6 +43,8 @@ def map_game(game: GameRow) -> dict:
         "turn_state_deadline": game.turn_state_deadline.timestamp() if game.turn_state_deadline is not None else None,
         "turn_target": game.target_id,
         "turn_challenger": game.challenged_by_id,
+        "turn_blocker": game.blocked_by_id,
+        "turn_block_challenger": game.block_challenged_by_id,
         "winner": game.winner_id,
     }
 

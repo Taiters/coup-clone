@@ -123,3 +123,18 @@ class Handler(AsyncNamespace):
     async def on_challenge(self, request: Request) -> None:
         print("on_challenge: ", request.sid)
         await self.game_manager.challenge(request)
+
+    @with_request
+    async def on_block(self, request: Request) -> None:
+        print("on_block: ", request.sid)
+        await self.game_manager.block(request)
+
+    @with_request
+    async def on_accept_block(self, request: Request) -> None:
+        print("on_accept_block: ", request.sid)
+        await self.game_manager.accept_block(request)
+
+    @with_request
+    async def on_challenge_block(self, request: Request) -> None:
+        print("on_challenge_block: ", request.sid)
+        await self.game_manager.challenge_block(request)

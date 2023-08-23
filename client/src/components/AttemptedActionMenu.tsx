@@ -19,6 +19,12 @@ function AttemptedActionMenu({ game, currentPlayer }: Props) {
     );
   }
 
+  const canBlock =
+    game.turnAction === TurnAction.FOREIGN_AID ||
+    (game.turnTarget?.id === currentPlayer.id &&
+      (game.turnAction === TurnAction.STEAL ||
+        game.turnAction === TurnAction.ASSASSINATE));
+
   return (
     <VGroup>
       <p>
@@ -28,6 +34,9 @@ function AttemptedActionMenu({ game, currentPlayer }: Props) {
       <HGroup>
         <Button label="Accept" onClick={() => socket.emit("accept_action")} />
         <Button label="Challenge" onClick={() => socket.emit("challenge")} />
+        {canBlock && (
+          <Button label="Block" onClick={() => socket.emit("block")} />
+        )}
       </HGroup>
     </VGroup>
   );
