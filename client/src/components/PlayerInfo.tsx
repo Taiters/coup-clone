@@ -16,10 +16,10 @@ function PlayerInfo({ player }: Props) {
       </div>
       <Coins value={player.coins} />
       <div style={{ width: "25%" }}>
-        <Influence influence={player.influence[0]} />
+        <Influence influence={player.hand?.influenceA ?? player.influenceA} />
       </div>
       <div style={{ width: "25%" }}>
-        <Influence influence={player.influence[1]} />
+        <Influence influence={player.hand?.influenceB ?? player.influenceB} />
       </div>
     </HGroup>
   );

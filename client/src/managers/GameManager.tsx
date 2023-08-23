@@ -45,8 +45,14 @@ type PlayerNotification = {
   name: string | null;
   state: PlayerState;
   coins: number;
-  influence: PlayerInfluence[];
+  influence_a: PlayerInfluence;
+  influence_b: PlayerInfluence;
   host: boolean;
+};
+
+type HandNotification = {
+  influence_a: PlayerInfluence;
+  influence_b: PlayerInfluence;
 };
 
 type EventNotification = {
@@ -61,7 +67,7 @@ function GameManager({ initializing, children }: Props) {
   const [game, setGame] = useState<GameNotification | null>(null);
   const [players, setPlayers] = useState<PlayerNotification[]>([]);
   const [events, setEvents] = useState<EventNotification[]>([]);
-  const [hand, setHand] = useState<PlayerInfluence[]>([]);
+  const [hand, setHand] = useState<HandNotification | null>(null);
 
   useEffect(() => {
     socket.emit("initialize_game");
@@ -82,7 +88,7 @@ function GameManager({ initializing, children }: Props) {
       setEvents(events);
     };
 
-    const handleHand = (hand: PlayerInfluence[]) => {
+    const handleHand = (hand: HandNotification) => {
       setHand(hand);
     };
 
@@ -95,14 +101,16 @@ function GameManager({ initializing, children }: Props) {
     };
   }, [setGame, setPlayers, setEvents, setHand]);
 
-  const gamePlayers = players.map((p) => ({
+  const gamePlayers = players.map<Player>((p) => ({
     id: p.id,
     name: p.name ?? "",
     state: p.state,
     coins: p.coins,
-    influence: p.influence,
+    influenceA: p.influence_a,
+    influenceB: p.influence_b,
     host: p.host,
     isCurrentTurn: p.id === game?.player_turn_id,
+    hand: null,
   }));
   const currentTurn = gamePlayers.find((p) => p.id === game?.player_turn_id);
   const currentPlayer = gamePlayers.find((p) => p.id === session.playerID);
@@ -114,11 +122,20 @@ function GameManager({ initializing, children }: Props) {
     message: e.message,
   }));
 
-  if (game == null || currentPlayer == null || currentTurn == null) {
+  if (
+    game == null ||
+    currentPlayer == null ||
+    currentTurn == null ||
+    hand == null
+  ) {
     return <>{initializing}</>;
   }
 
-  currentPlayer.influence = hand;
+  currentPlayer.hand = {
+    influenceA: hand.influence_a,
+    influenceB: hand.influence_b,
+  };
+
   return (
     <>
       {children({

@@ -24,7 +24,6 @@ type Props = {
 };
 
 function Influence({ influence }: Props) {
-  const isUnknown = influence === PlayerInfluence.UNKNOWN;
   return (
     <div
       className={styles.influence}

@@ -5,6 +5,7 @@ from socketio import AsyncNamespace
 from socketio.exceptions import ConnectionRefusedError
 
 from coup_clone import db
+from coup_clone.db.players import Influence
 from coup_clone.managers.exceptions import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
@@ -112,3 +113,8 @@ class Handler(AsyncNamespace):
     async def on_accept_action(self, request: Request) -> None:
         print("on_accept_action: ", request.sid)
         await self.game_manager.accept_action(request)
+
+    @with_request
+    async def on_reveal(self, request: Request, influence: Influence) -> None:
+        print("on_reveal: +", request.sid)
+        await self.game_manager.reveal_influence(request, influence)

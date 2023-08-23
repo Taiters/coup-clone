@@ -48,9 +48,14 @@ export type Player = {
   name: string;
   state: PlayerState;
   coins: number;
-  influence: PlayerInfluence[];
+  influenceA: PlayerInfluence;
+  influenceB: PlayerInfluence;
   host: boolean;
   isCurrentTurn: boolean;
+  hand: {
+    influenceA: PlayerInfluence;
+    influenceB: PlayerInfluence;
+  } | null;
 };
 
 export type Game = {

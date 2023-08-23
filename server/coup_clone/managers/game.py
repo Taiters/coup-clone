@@ -228,3 +228,30 @@ class GameManager:
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+
+    async def reveal_influence(self, request: Request, influence: Influence) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        game = await player.get_game()
+
+        if game.row.turn_state not in {TurnState.REVEALING, TurnState.TARGET_REVEALING}:
+            raise Exception("Invalid turn state")
+
+        if game.row.turn_state == TurnState.REVEALING and player.id != game.row.player_turn_id:
+            raise Exception("Expecting current turn player to reveal")
+
+        if game.row.turn_state == TurnState.TARGET_REVEALING and player.id != game.row.target_id:
+            raise Exception("Expecting current turn target to reveal")
+
+        if player.row.influence_a == influence and not player.row.revealed_influence_a:
+            await player.update(revealed_influence_a=True)
+        elif player.row.influence_b == influence and not player.row.revealed_influence_b:
+            await player.update(revealed_influence_b=True)
+        else:
+            raise Exception("Invalid influence for reveal")
+
+        await self._next_player_turn(game)
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)

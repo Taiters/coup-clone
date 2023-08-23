@@ -18,10 +18,8 @@ def map_player(player: PlayerRow) -> dict:
         "name": player.name,
         "state": player.state,
         "coins": player.coins,
-        "influence": [
-            player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
-            player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
-        ],
+        "influence_a": player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
+        "influence_b": player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
         "host": player.host,
     }
 
@@ -90,10 +88,11 @@ class NotificationsManager:
         await self._send_game(conn, player.game_id, to=session.id)
         await self.socket_server.emit(
             "hand",
-            [
-                player.influence_a,
-                player.influence_b,
-            ],
+            {
+                "influence_a": player.row.influence_a,
+                "influence_b": player.row.influence_b,
+            },
+            to=session.id,
         )
 
     async def broadcast_game(self, conn: Connection, game_id: str) -> None:
