@@ -1,10 +1,10 @@
 export enum PlayerInfluence {
   UNKNOWN,
+  DUKE,
   AMBASSADOR,
   ASSASSIN,
-  CAPTAIN,
-  DUKE,
   CONTESSA,
+  CAPTAIN,
 }
 
 export enum GameState {

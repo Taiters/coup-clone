@@ -21,12 +21,13 @@ const INFLUENCE_NAMES = {
 
 type Props = {
   influence: PlayerInfluence;
+  revealed?: boolean;
 };
 
-function Influence({ influence }: Props) {
+function Influence({ influence, revealed = false }: Props) {
   return (
     <div
-      className={styles.influence}
+      className={`${styles.influence} ${revealed && styles.revealed}`}
       style={{
         color: INFLUENCE_COLORS[influence],
       }}

@@ -1,4 +1,19 @@
 .influence {
   font-weight: bold;
   text-align: center;
+  position: relative;
+}
+
+.revealed {
+  filter: grayscale(50%);
+}
+
+.revealed:after {
+  content: "";
+  position: absolute;
+  left: 15%;
+  top: 50%;
+  width: 70%;
+  height: 2px;
+  background-color: #00000088;
 }

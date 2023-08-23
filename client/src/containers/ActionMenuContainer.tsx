@@ -35,6 +35,13 @@ function ActionMenuContainer({ game, players, currentPlayer }: Props) {
           currentPlayer={currentPlayer}
         />
       );
+    case TurnState.CHALLENGER_REVEALING:
+      return (
+        <RevealingActionMenu
+          playerToReveal={nullthrows(game.turnChallenger)}
+          currentPlayer={currentPlayer}
+        />
+      );
     case TurnState.CHALLENGED:
       return (
         <>

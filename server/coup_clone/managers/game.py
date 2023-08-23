@@ -6,7 +6,6 @@ from typing import Optional, Tuple
 from aiosqlite import Connection
 from socketio import AsyncServer
 
-from coup_clone.actions import Action, ForeignAid, Income, Tax
 from coup_clone.db.games import GamesTable, GameState, TurnAction, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerState
 from coup_clone.managers.exceptions import (
@@ -53,17 +52,6 @@ class GameManager:
     async def _next_player_turn(self, game: Game) -> None:
         next_player = await game.get_next_player_turn()
         await game.reset_turn_state(next_player.id)
-
-    def _get_action(self, conn: Connection, request: Request, action: TurnAction, target: Optional[int]) -> Action:
-        match action:
-            case TurnAction.INCOME:
-                return Income(conn, request)
-            case TurnAction.FOREIGN_AID:
-                return ForeignAid(conn, request)
-            case TurnAction.TAX:
-                return Tax(conn, request)
-            case _:
-                raise UnsupportedActionException("Unsupported action: " + str(action))
 
     async def create(self, request: Request) -> None:
         current_player = await request.session.get_player()
@@ -230,33 +218,43 @@ class GameManager:
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def reveal_influence(self, request: Request, influence: Influence) -> None:
+        # This is all horrible, must refactor... writing this makes me feel better in the meantime
+
         player = await request.session.get_player()
         if player is None:
             raise PlayerNotInGameException()
 
         game = await player.get_game()
 
-        if game.row.turn_state not in {TurnState.REVEALING, TurnState.TARGET_REVEALING, TurnState.CHALLENGED}:
+        if game.row.turn_state not in {
+            TurnState.REVEALING,
+            TurnState.TARGET_REVEALING,
+            TurnState.CHALLENGED,
+            TurnState.CHALLENGER_REVEALING,
+        }:
             raise Exception("Invalid turn state")
 
-        if (game.row.turn_state == TurnState.REVEALING or game.row.turn_state == TurnState.CHALLENGED) \
-            and player.id != game.row.player_turn_id:
+        if (
+            game.row.turn_state == TurnState.REVEALING or game.row.turn_state == TurnState.CHALLENGED
+        ) and player.id != game.row.player_turn_id:
             raise Exception("Expecting current turn player to reveal")
 
         if game.row.turn_state == TurnState.TARGET_REVEALING and player.id != game.row.target_id:
             raise Exception("Expecting current turn target to reveal")
 
-        # This is all horrible, must refactor... writing this makes me feel better in the meantime
+        if game.row.turn_state == TurnState.CHALLENGER_REVEALING and player.id != game.row.challenged_by_id:
+            raise Exception("Expecting current turn challenger to reveal")
+
         revealed = None
         if player.row.influence_a == influence and not player.row.revealed_influence_a:
-            revealed = 'A'
+            revealed = "A"
             await player.update(revealed_influence_a=True)
         elif player.row.influence_b == influence and not player.row.revealed_influence_b:
-            revealed = 'B'
+            revealed = "B"
             await player.update(revealed_influence_b=True)
         else:
             raise Exception("Invalid influence for reveal")
-        
+
         if game.row.turn_state == TurnState.CHALLENGED:
             action = game.row.turn_action
             match action:
@@ -266,10 +264,10 @@ class GameManager:
                         await game.return_to_deck([influence])
                         new_card = await game.take_from_deck(n=1)
                         match revealed:
-                            case 'A':
-                                await player.update(influence_a=new_card, revealed_influence_a=False)
-                            case 'B':
-                                await player.update(influence_b=new_card, revealed_influence_b=False)
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
                         await game.update(
                             turn_state=TurnState.CHALLENGER_REVEALING,
                         )
@@ -283,12 +281,13 @@ class GameManager:
                         await player.increment_coins(amount=2)
                         await target.decrement_coins(amount=2)
 
+                        await game.return_to_deck([influence])
                         new_card = await game.take_from_deck(n=1)
                         match revealed:
-                            case 'A':
-                                await player.update(influence_a=new_card, revealed_influence_a=False)
-                            case 'B':
-                                await player.update(influence_b=new_card, revealed_influence_b=False)
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
                         await game.update(
                             turn_state=TurnState.CHALLENGER_REVEALING,
                         )
@@ -300,27 +299,29 @@ class GameManager:
                 case TurnAction.ASSASSINATE:
                     if influence == Influence.ASSASSIN:
                         await game.update(
-                            turn_state=TurnState.TARGET_REVEALING,
+                            turn_state=TurnState.CHALLENGER_REVEALING,
                         )
-
+                        await game.return_to_deck([influence])
                         new_card = await game.take_from_deck(n=1)
                         match revealed:
-                            case 'A':
-                                await player.update(influence_a=new_card, revealed_influence_a=False)
-                            case 'B':
-                                await player.update(influence_b=new_card, revealed_influence_b=False)
-                        
-                        # Hmm, we already need to set the target revealing state
-                        # await game.update(
-                        #     turn_state=TurnState.CHALLENGER_REVEALING,
-                        # )
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
                     else:
                         await self._next_player_turn(game)
                 case _:
                     raise Exception("Unexpected challenge")
+        elif game.row.turn_state == TurnState.CHALLENGER_REVEALING:
+            if game.row.turn_action == TurnAction.ASSASSINATE:
+                await game.update(
+                    turn_state=TurnState.TARGET_REVEALING,
+                )
+            else:
+                await self._next_player_turn(game)
         else:
             await self._next_player_turn(game)
-            
+
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
         # In case the hand changed...
@@ -335,13 +336,17 @@ class GameManager:
 
         if game.row.turn_state != TurnState.ATTEMPTED:
             raise Exception("Invalid turn state")
-        
+
         if game.row.player_turn_id == player.id:
             raise Exception("Cannot challenge self")
         
-        await game.update(
-            turn_state=TurnState.CHALLENGED,
-            challenged_by_id=player.id
-        )
+        if game.row.turn_action in {
+            TurnAction.INCOME,
+            TurnAction.FOREIGN_AID,
+            TurnAction.COUP,
+        }:
+            raise Exception("Cannot challenge this action")
+
+        await game.update(turn_state=TurnState.CHALLENGED, challenged_by_id=player.id)
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)

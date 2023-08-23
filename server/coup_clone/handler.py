@@ -115,9 +115,9 @@ class Handler(AsyncNamespace):
         await self.game_manager.accept_action(request)
 
     @with_request
-    async def on_reveal(self, request: Request, influence: Influence) -> None:
-        print("on_reveal: ", request.sid)
-        await self.game_manager.reveal_influence(request, influence)
+    async def on_reveal(self, request: Request, influence: int) -> None:
+        print("on_reveal: ", request.sid, influence)
+        await self.game_manager.reveal_influence(request, Influence(influence))
 
     @with_request
     async def on_challenge(self, request: Request) -> None:

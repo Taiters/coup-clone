@@ -1,0 +1,33 @@
+income:
+  canChallenge: no
+  canBeBlockedBy: []
+  isTargetted: no
+
+foreignAid:
+  canChallenge: no
+  canBeBlockedBy:
+    - DUKE
+  isTargetted: no
+
+tax:
+  canChallenge: yes 
+  canBlock: no
+  isTargetted: no
+
+steal:
+  canChallenge: yes 
+  canBeBlockedBy:
+    - CAPTAIN
+    - AMBASSADOR
+  isTargetted: yes
+
+assassinate:
+  canChallenge: yes
+  canBeBlockedBy:
+    - CONTESSA
+  isTargetted: yes
+
+coup:
+  canChallenge: no
+  canBeBlockedBy: []
+  isTargetted: no
