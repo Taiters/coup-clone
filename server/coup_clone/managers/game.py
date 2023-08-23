@@ -3,7 +3,6 @@ import string
 from sqlite3 import IntegrityError
 from typing import Optional, Tuple
 
-from aiosqlite import Connection
 from socketio import AsyncServer
 
 from coup_clone.db.games import GamesTable, GameState, TurnAction, TurnState
@@ -15,7 +14,6 @@ from coup_clone.managers.exceptions import (
     NotPlayerTurnException,
     PlayerAlreadyInGameException,
     PlayerNotInGameException,
-    UnsupportedActionException,
 )
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.models import Game, Player
@@ -161,6 +159,7 @@ class GameManager:
                     turn_state=TurnState.ATTEMPTED,
                 )
             case TurnAction.ASSASSINATE:
+                await player.decrement_coins(amount=3)
                 await game.update(
                     turn_action=TurnAction.ASSASSINATE,
                     turn_state=TurnState.ATTEMPTED,
@@ -219,7 +218,6 @@ class GameManager:
 
     async def reveal_influence(self, request: Request, influence: Influence) -> None:
         # This is all horrible, must refactor... writing this makes me feel better in the meantime
-
         player = await request.session.get_player()
         if player is None:
             raise PlayerNotInGameException()
@@ -321,6 +319,11 @@ class GameManager:
                 await self._next_player_turn(game)
         else:
             await self._next_player_turn(game)
+        
+        players_remaining = [p for p in await game.get_players() if not p.is_out]
+        if len(players_remaining) == 1:
+            winner = players_remaining[0]
+            await game.update(state=GameState.FINISHED, winner_id=winner.id)
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)

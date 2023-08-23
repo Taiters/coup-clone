@@ -10,6 +10,7 @@ export enum PlayerInfluence {
 export enum GameState {
   LOBBY,
   RUNNING,
+  FINISHED,
 }
 
 export enum TurnState {
@@ -69,6 +70,7 @@ export type Game = {
   turnStateDeadline: Date | null;
   turnTarget: Player | null;
   turnChallenger: Player | null;
+  winner: Player | null;
 };
 
 export type GameEvent = {

@@ -11,6 +11,7 @@ from coup_clone.db.table import Table, TableRow
 class GameState(enum.IntEnum):
     LOBBY = 0
     RUNNING = 1
+    FINISHED = 2
 
 
 class TurnState(enum.IntEnum):
@@ -47,6 +48,7 @@ class GameRow(TableRow[str]):
     block_challenged_by_id: Optional[int]
     turn_state_modified: Optional[datetime]
     turn_state_deadline: Optional[datetime]
+    winner_id: Optional[int]
 
 
 class GamesTable(Table[GameRow, str]):
@@ -64,7 +66,8 @@ class GamesTable(Table[GameRow, str]):
             blocked_by_id INTEGER REFERENCES players,
             block_challenged_by_id INTEGER REFERENCES players,
             turn_state_modified DATETIME,
-            turn_state_deadline DATETIME
+            turn_state_deadline DATETIME,
+            winner_id INTEGER REFERENCES players
         );
     """
     COLUMNS = [
@@ -80,6 +83,7 @@ class GamesTable(Table[GameRow, str]):
         "block_challenged_by_id",
         "turn_state_modified",
         "turn_state_deadline",
+        "winner_id",
     ]
 
     @staticmethod
@@ -97,4 +101,5 @@ class GamesTable(Table[GameRow, str]):
             block_challenged_by_id=row[9],
             turn_state_modified=datetime.fromisoformat(row[10]) if row[10] is not None else None,
             turn_state_deadline=datetime.fromisoformat(row[11]) if row[11] is not None else None,
+            winner_id=row[12],
         )

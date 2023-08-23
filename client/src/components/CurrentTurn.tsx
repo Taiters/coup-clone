@@ -3,7 +3,7 @@ import VGroup from "./layout/VGroup";
 import styles from "./CurrentTurn.module.css";
 import Button from "./ui/Button";
 import { socket } from "../socket";
-import { Player, TurnAction } from "../types";
+import { Player, PlayerInfluence, TurnAction } from "../types";
 import { useState } from "react";
 import PlayerSelector from "./PlayerSelector";
 
@@ -55,6 +55,7 @@ function CurrentTurn({ currentPlayer, players }: Props) {
               }
             />
             <Button
+              disabled={currentPlayer.coins < 3}
               label="Assassinate"
               onClick={() => setTargetedAction(TurnAction.ASSASSINATE)}
             />
@@ -65,13 +66,19 @@ function CurrentTurn({ currentPlayer, players }: Props) {
           </VGroup>
         </HGroup>
         <Button
+          disabled={currentPlayer.coins < 7}
           label="Coup"
           onClick={() => setTargetedAction(TurnAction.COUP)}
         />
       </VGroup>
       {targetedAction != null && (
         <PlayerSelector
-          players={players.filter((p) => p.id !== currentPlayer.id)}
+          players={players.filter(
+            (p) =>
+              p.id !== currentPlayer.id &&
+              (p.influenceA === PlayerInfluence.UNKNOWN ||
+                p.influenceB === PlayerInfluence.UNKNOWN),
+          )}
           onSelect={onSelectTarget}
           onClose={() => setTargetedAction(null)}
         />

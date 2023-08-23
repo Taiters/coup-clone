@@ -45,7 +45,7 @@ class PlayersTable(Table[PlayerRow, int]):
                 NOT NULL,
             state INTEGER NOT NULL DEFAULT(0),
             name TEXT,
-            coins INTEGER NOT NULL DEFAULT(3),
+            coins INTEGER NOT NULL DEFAULT(2) CHECK (coins >= 0),
             influence_a INTEGER NOT NULL,
             influence_b INTEGER NOT NULL,
             revealed_influence_a INTEGER NOT NULL DEFAULT(0),

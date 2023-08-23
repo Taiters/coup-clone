@@ -105,9 +105,9 @@ class Game(Model[GameRow, str]):
         async with self.conn.cursor() as cursor:
             players = await PlayersTable.query(cursor, game_id=self.id, order_by=["id"])
         return [Player(self.conn, p) for p in players]
-
+    
     async def get_next_player_turn(self) -> "Player":
-        players = await self.get_players()
+        players = [p for p in await self.get_players() if not p.is_out]
         if self.row.player_turn_id is None:
             return players[0]
         else:
@@ -116,7 +116,7 @@ class Game(Model[GameRow, str]):
 
     async def all_players_accepted(self) -> bool:
         players = await self.get_players()
-        return all(p.id == self.row.player_turn_id or p.row.accepts_action for p in players)
+        return all(p.row.accepts_action for p in players if p.id != self.row.player_turn_id and not p.is_out)
 
 
 class Player(Model[PlayerRow, int]):
@@ -133,6 +133,10 @@ class Player(Model[PlayerRow, int]):
     @property
     def influence_b(self) -> Influence:
         return self.row.influence_a
+    
+    @property
+    def is_out(self) -> bool:
+        return self.row.revealed_influence_a and self.row.revealed_influence_b 
 
     async def increment_coins(self, amount: int = 1) -> None:
         self.row.coins += amount

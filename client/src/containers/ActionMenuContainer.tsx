@@ -2,7 +2,7 @@ import AttemptedActionMenu from "../components/AttemptedActionMenu";
 import CurrentTurn from "../components/CurrentTurn";
 import RevealingActionMenu from "../components/RevealingActionMenu";
 import WaitingForPlayer from "../components/WaitingForPlayer";
-import { Game, Player, TurnState } from "../types";
+import { Game, Player, PlayerInfluence, TurnState } from "../types";
 import { nullthrows } from "../utils";
 
 type Props = {
@@ -12,6 +12,13 @@ type Props = {
 };
 
 function ActionMenuContainer({ game, players, currentPlayer }: Props) {
+  if (
+    currentPlayer.influenceA !== PlayerInfluence.UNKNOWN &&
+    currentPlayer.influenceB !== PlayerInfluence.UNKNOWN
+  ) {
+    return <p>You are out</p>;
+  }
+
   switch (game.turnState) {
     case TurnState.START:
       return currentPlayer.isCurrentTurn ? (

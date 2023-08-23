@@ -1,7 +1,7 @@
 import Container from "./layout/Container";
 import TopBar from "./ui/TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { Game, GameEvent, Player } from "../types";
+import { Game, GameEvent, GameState, Player, PlayerInfluence } from "../types";
 import VGroup from "./layout/VGroup";
 import styles from "./GameView.module.css";
 import GameLog from "./GameLog";
@@ -45,11 +45,20 @@ function GameView({ game, players, events, currentPlayer }: Props) {
         </div>
         <div className={styles.controls}>
           <Container>
-            <ActionMenuContainer
-              game={game}
-              players={players}
-              currentPlayer={currentPlayer}
-            />
+            {game.state === GameState.RUNNING ? (
+              currentPlayer.influenceA !== PlayerInfluence.UNKNOWN &&
+              currentPlayer.influenceB !== PlayerInfluence.UNKNOWN ? (
+                <p>You are out</p>
+              ) : (
+                <ActionMenuContainer
+                  game={game}
+                  players={players}
+                  currentPlayer={currentPlayer}
+                />
+              )
+            ) : (
+              <p>{game.winner?.name ?? "UNKNOWN"} has won the game!</p>
+            )}
           </Container>
         </div>
       </div>

@@ -34,6 +34,15 @@ function GameContainer({ game, players, events, currentPlayer }: Props) {
           currentPlayer={currentPlayer}
         />
       );
+    case GameState.FINISHED:
+      return (
+        <GameView
+          game={game}
+          players={players}
+          events={events}
+          currentPlayer={currentPlayer}
+        />
+      );
   }
 }
 
