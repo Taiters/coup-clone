@@ -60,7 +60,6 @@ type HandNotification = {
 type EventNotification = {
   id: number;
   timestamp: number;
-  actor_id: number;
   message: string;
 };
 
@@ -120,7 +119,6 @@ function GameManager({ initializing, children }: Props) {
   const gameEvents = events.map((e) => ({
     id: e.id,
     timestamp: e.timestamp,
-    actor: nullthrows(gamePlayers.find((p) => p.id === e.actor_id)),
     message: e.message,
   }));
 

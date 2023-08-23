@@ -28,7 +28,6 @@ def map_event(event: EventRow) -> dict:
     return {
         "id": event.id,
         "timestamp": event.time_created.timestamp(),
-        "actor_id": event.actor_id,
         "message": event.message,
     }
 

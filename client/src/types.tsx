@@ -76,6 +76,5 @@ export type Game = {
 export type GameEvent = {
   id: number;
   timestamp: number;
-  actor: Player;
   message: string;
 };
