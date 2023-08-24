@@ -19,14 +19,18 @@ function RevealingActionMenu({ playerToReveal, currentPlayer }: Props) {
 
   return (
     <VGroup>
-      <p>You must reveal an influence!</p>
+      <p>You must reveal an influence</p>
       <HGroup>
         <Button
+          className="w-full"
+          color={`bg-influence-${PlayerInfluence[hand.influenceA].toLowerCase()}`}
           disabled={currentPlayer.influenceA !== PlayerInfluence.UNKNOWN}
           label={PlayerInfluence[hand.influenceA]}
           onClick={() => socket.emit("reveal", hand.influenceA)}
         />
         <Button
+          className="w-full"
+          color={`bg-influence-${PlayerInfluence[hand.influenceB].toLowerCase()}`}
           disabled={currentPlayer.influenceB !== PlayerInfluence.UNKNOWN}
           label={PlayerInfluence[hand.influenceB]}
           onClick={() => socket.emit("reveal", hand.influenceB)}

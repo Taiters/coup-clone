@@ -26,9 +26,10 @@ function BlockedMenu({ game, currentPlayer }: Props) {
       </p>
       <HGroup>
         {game.currentTurn.id === currentPlayer.id && (
-          <Button label="Accept" onClick={() => socket.emit("accept_block")} />
+          <Button className="w-full" label="Accept" onClick={() => socket.emit("accept_block")} />
         )}
         <Button
+          className="w-full"
           label="Challenge"
           onClick={() => socket.emit("challenge_block")}
         />

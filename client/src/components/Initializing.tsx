@@ -1,11 +1,12 @@
 import { FaSpinner } from "react-icons/fa6";
+import VGroup from "./layout/VGroup";
 
 function Initializing() {
   return (
-    <div className="flex flex-col justify-center items-center h-full text-brown">
+    <VGroup className="justify-center items-center h-full text-brown">
       <FaSpinner className="spinner" />
-      <h1>Connecting</h1>
-    </div>
+      <h1 className="text-2xl">Connecting</h1>
+    </VGroup>
   );
 }
 

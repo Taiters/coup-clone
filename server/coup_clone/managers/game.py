@@ -445,10 +445,7 @@ class GameManager:
                 case _:
                     raise Exception("Unexpected block challenge")
 
-        elif (
-            game.row.turn_state == TurnState.CHALLENGER_REVEALING
-            or game.row.turn_state == TurnState.BLOCK_CHALLENGER_REVEALING
-        ):
+        elif game.row.turn_state == TurnState.CHALLENGER_REVEALING:
             if game.row.turn_action == TurnAction.ASSASSINATE:
                 await game.update(
                     turn_state=TurnState.TARGET_REVEALING,

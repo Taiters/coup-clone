@@ -9,7 +9,7 @@ import { socket } from "../socket";
 import LeaveButton from "./LeaveButton";
 
 function Join() {
-  const { gameID } = useParams();
+  const { game } = useParams();
   const [name, setName] = useState("");
 
   const onContinue = () => {
@@ -19,7 +19,7 @@ function Join() {
 
   return (
     <Container>
-      <PageTitle heading="Joining" subheading={gameID} />
+      <PageTitle heading="Joining" subheading={`Game: ${game}`} />
       <VGroup>
         <TextInput
           value={name}

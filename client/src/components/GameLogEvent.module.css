@@ -6,12 +6,12 @@
 
 .container:before {
   position: absolute;
-  left: 0.25em;
+  left: 4px;
   content: "";
   border-radius: 0.5em;
-  top: 1.3em;
-  width: 0.25em;
-  height: 0.25em;
+  top: 1.5em;
+  width: 7px;
+  height: 7px;
   border: 1px solid #98754d;
   background-color: #98754d;
 }
@@ -21,6 +21,6 @@
   border-left: 1px dashed #98754d;
   height: 100%;
   position: absolute;
-  left: 0.4em;
-  top: 1.3em;
+  left: 7px;
+  top: 1.5em;
 }

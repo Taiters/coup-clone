@@ -3,17 +3,18 @@ type Props = {
   disabled?: boolean;
   onClick?: () => void;
   small?: boolean;
+  className?: string | undefined;
+  color?: string | null;
 };
-function Button({ label, onClick, disabled = false, small = false }: Props) {
+function Button({ label, onClick, disabled = false, small = false, className=undefined, color=null }: Props) {
+  const colorClass = disabled ? "bg-gray" : color ? color : "bg-purple";
   return (
     <button
       style={{
         fontSize: small ? "0.75em" : undefined,
       }}
       disabled={disabled}
-      className={`rounded-none border-none px-8 cursor-pointer text-white h-10 ${
-        disabled ? "bg-gray" : "bg-purple"
-      } ${disabled ? "cursor-auto" : "cursor-pointer"}`}
+      className={`${className} ${colorClass} ${disabled ? "cursor-auto" : "cursor-pointer"} rounded-none border-none px-8 cursor-pointer text-white h-10`}
       onClick={onClick}
     >
       {label}

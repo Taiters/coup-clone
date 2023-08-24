@@ -8,7 +8,7 @@ type Props = {
 
 function PlayerName({ name, isCurrentTurn = false }: Props) {
   return (
-    <HGroup>
+    <HGroup className="items-center">
       {isCurrentTurn ? ">" : null}
       <FaUser />
       {name}

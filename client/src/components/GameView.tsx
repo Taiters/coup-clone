@@ -4,7 +4,7 @@ import PlayerInfo from "./PlayerInfo";
 import { Game, GameEvent, GameState, Player, PlayerInfluence } from "../types";
 import VGroup from "./layout/VGroup";
 import GameLog from "./GameLog";
-import ActionMenuContainer from "../containers/ActionMenuContainer";
+import TurnMenuContainer from "../containers/TurnMenuContainer";
 
 type Props = {
   game: Game;
@@ -45,7 +45,7 @@ function GameView({ game, players, events, currentPlayer }: Props) {
               currentPlayer.influenceB !== PlayerInfluence.UNKNOWN ? (
                 <p>You are out</p>
               ) : (
-                <ActionMenuContainer
+                <TurnMenuContainer
                   game={game}
                   players={players}
                   currentPlayer={currentPlayer}

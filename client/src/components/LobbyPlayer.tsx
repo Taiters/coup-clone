@@ -12,7 +12,7 @@ function LobbyPlayer({ player, current = false }: Props) {
   if (player == null) {
     return (
       <div className="w-40 mx-auto">
-        <HGroup className="text-darkgray">
+        <HGroup className="text-darkgray items-center">
           <FaUser />
           Waiting for player...
         </HGroup>
@@ -27,7 +27,7 @@ function LobbyPlayer({ player, current = false }: Props) {
           <PlayerName name={player.name} />
         </div>
       ) : (
-        <HGroup className="text-darkgray">
+        <HGroup className="text-darkgray items-center">
           <FaUser />
           Joining...
         </HGroup>
