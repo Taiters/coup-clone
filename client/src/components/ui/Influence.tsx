@@ -1,4 +1,3 @@
-import styles from "./Influence.module.css";
 import { PlayerInfluence } from "../../types";
 
 const INFLUENCE_COLORS = {
@@ -27,7 +26,9 @@ type Props = {
 function Influence({ influence, revealed = false }: Props) {
   return (
     <div
-      className={`${styles.influence} ${revealed && styles.revealed}`}
+      className={`text-center font-bold relative ${
+        revealed && "opacity-50 grayscale-[50%]"
+      }`}
       style={{
         color: INFLUENCE_COLORS[influence],
       }}

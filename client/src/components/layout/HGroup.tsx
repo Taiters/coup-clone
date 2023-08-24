@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import styles from "./HGroup.module.css";
 
 type Props = {
   children: ReactNode;
@@ -8,15 +7,12 @@ type Props = {
 };
 
 function HGroup({ children, className, gap }: Props) {
-  const cls =
-    className != null ? `${styles.hgroup} ${className}` : styles.hgroup;
-
   const extraStyles = {
     gap,
   };
 
   return (
-    <div style={extraStyles} className={cls}>
+    <div style={extraStyles} className={`flex gap-2 ${className}`}>
       {children}
     </div>
   );

@@ -1,10 +1,8 @@
 import { FaSpinner } from "react-icons/fa6";
 
-import styles from "./Initializing.module.css";
-
 function Initializing() {
   return (
-    <div className={styles.container}>
+    <div className="flex flex-col justify-center items-center h-full text-brown">
       <FaSpinner className="spinner" />
       <h1>Connecting</h1>
     </div>

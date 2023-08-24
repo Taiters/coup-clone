@@ -3,7 +3,6 @@ import HGroup from "./layout/HGroup";
 import Influence from "./ui/Influence";
 import PlayerName from "./ui/PlayerName";
 import { Player, PlayerInfluence } from "../types";
-import styles from "./PlayerInfo.module.css";
 
 type Props = {
   player: Player;
@@ -14,7 +13,7 @@ function PlayerInfo({ player }: Props) {
     player.influenceA !== PlayerInfluence.UNKNOWN &&
     player.influenceB !== PlayerInfluence.UNKNOWN;
   return (
-    <HGroup className={isOut ? styles.out : undefined}>
+    <HGroup className={isOut ? "grayscale-[50%] opacity-50" : ""}>
       <div style={{ width: "45%" }}>
         <PlayerName name={player.name} isCurrentTurn={player.isCurrentTurn} />
       </div>

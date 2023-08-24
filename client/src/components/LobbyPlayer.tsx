@@ -1,6 +1,5 @@
 import { FaUser } from "react-icons/fa6";
 import PlayerName from "./ui/PlayerName";
-import styles from "./LobbyPlayer.module.css";
 import HGroup from "./layout/HGroup";
 import { Player, PlayerState } from "../types";
 
@@ -12,8 +11,8 @@ type Props = {
 function LobbyPlayer({ player, current = false }: Props) {
   if (player == null) {
     return (
-      <div className={styles.container}>
-        <HGroup className={styles.pending}>
+      <div className="w-40 mx-auto">
+        <HGroup className="text-darkgray">
           <FaUser />
           Waiting for player...
         </HGroup>
@@ -22,13 +21,13 @@ function LobbyPlayer({ player, current = false }: Props) {
   }
 
   return (
-    <div className={styles.container}>
+    <div className="w-40 mx-auto">
       {player.state === PlayerState.READY ? (
-        <div className={current ? styles.current : undefined}>
+        <div className={current ? "text-purple" : ""}>
           <PlayerName name={player.name} />
         </div>
       ) : (
-        <HGroup className={styles.pending}>
+        <HGroup className="text-darkgray">
           <FaUser />
           Joining...
         </HGroup>

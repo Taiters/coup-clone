@@ -5,7 +5,6 @@ import TextInput from "./ui/TextInput";
 import Button from "./ui/Button";
 import HGroup from "./layout/HGroup";
 
-import styles from "./Home.module.css";
 import { socket } from "../socket";
 import { useState } from "react";
 
@@ -32,7 +31,11 @@ function Home() {
           />
           <Button label="Join" onClick={onJoinGame} />
         </HGroup>
-        <a className={styles.create} href="#" onClick={onCreateGame}>
+        <a
+          className="mt-28 block text-purple text-center"
+          href="#"
+          onClick={onCreateGame}
+        >
           Create a new game
         </a>
       </Container>

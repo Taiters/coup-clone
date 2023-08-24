@@ -1,5 +1,3 @@
-import styles from "./TextInput.module.css";
-
 type Props = {
   placeholder: string;
   value: string;
@@ -11,7 +9,7 @@ function TextInput({ value, placeholder, onChange }: Props) {
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={styles.input}
+      className="text-lightbrown bg-darkbrown rounded-none border-2 border-solid border-lightbrown px-4 h-10 w-full box-border"
       type="text"
       placeholder={placeholder}
     />

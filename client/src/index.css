@@ -1,17 +1,8 @@
 @import-normalize;
 
-/* :root {
-  --duke-color: #af5698;
-  --assassin-color: #465359;
-  --ambassador-color: #8f8a2b;
-  --captain-color: #1780a8;
-  --contessa-color: #de2b2b;
-
-  --background-color: #eeeeee;
-
-  --text-color: #303030;
-  --text-light-color: #505050;
-} */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html,
 body,

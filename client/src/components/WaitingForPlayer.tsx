@@ -5,7 +5,7 @@ type Props = {
 };
 
 function WaitingForPlayer({ player }: Props) {
-  return <span>Waiting for {player.name}</span>;
+  return <p className="m-0 py-4">Waiting for {player.name}</p>;
 }
 
 export default WaitingForPlayer;

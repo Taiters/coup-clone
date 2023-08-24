@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import styles from "./VGroup.module.css";
 
 type Props = {
   children: ReactNode;
@@ -7,10 +6,7 @@ type Props = {
 };
 
 function VGroup({ children, className }: Props) {
-  const cls =
-    className != null ? `${styles.vgroup} ${className}` : styles.vgroup;
-
-  return <div className={cls}>{children}</div>;
+  return <div className={`flex flex-col gap-2 ${className}`}>{children}</div>;
 }
 
 export default VGroup;

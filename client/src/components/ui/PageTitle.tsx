@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import styles from "./PageTitle.module.css";
 
 type Props = {
   heading: string;
@@ -8,9 +7,9 @@ type Props = {
 
 function PageTitle({ heading, subheading }: Props) {
   return (
-    <hgroup className={styles.title}>
-      <h1>{heading}</h1>
-      {subheading != null ? <p>{subheading}</p> : null}
+    <hgroup className="mt-36 mb-10 text-center text-brown">
+      <h1 className="text-5xl font-normal m-0">{heading}</h1>
+      {subheading != null ? <p className="m-0">{subheading}</p> : null}
     </hgroup>
   );
 }

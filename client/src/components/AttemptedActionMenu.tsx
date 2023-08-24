@@ -1,5 +1,6 @@
 import { socket } from "../socket";
 import { Game, Player, TurnAction } from "../types";
+import { titleCase } from "../utils";
 import HGroup from "./layout/HGroup";
 import VGroup from "./layout/VGroup";
 import Button from "./ui/Button";
@@ -13,7 +14,7 @@ function AttemptedActionMenu({ game, currentPlayer }: Props) {
   if (currentPlayer.isCurrentTurn) {
     return (
       <p>
-        You've attempted {TurnAction[game.turnAction]}
+        You've attempted {titleCase(TurnAction[game.turnAction])}
         {game.turnTarget && ` against ${game.turnTarget.name}`}
       </p>
     );

@@ -1,5 +1,3 @@
-import styles from "./Button.module.css";
-
 type Props = {
   label: string;
   disabled?: boolean;
@@ -13,7 +11,9 @@ function Button({ label, onClick, disabled = false, small = false }: Props) {
         fontSize: small ? "0.75em" : undefined,
       }}
       disabled={disabled}
-      className={`${styles.button} ${disabled ? styles.disabled : null}`}
+      className={`rounded-none border-none px-8 cursor-pointer text-white h-10 ${
+        disabled ? "bg-gray" : "bg-purple"
+      } ${disabled ? "cursor-auto" : "cursor-pointer"}`}
       onClick={onClick}
     >
       {label}

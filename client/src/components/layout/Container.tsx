@@ -1,12 +1,11 @@
 import { ReactNode } from "react";
-import styles from "./Container.module.css";
 
 type Props = {
   children: ReactNode;
 };
 
 function Container({ children }: Props) {
-  return <div className={styles.container}>{children}</div>;
+  return <div className="my-0 mx-auto max-w-screen-sm px-2">{children}</div>;
 }
 
 export default Container;

@@ -3,9 +3,7 @@ import TopBar from "./ui/TopBar";
 import PlayerInfo from "./PlayerInfo";
 import { Game, GameEvent, GameState, Player, PlayerInfluence } from "../types";
 import VGroup from "./layout/VGroup";
-import styles from "./GameView.module.css";
 import GameLog from "./GameLog";
-import Countdown from "./ui/Countdown";
 import ActionMenuContainer from "../containers/ActionMenuContainer";
 
 type Props = {
@@ -18,18 +16,15 @@ type Props = {
 function GameView({ game, players, events, currentPlayer }: Props) {
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
 
-  const turnStateModified = game.turnStateModified;
-  const turnStateDeadline = game.turnStateDeadline;
-
   return (
     <>
-      <div className={styles.verticalContainer}>
+      <div className="h-full flex flex-col">
         <TopBar>
           <Container>
             <PlayerInfo player={currentPlayer} />
           </Container>
         </TopBar>
-        <div className={styles.players}>
+        <div className="py-4 bg-darkyellow">
           <Container>
             <VGroup>
               {otherPlayers.map((p) => (
@@ -38,12 +33,12 @@ function GameView({ game, players, events, currentPlayer }: Props) {
             </VGroup>
           </Container>
         </div>
-        <div className={styles.log}>
+        <div className="border-y border-solid border-y-darkbrown bg-darkeryellow flex-grow overflow-y-auto">
           <Container>
             <GameLog events={events} />
           </Container>
         </div>
-        <div className={styles.controls}>
+        <div className="py-2 text-center">
           <Container>
             {game.state === GameState.RUNNING ? (
               currentPlayer.influenceA !== PlayerInfluence.UNKNOWN &&
@@ -62,9 +57,6 @@ function GameView({ game, players, events, currentPlayer }: Props) {
           </Container>
         </div>
       </div>
-      {turnStateModified && turnStateDeadline && (
-        <Countdown from={turnStateModified} to={turnStateDeadline} />
-      )}
     </>
   );
 }

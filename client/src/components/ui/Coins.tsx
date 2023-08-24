@@ -1,6 +1,5 @@
 import { FaCoins } from "react-icons/fa6";
 import HGroup from "../layout/HGroup";
-import styles from "./Coins.module.css";
 
 type Props = {
   value: number;
@@ -8,7 +7,7 @@ type Props = {
 
 function Coins({ value }: Props) {
   return (
-    <span className={styles.coins}>
+    <span className="text-right">
       <HGroup gap="0.25em">
         {value}
         <FaCoins />

@@ -3,7 +3,6 @@ import Container from "./layout/Container";
 import LobbyPlayer from "./LobbyPlayer";
 import PageTitle from "./ui/PageTitle";
 import VGroup from "./layout/VGroup";
-import styles from "./Lobby.module.css";
 import { Game, Player, PlayerState } from "../types";
 import LeaveButton from "./LeaveButton";
 import { FaShare } from "react-icons/fa6";
@@ -46,12 +45,12 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
           </span>
         }
       />
-      <VGroup className={styles.players}>{lobbyPlayers}</VGroup>
+      <VGroup className="mb-10">{lobbyPlayers}</VGroup>
       <VGroup>
         {currentPlayer.host ? (
           <Button disabled={!readyToStart} label="Start" onClick={onStart} />
         ) : (
-          <p className={styles.waiting}>Waiting for host...</p>
+          <p className="text-center m-0 text-brown">Waiting for host...</p>
         )}
         <LeaveButton />
       </VGroup>

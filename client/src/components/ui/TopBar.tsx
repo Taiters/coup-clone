@@ -1,12 +1,15 @@
 import { ReactNode } from "react";
-import styles from "./TopBar.module.css";
 
 type Props = {
   children: ReactNode;
 };
 
 function TopBar({ children }: Props) {
-  return <div className={styles.container}>{children}</div>;
+  return (
+    <div className="py-2 text-xl border-b border-solid border-b-darkbrown">
+      {children}
+    </div>
+  );
 }
 
 export default TopBar;

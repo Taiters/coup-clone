@@ -1,6 +1,5 @@
 import HGroup from "./layout/HGroup";
 import VGroup from "./layout/VGroup";
-import styles from "./CurrentTurn.module.css";
 import Button from "./ui/Button";
 import { socket } from "../socket";
 import { Player, PlayerInfluence, TurnAction } from "../types";
@@ -27,7 +26,7 @@ function CurrentTurn({ currentPlayer, players }: Props) {
     <>
       <VGroup>
         <HGroup>
-          <VGroup className={styles.buttonStack}>
+          <VGroup className="w-full">
             <Button
               label="Income"
               onClick={() =>
@@ -47,7 +46,7 @@ function CurrentTurn({ currentPlayer, players }: Props) {
               }
             />
           </VGroup>
-          <VGroup className={styles.buttonStack}>
+          <VGroup className="w-full">
             <Button
               label="Foreign Aid"
               onClick={() =>
