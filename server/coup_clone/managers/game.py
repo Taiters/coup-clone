@@ -102,13 +102,31 @@ class GameManager:
 
     async def leave(self, request: Request) -> None:
         player = await request.session.get_player()
-        if player is not None:
-            game = await player.get_game()
+        if player is None:
+            raise Exception("Session is already not in a game")
+
+        game = await player.get_game()
+
+        if game.row.player_turn_id == player.id:
+            next_player = await game.get_next_player_turn()
+            if next_player.id == player.id:
+                await game.update(player_turn_id=None)
+            else:
+                await self._next_player_turn(game)
+
+        if game.row.state == GameState.RUNNING:
+            await player.update(
+                revealed_influence_a=True,
+                revealed_influence_b=True,
+            )
+        else:
             await game.return_to_deck([player.influence_a, player.influence_b])
-            await request.session.clear_current_player()
-            await request.conn.commit()
-            self.socket_server.leave_room(request.sid, game.id)
-            await self.notifications_manager.broadcast_game(request.conn, game.id)
+            await player.delete()
+
+        await request.session.clear_current_player()
+        await request.conn.commit()
+        self.socket_server.leave_room(request.sid, game.id)
+        await self.notifications_manager.broadcast_game(request.conn, game.id)
         await self.notifications_manager.notify_session(request.session)
 
     async def set_name(self, request: Request, name: str) -> None:

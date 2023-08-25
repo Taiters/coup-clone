@@ -59,6 +59,8 @@ class NotificationsManager:
     async def _send_game(self, conn: Connection, game_id: str, to: str) -> None:
         async with conn.cursor() as cursor:
             game = await GamesTable.get(cursor, game_id)
+            if game is None:
+                return
             players = await PlayersTable.query(cursor, game_id=game.id)
             events = await EventsTable.query(cursor, game_id=game.id)
 

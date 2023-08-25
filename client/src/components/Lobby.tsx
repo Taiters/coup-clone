@@ -4,8 +4,9 @@ import LobbyPlayer from "./LobbyPlayer";
 import PageTitle from "./ui/PageTitle";
 import VGroup from "./layout/VGroup";
 import { Game, Player, PlayerState } from "../types";
-import LeaveButton from "./LeaveButton";
 import { FaShare } from "react-icons/fa6";
+import LinkButton from "./ui/LinkButton";
+import { socket } from "../socket";
 
 type Props = {
   game: Game;
@@ -35,6 +36,10 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
     });
   };
 
+  const onLeave = () => {
+    socket.emit("leave_game");
+  }
+
   return (
     <Container>
       <PageTitle
@@ -52,7 +57,7 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
         ) : (
           <p className="text-center m-0 text-brown">Waiting for host...</p>
         )}
-        <LeaveButton />
+        <LinkButton className="mt-8" onClick={onLeave} label="Leave game" />
       </VGroup>
     </Container>
   );

@@ -41,6 +41,10 @@ class Model(ABC, Generic[T, TID]):
         async with self.conn.cursor() as cursor:
             await self.TABLE.update(cursor, self.id, **kwargs)
             self.row = await self.TABLE.get(cursor, self.id)
+    
+    async def delete(self) -> None:
+        async with self.conn.cursor() as cursor:
+            await self.TABLE.delete(cursor, self.id)
 
 
 class Game(Model[GameRow, str]):
@@ -192,9 +196,5 @@ class Session(Model[SessionRow, str]):
     async def clear_current_player(self) -> None:
         if self.player_id is None:
             return
-        async with self.conn.cursor() as cursor:
-            await PlayersTable.delete(
-                cursor,
-                self.player_id,
-            )
+        await self.update(player_id = None)
         self.row.player_id = None

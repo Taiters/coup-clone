@@ -6,16 +6,19 @@ import TextInput from "./ui/TextInput";
 import VGroup from "./layout/VGroup";
 import { useState } from "react";
 import { socket } from "../socket";
-import LeaveButton from "./LeaveButton";
+import LinkButton from "./ui/LinkButton";
 
 function Join() {
   const { game } = useParams();
   const [name, setName] = useState("");
 
   const onContinue = () => {
-    console.log("SET NAME");
     socket.emit("set_name", name);
   };
+
+  const onLeave = () => {
+    socket.emit("leave_game");
+  }
 
   return (
     <Container>
@@ -27,7 +30,7 @@ function Join() {
           placeholder="Enter your name..."
         />
         <Button label="Continue" onClick={onContinue} />
-        <LeaveButton />
+        <LinkButton className="mt-8" onClick={onLeave} label="Leave game" />
       </VGroup>
     </Container>
   );
