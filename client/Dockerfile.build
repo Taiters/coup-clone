@@ -1,0 +1,7 @@
+FROM node:18
+
+
+RUN mkdir /usr/coup
+WORKDIR /usr/coup
+
+CMD ./build.sh
