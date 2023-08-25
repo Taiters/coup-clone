@@ -52,6 +52,7 @@ type PlayerNotification = {
   influence_a: PlayerInfluence;
   influence_b: PlayerInfluence;
   host: boolean;
+  accepts_action: boolean;
 };
 
 type HandNotification = {
@@ -114,6 +115,7 @@ function GameManager({ initializing, children }: Props) {
     influenceB: p.influence_b,
     host: p.host,
     isCurrentTurn: p.id === game?.player_turn_id,
+    acceptsAction: p.accepts_action,
     hand: null,
   }));
   const currentTurn = gamePlayers.find((p) => p.id === game?.player_turn_id);

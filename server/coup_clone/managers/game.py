@@ -252,44 +252,44 @@ class GameManager:
         await player.update(accepts_action=True)
 
         all_players_accepted = await game.all_players_accepted()
-        if not all_players_accepted:
-            return None
-
         current_player = await game.get_current_player()
         if current_player is None:
             raise Exception("Get a better exception..")
 
-        match game.row.turn_action:
-            case TurnAction.FOREIGN_AID:
-                await self._add_log_message(game, f"{current_player.row.name} succesfully took Foreign Aid")
-                await current_player.increment_coins(amount=2)
-                await self._next_player_turn(game)
-            case TurnAction.TAX:
-                await self._add_log_message(game, f"{current_player.row.name} succesfully took Tax")
-                await current_player.increment_coins(amount=3)
-                await self._next_player_turn(game)
-            case TurnAction.STEAL:
-                target = await game.get_target_player()
-                if target is None:
-                    raise Exception("Find a better exception...")
-                await self._add_log_message(game, f"{current_player.row.name} succesfully stole from {target.row.name}")
-                await current_player.increment_coins(amount=2)
-                await target.decrement_coins(amount=2)
-                await self._next_player_turn(game)
-            case TurnAction.EXCHANGE:
-                await self._add_log_message(game, f"{current_player.row.name} draws 2 cards to exchange")
-                await game.update(turn_state=TurnState.EXCHANGING)
-                await self.notifications_manager.notify_player(request.conn, current_player)
-            case TurnAction.ASSASSINATE:
-                target = await game.get_target_player()
-                if target is None:
-                    raise Exception("Find a better exception...")
-                await self._add_log_message(
-                    game, f"{current_player.row.name} succesfully assasinated {target.row.name}"
-                )
-                await game.update(
-                    turn_state=TurnState.TARGET_REVEALING,
-                )
+        if all_players_accepted:
+            match game.row.turn_action:
+                case TurnAction.FOREIGN_AID:
+                    await self._add_log_message(game, f"{current_player.row.name} succesfully took Foreign Aid")
+                    await current_player.increment_coins(amount=2)
+                    await self._next_player_turn(game)
+                case TurnAction.TAX:
+                    await self._add_log_message(game, f"{current_player.row.name} succesfully took Tax")
+                    await current_player.increment_coins(amount=3)
+                    await self._next_player_turn(game)
+                case TurnAction.STEAL:
+                    target = await game.get_target_player()
+                    if target is None:
+                        raise Exception("Find a better exception...")
+                    await self._add_log_message(
+                        game, f"{current_player.row.name} succesfully stole from {target.row.name}"
+                    )
+                    await current_player.increment_coins(amount=2)
+                    await target.decrement_coins(amount=2)
+                    await self._next_player_turn(game)
+                case TurnAction.EXCHANGE:
+                    await self._add_log_message(game, f"{current_player.row.name} draws 2 cards to exchange")
+                    await game.update(turn_state=TurnState.EXCHANGING)
+                    await self.notifications_manager.notify_player(request.conn, current_player)
+                case TurnAction.ASSASSINATE:
+                    target = await game.get_target_player()
+                    if target is None:
+                        raise Exception("Find a better exception...")
+                    await self._add_log_message(
+                        game, f"{current_player.row.name} succesfully assasinated {target.row.name}"
+                    )
+                    await game.update(
+                        turn_state=TurnState.TARGET_REVEALING,
+                    )
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)

@@ -20,6 +20,7 @@ def map_player(player: PlayerRow) -> dict:
         "influence_a": player.influence_a if player.revealed_influence_a else Influence.UNKNOWN,
         "influence_b": player.influence_b if player.revealed_influence_b else Influence.UNKNOWN,
         "host": player.host,
+        "accepts_action": player.accepts_action,
     }
 
 

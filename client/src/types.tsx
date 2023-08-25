@@ -56,6 +56,7 @@ export type Player = {
   influenceB: PlayerInfluence;
   host: boolean;
   isCurrentTurn: boolean;
+  acceptsAction: boolean;
   hand: {
     influenceA: PlayerInfluence;
     influenceB: PlayerInfluence;
