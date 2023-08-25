@@ -27,13 +27,12 @@ TRIGGERS = [
         SELECT RAISE(FAIL, "Game full");
     END;
     """,
-
     """
     CREATE TRIGGER IF NOT EXISTS clear_playerless_games_on_delete
     AFTER DELETE
     ON players
     WHEN (
-        SELECT COUNT(sessions.id) 
+        SELECT COUNT(sessions.id)
         FROM sessions
         JOIN players ON sessions.player_id = players.id
         WHERE game_id = OLD.game_id
@@ -42,13 +41,12 @@ TRIGGERS = [
         DELETE FROM games WHERE id = OLD.game_id;
     END;
     """,
-
     """
     CREATE TRIGGER IF NOT EXISTS clear_sessionless_games_on_update
     AFTER UPDATE
     ON sessions
     WHEN (
-        SELECT COUNT(sessions.id) 
+        SELECT COUNT(sessions.id)
         FROM sessions
         JOIN players ON sessions.player_id = players.id
         WHERE game_id = (
@@ -67,13 +65,12 @@ TRIGGERS = [
         );
     END;
     """,
-
     """
     CREATE TRIGGER IF NOT EXISTS clear_sessionless_games_on_delete
     AFTER DELETE
     ON sessions
     WHEN (
-        SELECT COUNT(sessions.id) 
+        SELECT COUNT(sessions.id)
         FROM sessions
         JOIN players ON sessions.player_id = players.id
         WHERE game_id = (

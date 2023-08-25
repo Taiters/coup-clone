@@ -119,6 +119,12 @@ class GameManager:
                 revealed_influence_a=True,
                 revealed_influence_b=True,
             )
+
+            players_remaining = [p for p in await game.get_players() if not p.is_out]
+            if len(players_remaining) == 1:
+                winner = players_remaining[0]
+                await self._add_log_message(game, f"{winner.row.name} wins the game!")
+                await game.update(state=GameState.FINISHED, winner_id=winner.id)
         else:
             await game.return_to_deck([player.influence_a, player.influence_b])
             await player.delete()

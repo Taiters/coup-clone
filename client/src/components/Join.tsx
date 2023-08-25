@@ -18,7 +18,7 @@ function Join() {
 
   const onLeave = () => {
     socket.emit("leave_game");
-  }
+  };
 
   return (
     <Container>

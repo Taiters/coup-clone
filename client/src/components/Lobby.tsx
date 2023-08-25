@@ -38,7 +38,7 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
 
   const onLeave = () => {
     socket.emit("leave_game");
-  }
+  };
 
   return (
     <Container>

@@ -13,7 +13,7 @@ function PlayerInfo({ player }: Props) {
     player.influenceA !== PlayerInfluence.UNKNOWN &&
     player.influenceB !== PlayerInfluence.UNKNOWN;
   return (
-    <HGroup className={isOut ? "grayscale-[50%] opacity-50" : ""}>
+    <HGroup className={`${isOut ? "grayscale-[50%] opacity-50" : ""} w-full`}>
       <div style={{ width: "45%" }}>
         <PlayerName name={player.name} isCurrentTurn={player.isCurrentTurn} />
       </div>

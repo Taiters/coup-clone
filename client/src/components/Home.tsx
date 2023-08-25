@@ -32,7 +32,11 @@ function Home() {
           />
           <Button label="Join" onClick={onJoinGame} />
         </HGroup>
-        <LinkButton className="mt-28 mx-auto !block text-center" onClick={onCreateGame} label="Create a new game" />
+        <LinkButton
+          className="mt-28 mx-auto !block text-center"
+          onClick={onCreateGame}
+          label="Create a new game"
+        />
       </Container>
     </>
   );
