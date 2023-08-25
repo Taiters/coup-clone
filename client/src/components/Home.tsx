@@ -7,6 +7,7 @@ import HGroup from "./layout/HGroup";
 
 import { socket } from "../socket";
 import { useState } from "react";
+import LinkButton from "./ui/LinkButton";
 
 function Home() {
   const [gameID, setGameID] = useState("");
@@ -31,13 +32,7 @@ function Home() {
           />
           <Button label="Join" onClick={onJoinGame} />
         </HGroup>
-        <a
-          className="mt-28 block text-purple text-center"
-          href="#"
-          onClick={onCreateGame}
-        >
-          Create a new game
-        </a>
+        <LinkButton className="mt-28 mx-auto !block text-center" onClick={onCreateGame} label="Create a new game" />
       </Container>
     </>
   );

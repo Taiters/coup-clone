@@ -12,7 +12,7 @@ module.exports = {
     "text-influence-assassin",
     "text-influence-captain",
     "text-influence-duke",
-    "text-influence-contessa"
+    "text-influence-contessa",
   ],
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
@@ -35,8 +35,8 @@ module.exports = {
         assassin: "#689393",
         captain: "#4494DE",
         duke: "#BF7BDF",
-        contessa: "#DA7777"
-      }
+        contessa: "#DA7777",
+      },
     },
   },
   plugins: [],

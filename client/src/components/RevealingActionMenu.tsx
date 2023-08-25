@@ -23,14 +23,18 @@ function RevealingActionMenu({ playerToReveal, currentPlayer }: Props) {
       <HGroup>
         <Button
           className="w-full"
-          color={`bg-influence-${PlayerInfluence[hand.influenceA].toLowerCase()}`}
+          color={`bg-influence-${PlayerInfluence[
+            hand.influenceA
+          ].toLowerCase()}`}
           disabled={currentPlayer.influenceA !== PlayerInfluence.UNKNOWN}
           label={PlayerInfluence[hand.influenceA]}
           onClick={() => socket.emit("reveal", hand.influenceA)}
         />
         <Button
           className="w-full"
-          color={`bg-influence-${PlayerInfluence[hand.influenceB].toLowerCase()}`}
+          color={`bg-influence-${PlayerInfluence[
+            hand.influenceB
+          ].toLowerCase()}`}
           disabled={currentPlayer.influenceB !== PlayerInfluence.UNKNOWN}
           label={PlayerInfluence[hand.influenceB]}
           onClick={() => socket.emit("reveal", hand.influenceB)}

@@ -1,5 +1,3 @@
-import { PlayerInfluence } from "./types";
-
 export function nullthrows<T>(value: T): NonNullable<T> {
   if (value == null) {
     throw new Error("Expected nonnull");

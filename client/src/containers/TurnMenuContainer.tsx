@@ -21,7 +21,13 @@ function TurnMenuContainer({ game, players, currentPlayer }: Props) {
 
   switch (game.turnState) {
     case TurnState.START:
-      return <StartTurnMenu game={game} players={players} currentPlayer={currentPlayer} />;
+      return (
+        <StartTurnMenu
+          game={game}
+          players={players}
+          currentPlayer={currentPlayer}
+        />
+      );
     case TurnState.ATTEMPTED:
       return <AttemptedTurnMenu game={game} currentPlayer={currentPlayer} />;
     case TurnState.TARGET_REVEALING:

@@ -7,12 +7,12 @@ import Button from "./ui/Button";
 import PlayerSelector from "./PlayerSelector";
 
 type Props = {
-    game: Game,
-    players: Player[],
-    currentPlayer: Player,
-}
+  game: Game;
+  players: Player[];
+  currentPlayer: Player;
+};
 
-function StartTurnMenu({game, players, currentPlayer}: Props) {
+function StartTurnMenu({ game, players, currentPlayer }: Props) {
   const [targetedAction, setTargetedAction] = useState<TurnAction | null>(null);
 
   if (!currentPlayer.isCurrentTurn) {

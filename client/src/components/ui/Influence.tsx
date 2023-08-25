@@ -1,6 +1,5 @@
 import { PlayerInfluence } from "../../types";
 
-
 const INFLUENCE_NAMES = {
   [PlayerInfluence.UNKNOWN]: "???",
   [PlayerInfluence.AMBASSADOR]: "AMBASSADOR",
@@ -18,9 +17,9 @@ type Props = {
 function Influence({ influence, revealed = false }: Props) {
   return (
     <div
-      className={`text-center font-bold relative text-influence-${PlayerInfluence[influence].toLowerCase()} ${
-        revealed && "opacity-50 grayscale-[50%]"
-      }`}
+      className={`text-center font-bold relative text-influence-${PlayerInfluence[
+        influence
+      ].toLowerCase()} ${revealed && "opacity-50 grayscale-[50%]"}`}
     >
       {INFLUENCE_NAMES[influence]}
     </div>

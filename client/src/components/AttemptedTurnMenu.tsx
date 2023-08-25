@@ -14,7 +14,8 @@ function AttemptedTurnMenu({ game, currentPlayer }: Props) {
   if (currentPlayer.isCurrentTurn) {
     return (
       <p>
-        You've attempted <span className="italic">{titleCase(TurnAction[game.turnAction])}</span>
+        You've attempted{" "}
+        <span className="italic">{titleCase(TurnAction[game.turnAction])}</span>
         {game.turnTarget && ` against ${game.turnTarget.name}`}
       </p>
     );
@@ -25,7 +26,7 @@ function AttemptedTurnMenu({ game, currentPlayer }: Props) {
     (game.turnTarget?.id === currentPlayer.id &&
       (game.turnAction === TurnAction.STEAL ||
         game.turnAction === TurnAction.ASSASSINATE));
-    
+
   const canChallenge =
     game.turnAction !== TurnAction.FOREIGN_AID &&
     game.turnAction !== TurnAction.INCOME &&
@@ -34,16 +35,29 @@ function AttemptedTurnMenu({ game, currentPlayer }: Props) {
   return (
     <VGroup>
       <p>
-        {game.currentTurn.name} has attempted <span className="italic">{TurnAction[game.turnAction]}</span>
+        {game.currentTurn.name} has attempted{" "}
+        <span className="italic">{TurnAction[game.turnAction]}</span>
         {game.turnTarget && ` against ${game.turnTarget.name}`}
       </p>
       <HGroup>
-        <Button className="w-full" label="Accept" onClick={() => socket.emit("accept_action")} />
-        {canChallenge &&
-          <Button className="w-full" label="Challenge" onClick={() => socket.emit("challenge")} />
-        }
+        <Button
+          className="w-full"
+          label="Accept"
+          onClick={() => socket.emit("accept_action")}
+        />
+        {canChallenge && (
+          <Button
+            className="w-full"
+            label="Challenge"
+            onClick={() => socket.emit("challenge")}
+          />
+        )}
         {canBlock && (
-          <Button className="w-full" label="Block" onClick={() => socket.emit("block")} />
+          <Button
+            className="w-full"
+            label="Block"
+            onClick={() => socket.emit("block")}
+          />
         )}
       </HGroup>
     </VGroup>
