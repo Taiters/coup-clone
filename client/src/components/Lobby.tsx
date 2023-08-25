@@ -57,7 +57,11 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
         ) : (
           <p className="text-center m-0 text-brown">Waiting for host...</p>
         )}
-        <LinkButton className="mt-8" onClick={onLeave} label="Leave game" />
+        <LinkButton
+          className="text-center mt-8"
+          onClick={onLeave}
+          label="Leave game"
+        />
       </VGroup>
     </Container>
   );

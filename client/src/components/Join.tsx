@@ -30,7 +30,11 @@ function Join() {
           placeholder="Enter your name..."
         />
         <Button label="Continue" onClick={onContinue} />
-        <LinkButton className="mt-8" onClick={onLeave} label="Leave game" />
+        <LinkButton
+          className="text-center mt-8"
+          onClick={onLeave}
+          label="Leave game"
+        />
       </VGroup>
     </Container>
   );

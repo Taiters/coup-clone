@@ -116,12 +116,13 @@ class Game(Model[GameRow, str]):
         return [Player(self.conn, p) for p in players]
 
     async def get_next_player_turn(self) -> "Player":
-        players = [p for p in await self.get_players() if not p.is_out]
+        players = [p for p in await self.get_players()]
         if self.row.player_turn_id is None:
             return players[0]
         else:
             current_index = [p.id for p in players].index(self.row.player_turn_id)
-            return players[(current_index + 1) % len(players)]
+            player_sequence = players[current_index + 1 :] + players[: current_index + 1]
+            return next(player for player in player_sequence if not player.is_out)
 
     async def all_players_accepted(self) -> bool:
         players = await self.get_players()
@@ -141,7 +142,7 @@ class Player(Model[PlayerRow, int]):
 
     @property
     def influence_b(self) -> Influence:
-        return self.row.influence_a
+        return self.row.influence_b
 
     @property
     def is_out(self) -> bool:
@@ -165,6 +166,13 @@ class Player(Model[PlayerRow, int]):
                 coins=self.row.coins,
             )
 
+    async def get_session(self) -> Optional["Session"]:
+        async with self.conn.cursor() as cursor:
+            sessions = await SessionsTable.query(cursor, player_id=self.id)
+        if not sessions:
+            return None
+        return Session(self.conn, sessions[0])
+
     async def get_game(self) -> Game:
         async with self.conn.cursor() as cursor:
             game = await GamesTable.get(cursor, self.row.game_id)
@@ -187,6 +195,12 @@ class Session(Model[SessionRow, str]):
         if player is None:
             return None
         return Player(self.conn, player)
+
+    async def get_playerX(self) -> Player:
+        player = await self.get_player()
+        if player is None:
+            raise Exception("OH no no player")
+        return player
 
     async def set_player(self, player_id: int) -> None:
         async with self.conn.cursor() as cursor:

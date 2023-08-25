@@ -1,5 +1,7 @@
 import random
 import string
+from collections import Counter
+from dataclasses import dataclass
 from sqlite3 import IntegrityError
 from typing import Optional, Tuple
 
@@ -37,6 +39,12 @@ DECK = [
     Influence.AMBASSADOR,
     Influence.AMBASSADOR,
 ]
+
+
+@dataclass
+class ExchangeInfluence:
+    influence: Influence
+    selected: bool
 
 
 class GameManager:
@@ -121,6 +129,7 @@ class GameManager:
             )
 
             players_remaining = [p for p in await game.get_players() if not p.is_out]
+            await self._add_log_message(game, f"{player.row.name} left the game")
             if len(players_remaining) == 1:
                 winner = players_remaining[0]
                 await self._add_log_message(game, f"{winner.row.name} wins the game!")
@@ -201,6 +210,7 @@ class GameManager:
                     turn_action=TurnAction.EXCHANGE,
                     turn_state=TurnState.ATTEMPTED,
                 )
+                await self._add_log_message(game, f"{player.row.name} attempts to Exchange")
             case TurnAction.ASSASSINATE:
                 if target_id is None:
                     raise Exception("Assasinate must have a target")
@@ -267,8 +277,9 @@ class GameManager:
                 await target.decrement_coins(amount=2)
                 await self._next_player_turn(game)
             case TurnAction.EXCHANGE:
-                # TODO: something
-                pass
+                await self._add_log_message(game, f"{current_player.row.name} draws 2 cards to exchange")
+                await game.update(turn_state=TurnState.EXCHANGING)
+                await self.notifications_manager.notify_player(request.conn, current_player)
             case TurnAction.ASSASSINATE:
                 target = await game.get_target_player()
                 if target is None:
@@ -375,7 +386,19 @@ class GameManager:
                     else:
                         await self._next_player_turn(game)
                 case TurnAction.EXCHANGE:
-                    # Do something
+                    if influence == Influence.AMBASSADOR:
+                        await game.return_to_deck([influence])
+                        new_card = await game.take_from_deck(n=1)
+                        match revealed:
+                            case "A":
+                                await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                            case "B":
+                                await player.update(influence_b=new_card[0], revealed_influence_b=False)
+                        await game.update(
+                            turn_state=TurnState.CHALLENGER_REVEALING,
+                        )
+                    else:
+                        await self._next_player_turn(game)
                     pass
                 case TurnAction.ASSASSINATE:
                     if influence == Influence.ASSASSIN:
@@ -474,6 +497,12 @@ class GameManager:
                 await game.update(
                     turn_state=TurnState.TARGET_REVEALING,
                 )
+            elif game.row.turn_action == TurnAction.EXCHANGE:
+                await game.update(
+                    turn_state=TurnState.EXCHANGING,
+                )
+
+                await self.notifications_manager.notify_player(request.conn, current_player)
             else:
                 await self._next_player_turn(game)
         else:
@@ -491,7 +520,7 @@ class GameManager:
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
         # In case the hand changed...
-        await self.notifications_manager.notify_game(request.conn, request.session)
+        await self.notifications_manager.notify_player(request.conn, player)
 
     async def challenge(self, request: Request) -> None:
         player = await request.session.get_player()
@@ -584,3 +613,50 @@ class GameManager:
         await self._add_log_message(game, f"{player.row.name} challenged {blocking.row.name}")
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+
+    async def exchange(self, request: Request, exchanges: list[ExchangeInfluence]) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        game = await player.get_game()
+        expected_influence = [Influence(int(i)) for i in game.row.deck[-2:]]
+        if not player.row.revealed_influence_a:
+            expected_influence.append(player.influence_a)
+        if not player.row.revealed_influence_b:
+            expected_influence.append(player.influence_b)
+        received_influence = [e.influence for e in exchanges]
+
+        if Counter(expected_influence) != Counter(received_influence):
+            raise Exception("Received unexpected influence")
+
+        return_to_deck = [e.influence for e in exchanges if not e.selected]
+        keep_in_hand = [e.influence for e in exchanges if e.selected]
+
+        if len(return_to_deck) != 2:
+            raise Exception("Must return 2 to deck")
+
+        await game.take_from_deck(n=2)
+        await game.return_to_deck(return_to_deck)
+
+        if len(keep_in_hand) == 1:
+            if player.row.revealed_influence_a:
+                await player.update(influence_b=keep_in_hand[0])
+            elif player.row.revealed_influence_b:
+                await player.update(influence_a=keep_in_hand[0])
+            else:
+                raise Exception("Something weird has happened")
+        elif len(keep_in_hand) == 2:
+            await player.update(
+                influence_a=keep_in_hand[0],
+                influence_b=keep_in_hand[1],
+            )
+        else:
+            raise Exception("Something weird has happened")
+
+        await self._add_log_message(game, f"{player.row.name} returns 2 cards to the deck")
+        await self._next_player_turn(game)
+
+        await request.conn.commit()
+        await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+        await self.notifications_manager.notify_player(request.conn, player)

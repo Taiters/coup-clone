@@ -1,5 +1,6 @@
 import AttemptedTurnMenu from "../components/AttemptedTurnMenu";
 import BlockedMenu from "../components/BlockedMenu";
+import ExchangingTurnMenu from "../components/ExchangingTurnMenu";
 import RevealingActionMenu from "../components/RevealingActionMenu";
 import StartTurnMenu from "../components/StartTurnMenu";
 import { Game, Player, PlayerInfluence, TurnState } from "../types";
@@ -76,6 +77,8 @@ function TurnMenuContainer({ game, players, currentPlayer }: Props) {
           currentPlayer={currentPlayer}
         />
       );
+    case TurnState.EXCHANGING:
+      return <ExchangingTurnMenu game={game} currentPlayer={currentPlayer} />;
     default:
       return <p>Hmm...</p>;
   }

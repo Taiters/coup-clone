@@ -1,4 +1,4 @@
-type Props = {
+export type ButtonProps = {
   label: string;
   small?: boolean;
 } & React.ComponentPropsWithoutRef<"button">;
@@ -10,7 +10,7 @@ function Button({
   color = undefined,
   className = undefined,
   ...rest
-}: Props) {
+}: ButtonProps) {
   const colorClass = disabled ? "bg-gray" : color ? color : "bg-purple";
   return (
     <button
@@ -20,7 +20,7 @@ function Button({
       disabled={disabled}
       className={`${className} ${colorClass} ${
         disabled ? "cursor-auto" : "cursor-pointer"
-      } rounded-none border-none px-8 cursor-pointer text-white h-10`}
+      } rounded-none border-none px-8 text-white h-10`}
       {...rest}
     >
       {label}

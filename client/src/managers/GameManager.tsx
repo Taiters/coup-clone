@@ -57,6 +57,7 @@ type PlayerNotification = {
 type HandNotification = {
   influence_a: PlayerInfluence;
   influence_b: PlayerInfluence;
+  top_of_deck: PlayerInfluence[];
 };
 
 type EventNotification = {
@@ -165,6 +166,8 @@ function GameManager({ initializing, children }: Props) {
             null,
           currentTurn,
           winner: gamePlayers.find((p) => p.id === game?.winner) ?? null,
+          topOfDeck:
+            game.turn_state === TurnState.EXCHANGING ? hand.top_of_deck : [],
         },
         players: gamePlayers,
         events: gameEvents,

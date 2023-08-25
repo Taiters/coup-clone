@@ -23,6 +23,7 @@ export enum TurnState {
   TARGET_REVEALING,
   CHALLENGER_REVEALING,
   BLOCK_CHALLENGER_REVEALING,
+  EXCHANGING,
 }
 
 export enum TurnAction {
@@ -74,6 +75,7 @@ export type Game = {
   turnBlocker: Player | null;
   turnBlockChallenger: Player | null;
   winner: Player | null;
+  topOfDeck: PlayerInfluence[];
 };
 
 export type GameEvent = {

@@ -10,7 +10,7 @@ from coup_clone.managers.exceptions import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
 )
-from coup_clone.managers.game import GameManager
+from coup_clone.managers.game import ExchangeInfluence, GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import NoActiveSessionException, SessionManager
 from coup_clone.request import Request
@@ -92,7 +92,8 @@ class Handler(AsyncNamespace):
     @with_request
     async def on_initialize_game(self, request: Request) -> None:
         print("on_initialize_game: ", request.sid)
-        await self.notifications_manager.notify_game(request.conn, request.session)
+        player = await request.session.get_playerX()
+        await self.notifications_manager.notify_player(request.conn, player)
 
     @with_request
     async def on_set_name(self, request: Request, name: str) -> None:
@@ -138,3 +139,17 @@ class Handler(AsyncNamespace):
     async def on_challenge_block(self, request: Request) -> None:
         print("on_challenge_block: ", request.sid)
         await self.game_manager.challenge_block(request)
+
+    @with_request
+    async def on_exchange(self, request: Request, exchange: list[dict]) -> None:
+        print("on_exchange: ", request.sid, exchange)
+        await self.game_manager.exchange(
+            request,
+            [
+                ExchangeInfluence(
+                    Influence(e["influence"]),
+                    e["selected"],
+                )
+                for e in exchange
+            ],
+        )

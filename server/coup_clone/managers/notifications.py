@@ -2,10 +2,9 @@ from aiosqlite import Connection
 from socketio import AsyncServer
 
 from coup_clone.db.events import EventRow, EventsTable
-from coup_clone.db.games import GameRow, GamesTable
+from coup_clone.db.games import GameRow, GamesTable, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
-from coup_clone.managers.exceptions import PlayerNotInGameException
-from coup_clone.models import Session
+from coup_clone.models import Game, Player, Session
 
 
 def map_session(session: Session) -> dict:
@@ -85,10 +84,14 @@ class NotificationsManager:
             room=session.id,
         )
 
-    async def notify_game(self, conn: Connection, session: Session) -> None:
-        player = await session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
+    async def notify_player(self, conn: Connection, player: Player) -> None:
+        session = await player.get_session()
+        if session is None:
+            raise Exception("No session to nofify")
+
+        game = await Game.get(conn, player.game_id)
+        if game is None:
+            raise Exception("No game!")
 
         await self._send_game(conn, player.game_id, to=session.id)
         await self.socket_server.emit(
@@ -96,6 +99,9 @@ class NotificationsManager:
             {
                 "influence_a": player.row.influence_a,
                 "influence_b": player.row.influence_b,
+                "top_of_deck": [Influence(int(i)) for i in game.row.deck[-2:]]
+                if game.row.turn_state == TurnState.EXCHANGING and game.row.player_turn_id == player.id
+                else [],
             },
             to=session.id,
         )
