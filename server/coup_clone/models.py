@@ -115,7 +115,7 @@ class Game(Model[GameRow, str]):
             players = await PlayersTable.query(cursor, game_id=self.id, order_by=["id"])
         return [Player(self.conn, p) for p in players]
 
-    async def get_next_player_turn(self) -> "Player":
+    async def get_next_player_turn(self) -> Optional["Player"]:
         players = [p for p in await self.get_players()]
         if self.row.player_turn_id is None:
             return players[0]

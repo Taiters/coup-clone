@@ -66,6 +66,8 @@ class GameManager:
 
     async def _next_player_turn(self, game: Game) -> None:
         next_player = await game.get_next_player_turn()
+        if next_player is None:
+            raise Exception("No next player available")
         await game.reset_turn_state(next_player.id)
 
     async def create(self, request: Request) -> None:
@@ -117,7 +119,7 @@ class GameManager:
 
         if game.row.player_turn_id == player.id:
             next_player = await game.get_next_player_turn()
-            if next_player.id == player.id:
+            if next_player is None or next_player.id == player.id:
                 await game.update(player_turn_id=None)
             else:
                 await self._next_player_turn(game)
@@ -134,7 +136,7 @@ class GameManager:
                 winner = players_remaining[0]
                 await self._add_log_message(game, f"{winner.row.name} wins the game!")
                 await game.update(state=GameState.FINISHED, winner_id=winner.id)
-        else:
+        elif game.row.state == GameState.LOBBY:
             await game.return_to_deck([player.influence_a, player.influence_b])
             await player.delete()
 
