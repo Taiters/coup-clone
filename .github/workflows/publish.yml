@@ -35,8 +35,8 @@ jobs:
           echo $SECRET_ORIGIN_KEY > ./client/cf-origin.key
           echo $SECRET_ORIGIN_CERT > ./client/cf-origin.crt
         env:
-          SECRET_ORIGIN_CERT: "${{ secrets.ORIGIN_CERT }}"
-          SECRET_ORIGIN_KEY: "${{ secrets.ORIGIN_KEY }}"
+          SECRET_ORIGIN_CERT: "${{ secrets.ORIGIN_CERTIFICATE }}"
+          SECRET_ORIGIN_KEY: "${{ secrets.ORIGIN_PRIVATE_KEY }}"
 
       - name: Build and push client
         uses: docker/build-push-action@v4
