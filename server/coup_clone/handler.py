@@ -80,7 +80,7 @@ class Handler(AsyncNamespace):
     async def on_join_game(self, request: Request, game_id: str) -> None:
         print("on_join_game: ", request.sid, game_id)
         try:
-            await self.game_manager.join(request, game_id)
+            await self.game_manager.join(request, game_id.lower())
         except (PlayerAlreadyInGameException, GameNotFoundException):
             await self.disconnect(request.sid)
             raise
