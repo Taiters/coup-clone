@@ -1,5 +1,4 @@
 import functools
-from sqlite3 import IntegrityError
 from typing import Any, Callable
 
 from socketio import AsyncNamespace

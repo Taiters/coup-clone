@@ -46,7 +46,10 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
         heading="Lobby"
         subheading={
           <span>
-            Code: {game.id} {canShare && <FaShare onClick={onShare} />}
+            Code: {game.id}{" "}
+            {canShare && (
+              <FaShare className="inline cursor-pointer" onClick={onShare} />
+            )}
           </span>
         }
       />

@@ -1,3 +1,5 @@
+import os
+
 import socketio
 from aiohttp import web
 
@@ -7,10 +9,11 @@ from coup_clone.managers.game import GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import SessionManager
 
-sio = socketio.AsyncServer(cors_allowed_origins="*", cookie="coup_session")
-
 
 async def app_factory():
+    allow_origins = os.environ.get("COUP_ALLOW_ORIGINS", None)
+    sio = socketio.AsyncServer(cors_allowed_origins=allow_origins, cookie="coup_session")
+
     async with db.open() as conn:
         await db.init(conn)
         await conn.commit()
