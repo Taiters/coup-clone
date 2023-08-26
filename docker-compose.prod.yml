@@ -1,0 +1,11 @@
+services:
+  backend:
+    image: ghcr.io/taiters/coup-server:latest
+    restart: always
+
+  web:
+    image: ghcr.io/taiters/coup-client:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
