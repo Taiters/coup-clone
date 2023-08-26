@@ -30,15 +30,11 @@ jobs:
         with:
           context: ./client
           push: true
-          tags: |
-            ghcr.io/taiters/coup-client:latest
-            ghcr.io/taiters/coup-client:${{ github.run_number }}
+          tags: ghcr.io/taiters/coup-client:latest
 
       - name: Build and push server
         uses: docker/build-push-action@v4
         with:
           context: ./server
           push: true
-          tags: |
-            ghcr.io/taiters/coup-server:latest
-            ghcr.io/taiters/coup-server:${{ github.run_number }}
+          tags: ghcr.io/taiters/coup-server:latest
