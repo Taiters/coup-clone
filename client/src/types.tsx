@@ -66,7 +66,7 @@ export type Player = {
 export type Game = {
   id: string;
   state: GameState;
-  currentTurn: Player;
+  currentTurn: Player | null;
   turnState: TurnState;
   turnAction: TurnAction;
   turnStateModified: Date | null;

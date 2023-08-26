@@ -127,8 +127,8 @@ function Inner({ game, currentPlayer }: Props) {
 
 function ExchangingTurnMenu({ game, currentPlayer }: Props) {
   debugger;
-  if (currentPlayer.id !== game.currentTurn.id) {
-    return <p>Waiting for {game.currentTurn.name} to exchange</p>;
+  if (currentPlayer.id !== nullthrows(game.currentTurn?.id)) {
+    return <p>Waiting for {nullthrows(game.currentTurn?.name)} to exchange</p>;
   }
 
   return <Inner game={game} currentPlayer={currentPlayer} />;

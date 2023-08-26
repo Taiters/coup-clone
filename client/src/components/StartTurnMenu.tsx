@@ -5,6 +5,7 @@ import VGroup from "./layout/VGroup";
 import HGroup from "./layout/HGroup";
 import Button from "./ui/Button";
 import PlayerSelector from "./PlayerSelector";
+import { nullthrows } from "../utils";
 
 type Props = {
   game: Game;
@@ -16,7 +17,11 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
   const [targetedAction, setTargetedAction] = useState<TurnAction | null>(null);
 
   if (!currentPlayer.isCurrentTurn) {
-    return <p className="m-0 py-2">Waiting for {game.currentTurn.name}</p>;
+    return (
+      <p className="m-0 py-2">
+        Waiting for {nullthrows(game.currentTurn?.name)}
+      </p>
+    );
   }
 
   const onSelectTarget = (player: Player) => {

@@ -13,19 +13,19 @@ type Props = {
 function BlockedMenu({ game, currentPlayer }: Props) {
   const blocker = nullthrows(game.turnBlocker);
   if (blocker.id === currentPlayer.id) {
-    return <p>You've blocked {game.currentTurn.name}</p>;
+    return <p>You've blocked {nullthrows(game.currentTurn?.name)}</p>;
   }
 
   return (
     <VGroup>
       <p>
         {blocker.name} has blocked{" "}
-        {game.currentTurn.id === currentPlayer.id
+        {nullthrows(game.currentTurn?.id) === currentPlayer.id
           ? "you"
-          : game.currentTurn.name}
+          : nullthrows(game.currentTurn?.name)}
       </p>
       <HGroup>
-        {game.currentTurn.id === currentPlayer.id && (
+        {nullthrows(game.currentTurn?.id) === currentPlayer.id && (
           <Button
             className="w-full"
             label="Accept"

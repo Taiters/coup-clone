@@ -118,7 +118,8 @@ function GameManager({ initializing, children }: Props) {
     acceptsAction: p.accepts_action,
     hand: null,
   }));
-  const currentTurn = gamePlayers.find((p) => p.id === game?.player_turn_id);
+  const currentTurn =
+    gamePlayers.find((p) => p.id === game?.player_turn_id) ?? null;
   const currentPlayer = gamePlayers.find((p) => p.id === session.playerID);
 
   const gameEvents = events.map((e) => ({
@@ -127,12 +128,7 @@ function GameManager({ initializing, children }: Props) {
     message: e.message,
   }));
 
-  if (
-    game == null ||
-    currentPlayer == null ||
-    currentTurn == null ||
-    hand == null
-  ) {
+  if (game == null || currentPlayer == null || hand == null) {
     return <>{initializing}</>;
   }
 

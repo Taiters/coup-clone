@@ -1,6 +1,6 @@
 import { socket } from "../socket";
 import { Game, Player, PlayerInfluence, TurnAction } from "../types";
-import { titleCase } from "../utils";
+import { nullthrows, titleCase } from "../utils";
 import HGroup from "./layout/HGroup";
 import VGroup from "./layout/VGroup";
 import Button from "./ui/Button";
@@ -25,7 +25,7 @@ function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
   if (currentPlayer.acceptsAction) {
     const waitingForPlayers = players.filter(
       (p) =>
-        p.id !== game.currentTurn.id &&
+        p.id !== nullthrows(game.currentTurn?.id) &&
         (p.influenceA === PlayerInfluence.UNKNOWN ||
           p.influenceB === PlayerInfluence.UNKNOWN),
     );
@@ -51,7 +51,7 @@ function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
   return (
     <VGroup>
       <p>
-        {game.currentTurn.name} has attempted{" "}
+        {nullthrows(game.currentTurn?.name)} has attempted{" "}
         <span className="italic">{TurnAction[game.turnAction]}</span>
         {game.turnTarget && ` against ${game.turnTarget.name}`}
       </p>
