@@ -8,6 +8,10 @@ jobs:
   build_and_publish:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -30,11 +34,15 @@ jobs:
         with:
           context: ./client
           push: true
-          tags: ghcr.io/taiters/coup-client:latest
+          tags: |
+            ghcr.io/taiters/coup-client:latest
+            ghcr.io/taiters/coup-client:${{ github.run_number }}
 
       - name: Build and push server
         uses: docker/build-push-action@v4
         with:
           context: ./server
           push: true
-          tags: ghcr.io/taiters/coup-server:latest
+          tags: |
+            ghcr.io/taiters/coup-server:latest
+            ghcr.io/taiters/coup-server:${{ github.run_number }}
