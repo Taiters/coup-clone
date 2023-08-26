@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -9,7 +10,7 @@ from .games import GamesTable
 from .players import PlayersTable
 from .sessions import SessionsTable
 
-DB_FILE = "./test.db"
+DB_FILE = os.environ.get("COUP_DB_PATH", "./test.db")
 TABLE_DEFINITIONS = [
     PlayersTable.TABLE_DEFINITION,
     EventsTable.TABLE_DEFINITION,
