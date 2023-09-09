@@ -28,6 +28,7 @@ module.exports = {
       gray: "#b1b59a",
       darkgray: "#8e8d7e",
       overlay: "#32220861",
+      red: "#dd7979",
 
       influence: {
         unknown: "#8E8D7E",

@@ -8,7 +8,6 @@ import HGroup from "./layout/HGroup";
 import { socket } from "../socket";
 import { useState } from "react";
 import LinkButton from "./ui/LinkButton";
-import { FaCircleQuestion } from "react-icons/fa6";
 import Modal from "./ui/Modal";
 import Help from "./Help";
 
@@ -21,7 +20,7 @@ function Home() {
   };
 
   const onJoinGame = async () => {
-    socket.emit("join_game", gameID);
+    socket.timeout(5000).emit("join_game", gameID);
   };
 
   return (
@@ -33,8 +32,9 @@ function Home() {
             value={gameID}
             onChange={setGameID}
             placeholder="Enter game code..."
+            validate={(value) => value.length !== 6 ? "Game code should be 6 characters" : null}
           />
-          <Button label="Join" onClick={onJoinGame} />
+          <Button label="Join" onClick={onJoinGame} disabled={gameID.length !== 6} />
         </HGroup>
         <LinkButton
           className="mt-28 mx-auto !block text-center"
