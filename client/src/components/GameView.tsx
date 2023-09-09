@@ -11,6 +11,7 @@ import HGroup from "./layout/HGroup";
 import { FaBars } from "react-icons/fa6";
 import { useState } from "react";
 import Modal from "./ui/Modal";
+import Help from "./Help";
 
 type Props = {
   game: Game;
@@ -21,6 +22,7 @@ type Props = {
 
 function GameView({ game, players, events, currentPlayer }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
 
   const onLeave = () => {
@@ -81,9 +83,21 @@ function GameView({ game, players, events, currentPlayer }: Props) {
       </div>
       {menuOpen && (
         <Modal heading="Menu" onClose={() => setMenuOpen(false)}>
-          <VGroup>
+          <VGroup className="p-1">
+            <LinkButton
+              label="How to play"
+              onClick={() => {
+                setMenuOpen(false);
+                setShowHelp(true);
+              }}
+            />
             <LinkButton label="Leave Game" onClick={onLeave} />
           </VGroup>
+        </Modal>
+      )}
+      {showHelp && (
+        <Modal heading="How to play" onClose={() => setShowHelp(false)}>
+          <Help />
         </Modal>
       )}
     </>

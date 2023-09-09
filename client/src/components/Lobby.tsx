@@ -7,6 +7,9 @@ import { Game, Player, PlayerState } from "../types";
 import { FaShare } from "react-icons/fa6";
 import LinkButton from "./ui/LinkButton";
 import { socket } from "../socket";
+import { useState } from "react";
+import Modal from "./ui/Modal";
+import Help from "./Help";
 
 type Props = {
   game: Game;
@@ -16,6 +19,8 @@ type Props = {
 };
 
 function Lobby({ game, players, currentPlayer, onStart }: Props) {
+  const [showHelp, setShowHelp] = useState(false);
+
   const lobbyPlayers = players.map((p, i) => (
     <LobbyPlayer key={i} player={p} current={currentPlayer.id === p.id} />
   ));
@@ -41,32 +46,44 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
   };
 
   return (
-    <Container>
-      <PageTitle
-        heading="Lobby"
-        subheading={
-          <span>
-            Code: {game.id}{" "}
-            {canShare && (
-              <FaShare className="inline cursor-pointer" onClick={onShare} />
-            )}
-          </span>
-        }
-      />
-      <VGroup className="mb-10">{lobbyPlayers}</VGroup>
-      <VGroup>
-        {currentPlayer.host ? (
-          <Button disabled={!readyToStart} label="Start" onClick={onStart} />
-        ) : (
-          <p className="text-center m-0 text-brown">Waiting for host...</p>
-        )}
-        <LinkButton
-          className="text-center mt-8"
-          onClick={onLeave}
-          label="Leave game"
+    <>
+      <Container>
+        <PageTitle
+          heading="Lobby"
+          subheading={
+            <span>
+              Code: {game.id}{" "}
+              {canShare && (
+                <FaShare className="inline cursor-pointer" onClick={onShare} />
+              )}
+            </span>
+          }
         />
-      </VGroup>
-    </Container>
+        <VGroup className="mb-10">{lobbyPlayers}</VGroup>
+        <VGroup>
+          {currentPlayer.host ? (
+            <Button disabled={!readyToStart} label="Start" onClick={onStart} />
+          ) : (
+            <p className="text-center m-0 text-brown">Waiting for host...</p>
+          )}
+          <LinkButton
+            className="mx-auto !block text-center"
+            onClick={() => setShowHelp(true)}
+            label="How to play"
+          />
+          <LinkButton
+            className="text-center mt-8"
+            onClick={onLeave}
+            label="Leave game"
+          />
+        </VGroup>
+      </Container>
+      {showHelp && (
+        <Modal heading="How to play" onClose={() => setShowHelp(false)}>
+          <Help />
+        </Modal>
+      )}
+    </>
   );
 }
 

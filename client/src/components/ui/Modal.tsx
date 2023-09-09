@@ -22,7 +22,7 @@ function Modal({ heading, children, onClose }: Props) {
               />
             )}
           </div>
-          <div className="m-2">{children}</div>
+          <div className="m-2 overflow-y-auto max-h-96">{children}</div>
         </div>
       </Container>
     </div>

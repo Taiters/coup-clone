@@ -8,9 +8,13 @@ import HGroup from "./layout/HGroup";
 import { socket } from "../socket";
 import { useState } from "react";
 import LinkButton from "./ui/LinkButton";
+import { FaCircleQuestion } from "react-icons/fa6";
+import Modal from "./ui/Modal";
+import Help from "./Help";
 
 function Home() {
   const [gameID, setGameID] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const onCreateGame = async () => {
     socket.emit("create_game");
@@ -37,7 +41,17 @@ function Home() {
           onClick={onCreateGame}
           label="Create a new game"
         />
+        <LinkButton
+          className="mt-4 mx-auto !block text-center"
+          onClick={() => setShowHelp(true)}
+          label="How to play"
+        />
       </Container>
+      {showHelp && (
+        <Modal heading="How to play" onClose={() => setShowHelp(false)}>
+          <Help />
+        </Modal>
+      )}
     </>
   );
 }
