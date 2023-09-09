@@ -10,17 +10,27 @@ import { useState } from "react";
 import LinkButton from "./ui/LinkButton";
 import Modal from "./ui/Modal";
 import Help from "./Help";
+import { useMessage } from "../managers/MessageManager";
 
 function Home() {
   const [gameID, setGameID] = useState("");
   const [showHelp, setShowHelp] = useState(false);
+  const {showMessage} = useMessage();
 
   const onCreateGame = async () => {
-    socket.emit("create_game");
+    socket.timeout(5000).emit("create_game", (err: Error) => {
+      if (err != null) {
+        showMessage("Error", "Timed out when creating game")
+      }
+    });
   };
 
   const onJoinGame = async () => {
-    socket.timeout(5000).emit("join_game", gameID);
+    socket.timeout(5000).emit("join_game", gameID, (err: Error) => {
+      if (err != null) {
+        showMessage("Error", "Timed out when joining game")
+      }
+    });
   };
 
   return (
@@ -43,7 +53,7 @@ function Home() {
         />
         <LinkButton
           className="mt-4 mx-auto !block text-center"
-          onClick={() => setShowHelp(true)}
+          onClick={() => showMessage('hello', 'world')}
           label="How to play"
         />
       </Container>

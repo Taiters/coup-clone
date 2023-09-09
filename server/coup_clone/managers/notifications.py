@@ -5,6 +5,7 @@ from coup_clone.db.events import EventRow, EventsTable
 from coup_clone.db.games import GameRow, GamesTable, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.models import Game, Player, Session
+from coup_clone.request import Request
 
 
 def map_session(session: Session) -> dict:
@@ -105,6 +106,16 @@ class NotificationsManager:
                 else [],
             },
             to=session.id,
+        )
+    
+    async def notify_error(self, request: Request, title: str, message: str) -> None:
+        await self.socket_server.emit(
+            "error_msg",
+            {
+                "title": title,
+                "message": message,
+            },
+            to=request.sid,
         )
 
     async def broadcast_game(self, conn: Connection, game_id: str) -> None:

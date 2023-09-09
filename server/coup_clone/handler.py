@@ -81,6 +81,7 @@ class Handler(AsyncNamespace):
         try:
             await self.game_manager.join(request, game_id.lower())
         except (PlayerAlreadyInGameException, GameNotFoundException):
+            await self.notifications_manager.notify_error(request, "OH SHIT", "SHIT HAPPENED")
             await self.disconnect(request.sid)
             raise
 

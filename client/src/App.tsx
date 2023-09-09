@@ -7,6 +7,7 @@ import { Outlet } from "react-router-dom";
 
 import SessionManager from "./managers/SessionManager";
 import Initializing from "./components/Initializing";
+import MessageManager from "./managers/MessageManager";
 
 function App() {
   return (
@@ -16,9 +17,11 @@ function App() {
           <Route
             path="/"
             element={
-              <SessionManager initializing={<Initializing />}>
-                {(session) => <Outlet context={session} />}
-              </SessionManager>
+              <MessageManager>
+                <SessionManager initializing={<Initializing />}>
+                  {(session) => <Outlet context={session} />}
+                </SessionManager>
+              </MessageManager>
             }
           >
             <Route index element={<Home />} />
