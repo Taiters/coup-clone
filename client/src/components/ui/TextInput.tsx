@@ -13,18 +13,18 @@ function TextInput({ value, placeholder, onChange, validate = null }: Props) {
 
   return (
     <div className="w-full">
-    <input
-      value={value}
-      onBlur={() => setShouldValidate(true)}
-      onChange={(e) => {
-        setShouldValidate(false);
-        onChange(e.target.value);
-      }}
-      className="text-lightbrown bg-darkbrown rounded-none border-2 border-solid border-lightbrown px-4 h-10 w-full box-border"
-      type="text"
-      placeholder={placeholder}
-    />
-    <p className="text-red h-4">{error}</p>
+      <input
+        value={value}
+        onBlur={() => setShouldValidate(true)}
+        onChange={(e) => {
+          setShouldValidate(false);
+          onChange(e.target.value);
+        }}
+        className="text-lightbrown bg-darkbrown rounded-none border-2 border-solid border-lightbrown px-4 h-10 w-full box-border"
+        type="text"
+        placeholder={placeholder}
+      />
+      <p className="text-red h-4">{error}</p>
     </div>
   );
 }

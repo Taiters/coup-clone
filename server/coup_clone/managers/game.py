@@ -73,7 +73,7 @@ class GameManager:
     async def create(self, request: Request) -> None:
         current_player = await request.session.get_player()
         if current_player is not None:
-            raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
+            raise PlayerAlreadyInGameException(current_player.game_id)
 
         game_id = "".join(random.choice(string.ascii_lowercase) for _ in range(6))
         game = await Game.create(
@@ -91,17 +91,17 @@ class GameManager:
         async with request.conn.cursor() as cursor:
             current_player = await request.session.get_player()
             if current_player is not None:
-                raise PlayerAlreadyInGameException("Already in game " + current_player.game_id)
+                raise PlayerAlreadyInGameException(current_player.game_id)
             game_row = await GamesTable.get(cursor, game_id)
             if game_row is None:
-                raise GameNotFoundException()
+                raise GameNotFoundException(game_id)
             game = Game(request.conn, await GamesTable.get(cursor, game_id))
             hand = await game.take_from_deck()
             try:
                 player = await PlayersTable.create(cursor, game_id=game_id, influence_a=hand[0], influence_b=hand[1])
             except IntegrityError as e:
                 if str(e) == "Game full":
-                    raise GameFullException()
+                    raise GameFullException(game_id)
             await request.session.set_player(player.id)
             await request.conn.commit()
 
@@ -163,7 +163,7 @@ class GameManager:
             game = await player.get_game()
             players = await game.get_players()
             if len(players) < 2:
-                raise NotEnoughPlayersException()
+                raise NotEnoughPlayersException(game.id)
             await GamesTable.update(cursor, player.game_id, state=GameState.RUNNING)
             await self._next_player_turn(game)
             await self._add_log_message(game, "Welcome to Coup!")

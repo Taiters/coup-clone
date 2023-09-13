@@ -1,4 +1,5 @@
 import functools
+import traceback
 from typing import Any, Callable
 
 from socketio import AsyncNamespace
@@ -9,6 +10,7 @@ from coup_clone.db.players import Influence
 from coup_clone.managers.exceptions import (
     GameNotFoundException,
     PlayerAlreadyInGameException,
+    UserException,
 )
 from coup_clone.managers.game import ExchangeInfluence, GameManager
 from coup_clone.managers.notifications import NotificationsManager
@@ -32,8 +34,27 @@ def with_request(f: Callable[..., Any]) -> Callable[..., Any]:
                     *args
                 )
             except NoActiveSessionException:
-                await self.disconnect(sid)
                 raise
+
+    return wrapper
+
+def socket_response(f: Callable[..., Any]) -> Callable[..., Any]:
+    @functools.wraps(f)
+    async def wrapper(self: "Handler", *args: Any) -> None:
+            try:
+                await f(
+                    self,
+                    *args,
+                )
+                return {
+                    "status": "success",
+                }
+            except UserException as e:
+                traceback.print_exc()
+                return {
+                    "status": "error",
+                    "error": e.as_error_response()     
+                }
 
     return wrapper
 
@@ -75,14 +96,13 @@ class Handler(AsyncNamespace):
             await self.disconnect(request.sid)
             raise
 
+    @socket_response
     @with_request
     async def on_join_game(self, request: Request, game_id: str) -> None:
         print("on_join_game: ", request.sid, game_id)
         try:
             await self.game_manager.join(request, game_id.lower())
         except (PlayerAlreadyInGameException, GameNotFoundException):
-            await self.notifications_manager.notify_error(request, "OH SHIT", "SHIT HAPPENED")
-            await self.disconnect(request.sid)
             raise
 
     @with_request

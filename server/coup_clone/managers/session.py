@@ -49,13 +49,13 @@ class SessionManager:
             session_id = socket_session.get(SESSION_KEY, None)
 
         if session_id is None:
-            raise NoActiveSessionException("session is not present in socket connection")
+            raise NoActiveSessionException()
 
         async with conn.cursor() as cursor:
             existing_session = await SessionsTable.get(cursor, session_id)
 
             if existing_session is None:
-                raise NoActiveSessionException("session not found in database")
+                raise NoActiveSessionException()
 
             return Session(
                 conn,

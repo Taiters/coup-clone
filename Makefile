@@ -16,3 +16,9 @@ test: lint mypy
 install:
 	python -m pip install --upgrade pip
 	pip install -r server/requirements.txt
+
+run_server:
+	COUP_ALLOW_ORIGINS="*" python server/app.py
+
+run_client:
+	cd client && REACT_APP_SOCKET_ADDR="http://localhost:8080" npm run start

@@ -1,63 +1,70 @@
-import { ReactNode, createContext, useContext, useEffect, useState } from "react";
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import Message from "../components/ui/Message";
 import { socket } from "../socket";
 
 type Props = {
-    children: ReactNode;
-}
+  children: ReactNode;
+};
 
 type MessageContextType = {
-    showMessage: (title: string, message: string) => void;
-}
+  showMessage: (title: string, message: string) => void;
+};
 
 const MessageContext = createContext<MessageContextType>({
-    showMessage: () => {},
+  showMessage: () => {},
 });
 
 export const useMessage = () => {
-    return useContext(MessageContext);
-}
+  return useContext(MessageContext);
+};
 
-function MessageManager({children}: Props) {
-    const [message, setMessage] = useState<{title: string, message:string} | null>(null);
+function MessageManager({ children }: Props) {
+  const [message, setMessage] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
 
-    const showMessage = (title: string, message: string) => {
-        setMessage({title, message});
+  const showMessage = (title: string, message: string) => {
+    setMessage({ title, message });
+  };
+
+  useEffect(() => {
+    if (message == null) {
+      return;
+    }
+
+    const timeout = setTimeout(() => setMessage(null), 5000);
+
+    return () => {
+      clearTimeout(timeout);
     };
+  }, [message, setMessage]);
 
-    useEffect(() => {
-        if (message == null) {
-            return;
-        }
+  useEffect(() => {
+    const handleErrorMsg = (message: { title: string; message: string }) => {
+      setMessage(message);
+    };
+    socket.on("error_msg", handleErrorMsg);
 
-        const timeout = setTimeout(() => setMessage(null), 5000);
+    return () => {
+      socket.off("error_msg", handleErrorMsg);
+    };
+  }, [setMessage]);
 
-        return () => {
-            clearTimeout(timeout);
-        }
-    }, [message, setMessage])
-
-    useEffect(() => {
-        const handleErrorMsg = (message: {title: string, message: string}) => {
-            setMessage(message);
-        }
-        socket.on("error_msg", handleErrorMsg);
-
-        return () => {
-            socket.off("error_msg", handleErrorMsg);
-        }
-    }, [setMessage]);
-
-    return (
-        <>
-            <MessageContext.Provider value={{showMessage}}>
-                {children}
-            </MessageContext.Provider>
-            {message && (
-            <Message title={message.title} message={message.message} />
-            )}
-        </>
-    )
+  return (
+    <>
+      <MessageContext.Provider value={{ showMessage }}>
+        {children}
+      </MessageContext.Provider>
+      {message && <Message title={message.title} message={message.message} />}
+    </>
+  );
 }
 
 export default MessageManager;
