@@ -107,7 +107,7 @@ class NotificationsManager:
             },
             to=session.id,
         )
-    
+
     async def notify_error(self, request: Request, title: str, message: str) -> None:
         await self.socket_server.emit(
             "error_msg",

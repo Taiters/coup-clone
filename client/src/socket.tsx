@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { useMessage } from "./managers/MessageManager";
+import { useCallback } from "react";
 
 const DEFAULT_TIMEOUT = 5000;
 
@@ -21,17 +22,23 @@ export const socket = io(process.env.REACT_APP_SOCKET_ADDR ?? "", {
 
 export function useEventEmitter(): (event: string, ...args: any) => void {
   const { showMessage } = useMessage();
-  return (event: string, ...args: any) =>
-    socket
-      .timeout(DEFAULT_TIMEOUT)
-      .emit(event, ...args, (err: Error, response: SocketResponse) => {
-        if (err != null) {
-          showMessage("Error", "Request timed out");
-          return;
-        }
+  return useCallback(
+    (event: string, ...args: any) =>
+      socket
+        .timeout(DEFAULT_TIMEOUT)
+        .emit(event, ...args, (err: Error, response: SocketResponse) => {
+          if (err != null) {
+            showMessage("Error", "Request timed out");
+            return;
+          }
 
-        if (response.status === "error") {
-          showMessage("Error", response.error.message ?? "Something went wrong");
-        }
-      });
+          if (response.status === "error") {
+            showMessage(
+              "Error",
+              response.error.message ?? "Something went wrong",
+            );
+          }
+        }),
+    [showMessage],
+  );
 }

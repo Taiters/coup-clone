@@ -5,7 +5,7 @@ import { nullthrows } from "../utils";
 import { useEffect, useState } from "react";
 import Button from "./ui/Button";
 import HGroup from "./layout/HGroup";
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 
 type Props = {
   game: Game;
@@ -19,11 +19,11 @@ type ExchangingInfluence = {
 };
 
 function Inner({ game, currentPlayer }: Props) {
-  debugger;
   const hand = nullthrows(currentPlayer.hand);
   const [exchangingInfluence, setExchangingInfluence] = useState<
     ExchangingInfluence[]
   >([]);
+  const emitEvent = useEventEmitter();
 
   useEffect(() => {
     setExchangingInfluence([
@@ -74,12 +74,11 @@ function Inner({ game, currentPlayer }: Props) {
       return copied;
     });
 
-  const onExchange = () => {
-    socket.emit(
+  const onExchange = () =>
+    emitEvent(
       "exchange",
       exchangingInfluence.filter((e) => e.enabled),
     );
-  };
 
   return (
     <VGroup>
@@ -126,7 +125,6 @@ function Inner({ game, currentPlayer }: Props) {
 }
 
 function ExchangingTurnMenu({ game, currentPlayer }: Props) {
-  debugger;
   if (currentPlayer.id !== nullthrows(game.currentTurn?.id)) {
     return <p>Waiting for {nullthrows(game.currentTurn?.name)} to exchange</p>;
   }

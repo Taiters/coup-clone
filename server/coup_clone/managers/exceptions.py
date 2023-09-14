@@ -1,23 +1,24 @@
 class UserException(Exception):
     def as_error_response(self) -> dict:
-       return {
+        return {
             "type": self.__class__.__name__,
             "message": str(self),
-       } 
+        }
+
 
 class PlayerAlreadyInGameException(UserException):
     def __init__(self, game_id: str):
-        super().__init__(f'Already in a game with ID: {game_id}')
+        super().__init__(f"Already in a game with ID: {game_id}")
 
 
 class PlayerNotInGameException(UserException):
     def __init__(self):
-        super().__init__('Not in a game')
+        super().__init__("Not in a game")
 
 
 class GameNotFoundException(UserException):
     def __init__(self, game_id: str):
-        super().__init__(f'No game found with ID: {game_id}')
+        super().__init__(f"No game found with ID: {game_id}")
 
 
 class NotPlayerTurnException(UserException):
@@ -32,7 +33,7 @@ class GameFullException(UserException):
 
 class NoActiveSessionException(UserException):
     def __init__(self):
-        super().__init__(f"No active session found")
+        super().__init__("No active session found")
 
 
 class NotEnoughPlayersException(UserException):

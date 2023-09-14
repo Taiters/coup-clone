@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Game, Player, PlayerInfluence, TurnAction } from "../types";
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import VGroup from "./layout/VGroup";
 import HGroup from "./layout/HGroup";
 import Button from "./ui/Button";
@@ -15,6 +15,7 @@ type Props = {
 
 function StartTurnMenu({ game, players, currentPlayer }: Props) {
   const [targetedAction, setTargetedAction] = useState<TurnAction | null>(null);
+  const emitEvent = useEventEmitter();
 
   if (!currentPlayer.isCurrentTurn) {
     return (
@@ -28,7 +29,7 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
     if (targetedAction == null) {
       throw new Error("Did not expect this");
     }
-    socket.emit("take_action", { action: targetedAction, target: player.id });
+    emitEvent("take_action", { action: targetedAction, target: player.id });
     setTargetedAction(null);
   };
 
@@ -40,19 +41,19 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
             <Button
               label="Income"
               onClick={() =>
-                socket.emit("take_action", { action: TurnAction.INCOME })
+                emitEvent("take_action", { action: TurnAction.INCOME })
               }
             />
             <Button
               label="Tax"
               onClick={() =>
-                socket.emit("take_action", { action: TurnAction.TAX })
+                emitEvent("take_action", { action: TurnAction.TAX })
               }
             />
             <Button
               label="Exchange"
               onClick={() =>
-                socket.emit("take_action", { action: TurnAction.EXCHANGE })
+                emitEvent("take_action", { action: TurnAction.EXCHANGE })
               }
             />
           </VGroup>
@@ -60,7 +61,7 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
             <Button
               label="Foreign Aid"
               onClick={() =>
-                socket.emit("take_action", { action: TurnAction.FOREIGN_AID })
+                emitEvent("take_action", { action: TurnAction.FOREIGN_AID })
               }
             />
             <Button

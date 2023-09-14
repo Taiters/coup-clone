@@ -6,7 +6,7 @@ import VGroup from "./layout/VGroup";
 import { Game, Player, PlayerState } from "../types";
 import { FaShare } from "react-icons/fa6";
 import LinkButton from "./ui/LinkButton";
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import { useState } from "react";
 import Modal from "./ui/Modal";
 import Help from "./Help";
@@ -20,6 +20,7 @@ type Props = {
 
 function Lobby({ game, players, currentPlayer, onStart }: Props) {
   const [showHelp, setShowHelp] = useState(false);
+  const emitEvent = useEventEmitter();
 
   const lobbyPlayers = players.map((p, i) => (
     <LobbyPlayer key={i} player={p} current={currentPlayer.id === p.id} />
@@ -41,9 +42,7 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
     });
   };
 
-  const onLeave = () => {
-    socket.emit("leave_game");
-  };
+  const onLeave = () => emitEvent("leave_game");
 
   return (
     <>

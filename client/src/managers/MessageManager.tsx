@@ -1,6 +1,7 @@
 import {
   ReactNode,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -30,9 +31,12 @@ function MessageManager({ children }: Props) {
     message: string;
   } | null>(null);
 
-  const showMessage = (title: string, message: string) => {
-    setMessage({ title, message });
-  };
+  const showMessage = useCallback(
+    (title: string, message: string) => {
+      setMessage({ title, message });
+    },
+    [setMessage],
+  );
 
   useEffect(() => {
     if (message == null) {

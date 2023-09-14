@@ -1,4 +1,4 @@
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import { Game, Player, PlayerInfluence, TurnAction } from "../types";
 import { nullthrows, titleCase } from "../utils";
 import HGroup from "./layout/HGroup";
@@ -12,6 +12,8 @@ type Props = {
 };
 
 function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
+  const emitEvent = useEventEmitter();
+
   if (currentPlayer.isCurrentTurn) {
     return (
       <p>
@@ -59,20 +61,20 @@ function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
         <Button
           className="w-full"
           label="Accept"
-          onClick={() => socket.emit("accept_action")}
+          onClick={() => emitEvent("accept_action")}
         />
         {canChallenge && (
           <Button
             className="w-full"
             label="Challenge"
-            onClick={() => socket.emit("challenge")}
+            onClick={() => emitEvent("challenge")}
           />
         )}
         {canBlock && (
           <Button
             className="w-full"
             label="Block"
-            onClick={() => socket.emit("block")}
+            onClick={() => emitEvent("block")}
           />
         )}
       </HGroup>

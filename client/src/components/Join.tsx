@@ -5,20 +5,16 @@ import PageTitle from "./ui/PageTitle";
 import TextInput from "./ui/TextInput";
 import VGroup from "./layout/VGroup";
 import { useState } from "react";
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import LinkButton from "./ui/LinkButton";
 
 function Join() {
   const { game } = useParams();
   const [name, setName] = useState("");
+  const emitEvent = useEventEmitter();
 
-  const onContinue = () => {
-    socket.emit("set_name", name);
-  };
-
-  const onLeave = () => {
-    socket.emit("leave_game");
-  };
+  const onContinue = () => emitEvent("set_name", name);
+  const onLeave = () => emitEvent("leave_game");
 
   return (
     <Container>

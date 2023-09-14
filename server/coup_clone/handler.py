@@ -31,30 +31,37 @@ def with_request(f: Callable[..., Any]) -> Callable[..., Any]:
                         conn=conn,
                         session=session,
                     ),
-                    *args
+                    *args,
                 )
             except NoActiveSessionException:
                 raise
 
     return wrapper
 
+
+def log_event(f: Callable[..., Any]) -> Callable[..., Any]:
+    @functools.wraps(f)
+    async def wrapper(self: "Handler", sid: str, *args: Any) -> None:
+        print(f.__name__, sid)
+        await f(self, sid, *args)
+
+    return wrapper
+
+
 def socket_response(f: Callable[..., Any]) -> Callable[..., Any]:
     @functools.wraps(f)
-    async def wrapper(self: "Handler", *args: Any) -> None:
-            try:
-                await f(
-                    self,
-                    *args,
-                )
-                return {
-                    "status": "success",
-                }
-            except UserException as e:
-                traceback.print_exc()
-                return {
-                    "status": "error",
-                    "error": e.as_error_response()     
-                }
+    async def wrapper(self: "Handler", *args: Any) -> dict:
+        try:
+            await f(
+                self,
+                *args,
+            )
+            return {
+                "status": "success",
+            }
+        except UserException as e:
+            traceback.print_exc()
+            return {"status": "error", "error": e.as_error_response()}
 
     return wrapper
 
@@ -71,8 +78,8 @@ class Handler(AsyncNamespace):
         self.notifications_manager = notifications_manager
         super().__init__()
 
+    @log_event
     async def on_connect(self, sid: str, environ: dict, auth: dict) -> None:
-        print("on_connect: ", sid)
         async with db.open() as conn:
             session = await self.session_manager.setup(conn, sid, auth)
             game = auth.get("game", None) if auth else None
@@ -87,83 +94,89 @@ class Handler(AsyncNamespace):
                     except GameNotFoundException:
                         raise ConnectionRefusedError("invalid game id")
 
+    @socket_response
+    @log_event
     @with_request
     async def on_create_game(self, request: Request) -> None:
-        print("on_create_game: ", request.sid)
-        try:
-            await self.game_manager.create(request)
-        except PlayerAlreadyInGameException:
-            await self.disconnect(request.sid)
-            raise
+        await self.game_manager.create(request)
 
     @socket_response
+    @log_event
     @with_request
     async def on_join_game(self, request: Request, game_id: str) -> None:
-        print("on_join_game: ", request.sid, game_id)
-        try:
-            await self.game_manager.join(request, game_id.lower())
-        except (PlayerAlreadyInGameException, GameNotFoundException):
-            raise
+        await self.game_manager.join(request, game_id.lower())
 
+    @socket_response
+    @log_event
     @with_request
     async def on_leave_game(self, request: Request) -> None:
-        print("on_leave_game: ", request.sid)
         await self.game_manager.leave(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_initialize_game(self, request: Request) -> None:
-        print("on_initialize_game: ", request.sid)
         player = await request.session.get_playerX()
         await self.notifications_manager.notify_player(request.conn, player)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_set_name(self, request: Request, name: str) -> None:
-        print("on_set_name: ", request.sid, name)
         await self.game_manager.set_name(request, name)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_start_game(self, request: Request) -> None:
-        print("on_start_game: ", request.sid)
         await self.game_manager.start(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_take_action(self, request: Request, action: dict) -> None:
-        print("on_take_action: ", request.sid, action)
         await self.game_manager.take_action(request, action["action"], action.get("target", None))
 
+    @socket_response
+    @log_event
     @with_request
     async def on_accept_action(self, request: Request) -> None:
-        print("on_accept_action: ", request.sid)
         await self.game_manager.accept_action(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_reveal(self, request: Request, influence: int) -> None:
-        print("on_reveal: ", request.sid, influence)
         await self.game_manager.reveal_influence(request, Influence(influence))
 
+    @socket_response
+    @log_event
     @with_request
     async def on_challenge(self, request: Request) -> None:
-        print("on_challenge: ", request.sid)
         await self.game_manager.challenge(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_block(self, request: Request) -> None:
-        print("on_block: ", request.sid)
         await self.game_manager.block(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_accept_block(self, request: Request) -> None:
-        print("on_accept_block: ", request.sid)
         await self.game_manager.accept_block(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_challenge_block(self, request: Request) -> None:
-        print("on_challenge_block: ", request.sid)
         await self.game_manager.challenge_block(request)
 
+    @socket_response
+    @log_event
     @with_request
     async def on_exchange(self, request: Request, exchange: list[dict]) -> None:
-        print("on_exchange: ", request.sid, exchange)
         await self.game_manager.exchange(
             request,
             [

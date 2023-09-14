@@ -5,7 +5,7 @@ import { Game, GameEvent, GameState, Player, PlayerInfluence } from "../types";
 import VGroup from "./layout/VGroup";
 import GameLog from "./GameLog";
 import TurnMenuContainer from "../containers/TurnMenuContainer";
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import LinkButton from "./ui/LinkButton";
 import HGroup from "./layout/HGroup";
 import { FaBars } from "react-icons/fa6";
@@ -23,11 +23,11 @@ type Props = {
 function GameView({ game, players, events, currentPlayer }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const emitEvent = useEventEmitter();
+
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
 
-  const onLeave = () => {
-    socket.emit("leave_game");
-  };
+  const onLeave = () => emitEvent("leave_game");
 
   return (
     <>

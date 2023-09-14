@@ -9,7 +9,7 @@ import {
   TurnAction,
   TurnState,
 } from "../types";
-import { socket } from "../socket";
+import { socket, useEventEmitter } from "../socket";
 import { useOutletContext } from "react-router-dom";
 import { ActiveSession } from "./SessionManager";
 import { nullthrows } from "../utils";
@@ -73,10 +73,11 @@ function GameManager({ initializing, children }: Props) {
   const [players, setPlayers] = useState<PlayerNotification[]>([]);
   const [events, setEvents] = useState<EventNotification[]>([]);
   const [hand, setHand] = useState<HandNotification | null>(null);
+  const emitEvent = useEventEmitter();
 
   useEffect(() => {
-    socket.emit("initialize_game");
-  }, []);
+    emitEvent("initialize_game");
+  }, [emitEvent]);
 
   useEffect(() => {
     const handleGame = ({
@@ -104,7 +105,7 @@ function GameManager({ initializing, children }: Props) {
       socket.off("game", handleGame);
       socket.off("hand", handleHand);
     };
-  }, [setGame, setPlayers, setEvents, setHand]);
+  }, [setGame, setPlayers, setEvents, setHand, emitEvent]);
 
   const gamePlayers = players.map<Player>((p) => ({
     id: p.id,

@@ -1,4 +1,4 @@
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import { Player, PlayerInfluence } from "../types";
 import { nullthrows } from "../utils";
 import HGroup from "./layout/HGroup";
@@ -11,6 +11,8 @@ type Props = {
 };
 
 function RevealingActionMenu({ playerToReveal, currentPlayer }: Props) {
+  const emitEvent = useEventEmitter();
+
   if (playerToReveal.id !== currentPlayer.id) {
     return <p>Waiting for {playerToReveal.name} to reveal an influence</p>;
   }
@@ -25,13 +27,13 @@ function RevealingActionMenu({ playerToReveal, currentPlayer }: Props) {
           className="w-full"
           influence={hand.influenceA}
           disabled={currentPlayer.influenceA !== PlayerInfluence.UNKNOWN}
-          onClick={() => socket.emit("reveal", hand.influenceA)}
+          onClick={() => emitEvent("reveal", hand.influenceA)}
         />
         <InfluenceButton
           className="w-full"
           influence={hand.influenceB}
           disabled={currentPlayer.influenceB !== PlayerInfluence.UNKNOWN}
-          onClick={() => socket.emit("reveal", hand.influenceB)}
+          onClick={() => emitEvent("reveal", hand.influenceB)}
         />
       </HGroup>
     </VGroup>

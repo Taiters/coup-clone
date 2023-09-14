@@ -1,4 +1,4 @@
-import { socket } from "../socket";
+import { useEventEmitter } from "../socket";
 import { Game, Player } from "../types";
 import { nullthrows } from "../utils";
 import HGroup from "./layout/HGroup";
@@ -12,6 +12,8 @@ type Props = {
 
 function BlockedMenu({ game, currentPlayer }: Props) {
   const blocker = nullthrows(game.turnBlocker);
+  const emitEvent = useEventEmitter();
+
   if (blocker.id === currentPlayer.id) {
     return <p>You've blocked {nullthrows(game.currentTurn?.name)}</p>;
   }
@@ -29,13 +31,13 @@ function BlockedMenu({ game, currentPlayer }: Props) {
           <Button
             className="w-full"
             label="Accept"
-            onClick={() => socket.emit("accept_block")}
+            onClick={() => emitEvent("accept_block")}
           />
         )}
         <Button
           className="w-full"
           label="Challenge"
-          onClick={() => socket.emit("challenge_block")}
+          onClick={() => emitEvent("challenge_block")}
         />
       </HGroup>
     </VGroup>
