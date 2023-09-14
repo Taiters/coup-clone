@@ -14,10 +14,12 @@ import Help from "./Help";
 function Home() {
   const [gameID, setGameID] = useState("");
   const [showHelp, setShowHelp] = useState(false);
-  const emitEvent = useEventEmitter();
 
-  const onCreateGame = async () => emitEvent("create_game");
-  const onJoinGame = async () => emitEvent("join_game", gameID);
+  const [emitCreateGame, isCreateGameInFlight] = useEventEmitter("create_game");
+  const [emitJoinGame, isJoinGameInFlight] = useEventEmitter("join_game");
+
+  const onCreateGame = async () => emitCreateGame();
+  const onJoinGame = async () => emitJoinGame(gameID);
 
   return (
     <>
@@ -35,12 +37,14 @@ function Home() {
           <Button
             label="Join"
             onClick={onJoinGame}
+            pending={isJoinGameInFlight}
             disabled={gameID.length !== 6}
           />
         </HGroup>
         <LinkButton
           className="mt-28 mx-auto !block text-center"
           onClick={onCreateGame}
+          pending={isCreateGameInFlight}
           label="Create a new game"
         />
         <LinkButton

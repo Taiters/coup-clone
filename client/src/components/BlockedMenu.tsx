@@ -12,7 +12,10 @@ type Props = {
 
 function BlockedMenu({ game, currentPlayer }: Props) {
   const blocker = nullthrows(game.turnBlocker);
-  const emitEvent = useEventEmitter();
+  const [emitAcceptBlock, isAcceptBlockInFlight] =
+    useEventEmitter("accept_block");
+  const [emitChallengeBlock, isChallengeBlockInFlight] =
+    useEventEmitter("challenge_block");
 
   if (blocker.id === currentPlayer.id) {
     return <p>You've blocked {nullthrows(game.currentTurn?.name)}</p>;
@@ -31,13 +34,15 @@ function BlockedMenu({ game, currentPlayer }: Props) {
           <Button
             className="w-full"
             label="Accept"
-            onClick={() => emitEvent("accept_block")}
+            onClick={() => emitAcceptBlock()}
+            pending={isAcceptBlockInFlight}
           />
         )}
         <Button
           className="w-full"
           label="Challenge"
-          onClick={() => emitEvent("challenge_block")}
+          onClick={() => emitChallengeBlock}
+          pending={isChallengeBlockInFlight}
         />
       </HGroup>
     </VGroup>

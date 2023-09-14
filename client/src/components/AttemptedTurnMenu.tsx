@@ -12,7 +12,10 @@ type Props = {
 };
 
 function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
-  const emitEvent = useEventEmitter();
+  const [emitAcceptAction, isAcceptActionInFlight] =
+    useEventEmitter("accept_action");
+  const [emitChallenge, isChallengeInFlight] = useEventEmitter("challenge");
+  const [emitBlock, isBlockInFlight] = useEventEmitter("block");
 
   if (currentPlayer.isCurrentTurn) {
     return (
@@ -61,20 +64,23 @@ function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
         <Button
           className="w-full"
           label="Accept"
-          onClick={() => emitEvent("accept_action")}
+          onClick={() => emitAcceptAction()}
+          pending={isAcceptActionInFlight}
         />
         {canChallenge && (
           <Button
             className="w-full"
             label="Challenge"
-            onClick={() => emitEvent("challenge")}
+            onClick={() => emitChallenge()}
+            pending={isChallengeInFlight}
           />
         )}
         {canBlock && (
           <Button
             className="w-full"
             label="Block"
-            onClick={() => emitEvent("block")}
+            onClick={() => emitBlock()}
+            pending={isBlockInFlight}
           />
         )}
       </HGroup>

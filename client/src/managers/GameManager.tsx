@@ -73,11 +73,11 @@ function GameManager({ initializing, children }: Props) {
   const [players, setPlayers] = useState<PlayerNotification[]>([]);
   const [events, setEvents] = useState<EventNotification[]>([]);
   const [hand, setHand] = useState<HandNotification | null>(null);
-  const emitEvent = useEventEmitter();
+  const [emitInitGame] = useEventEmitter("initialize_game");
 
   useEffect(() => {
-    emitEvent("initialize_game");
-  }, [emitEvent]);
+    emitInitGame();
+  }, [emitInitGame]);
 
   useEffect(() => {
     const handleGame = ({
@@ -105,7 +105,7 @@ function GameManager({ initializing, children }: Props) {
       socket.off("game", handleGame);
       socket.off("hand", handleHand);
     };
-  }, [setGame, setPlayers, setEvents, setHand, emitEvent]);
+  }, [setGame, setPlayers, setEvents, setHand]);
 
   const gamePlayers = players.map<Player>((p) => ({
     id: p.id,

@@ -11,7 +11,7 @@ type Props = {
 };
 
 function RevealingActionMenu({ playerToReveal, currentPlayer }: Props) {
-  const emitEvent = useEventEmitter();
+  const [emitReveal, isRevealInFlight] = useEventEmitter("reveal");
 
   if (playerToReveal.id !== currentPlayer.id) {
     return <p>Waiting for {playerToReveal.name} to reveal an influence</p>;
@@ -27,13 +27,15 @@ function RevealingActionMenu({ playerToReveal, currentPlayer }: Props) {
           className="w-full"
           influence={hand.influenceA}
           disabled={currentPlayer.influenceA !== PlayerInfluence.UNKNOWN}
-          onClick={() => emitEvent("reveal", hand.influenceA)}
+          onClick={() => emitReveal(hand.influenceA)}
+          pending={isRevealInFlight}
         />
         <InfluenceButton
           className="w-full"
           influence={hand.influenceB}
           disabled={currentPlayer.influenceB !== PlayerInfluence.UNKNOWN}
-          onClick={() => emitEvent("reveal", hand.influenceB)}
+          onClick={() => emitReveal(hand.influenceB)}
+          pending={isRevealInFlight}
         />
       </HGroup>
     </VGroup>

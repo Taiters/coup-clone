@@ -1,11 +1,15 @@
+import { FaSpinner } from "react-icons/fa6";
+
 export type ButtonProps = {
   label: string;
   small?: boolean;
+  pending?: boolean;
 } & React.ComponentPropsWithoutRef<"button">;
 
 function Button({
   label,
   small = false,
+  pending = false,
   disabled = false,
   color = undefined,
   className = undefined,
@@ -17,13 +21,13 @@ function Button({
       style={{
         fontSize: small ? "0.75em" : undefined,
       }}
-      disabled={disabled}
+      disabled={disabled || pending}
       className={`${className} ${colorClass} ${
-        disabled ? "cursor-auto" : "cursor-pointer"
-      } rounded-none border-none px-8 text-white h-10`}
+        disabled || pending ? "cursor-auto" : "cursor-pointer"
+      } rounded-none border-none px-8 text-white text-center h-10`}
       {...rest}
     >
-      {label}
+      {pending ? <FaSpinner className="animate-spin inline" /> : label}
     </button>
   );
 }

@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 import { useMessage } from "./managers/MessageManager";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 const DEFAULT_TIMEOUT = 5000;
 
@@ -20,13 +20,18 @@ export const socket = io(process.env.REACT_APP_SOCKET_ADDR ?? "", {
   autoConnect: false,
 });
 
-export function useEventEmitter(): (event: string, ...args: any) => void {
+export function useEventEmitter(
+  event: string,
+): [(...args: any) => void, boolean] {
   const { showMessage } = useMessage();
-  return useCallback(
-    (event: string, ...args: any) =>
+  const [isInFlight, setIsInFlight] = useState(false);
+  const emitEvent = useCallback(
+    (...args: any) => {
+      setIsInFlight(true);
       socket
         .timeout(DEFAULT_TIMEOUT)
         .emit(event, ...args, (err: Error, response: SocketResponse) => {
+          setIsInFlight(false);
           if (err != null) {
             showMessage("Error", "Request timed out");
             return;
@@ -38,7 +43,10 @@ export function useEventEmitter(): (event: string, ...args: any) => void {
               response.error.message ?? "Something went wrong",
             );
           }
-        }),
-    [showMessage],
+        });
+    },
+    [event, showMessage],
   );
+
+  return [emitEvent, isInFlight];
 }

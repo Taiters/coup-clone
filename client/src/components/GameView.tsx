@@ -23,11 +23,11 @@ type Props = {
 function GameView({ game, players, events, currentPlayer }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const emitEvent = useEventEmitter();
+  const [emitLeaveGame, isLeaveGameInFlight] = useEventEmitter("leave_game");
 
   const otherPlayers = players.filter((p) => p.id !== currentPlayer.id);
 
-  const onLeave = () => emitEvent("leave_game");
+  const onLeave = () => emitLeaveGame();
 
   return (
     <>
@@ -91,7 +91,11 @@ function GameView({ game, players, events, currentPlayer }: Props) {
                 setShowHelp(true);
               }}
             />
-            <LinkButton label="Leave Game" onClick={onLeave} />
+            <LinkButton
+              label="Leave Game"
+              onClick={onLeave}
+              pending={isLeaveGameInFlight}
+            />
           </VGroup>
         </Modal>
       )}

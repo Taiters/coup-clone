@@ -15,12 +15,12 @@ type Props = {
   game: Game;
   players: Player[];
   currentPlayer: Player;
-  onStart: () => void;
 };
 
-function Lobby({ game, players, currentPlayer, onStart }: Props) {
+function Lobby({ game, players, currentPlayer }: Props) {
   const [showHelp, setShowHelp] = useState(false);
-  const emitEvent = useEventEmitter();
+  const [emitLeaveGame, isLeaveGameInFlight] = useEventEmitter("leave_game");
+  const [emitStartgame, isStartGameInFlight] = useEventEmitter("start_game");
 
   const lobbyPlayers = players.map((p, i) => (
     <LobbyPlayer key={i} player={p} current={currentPlayer.id === p.id} />
@@ -42,7 +42,8 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
     });
   };
 
-  const onLeave = () => emitEvent("leave_game");
+  const onLeave = () => emitLeaveGame();
+  const onStart = () => emitStartgame();
 
   return (
     <>
@@ -61,7 +62,12 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
         <VGroup className="mb-10">{lobbyPlayers}</VGroup>
         <VGroup>
           {currentPlayer.host ? (
-            <Button disabled={!readyToStart} label="Start" onClick={onStart} />
+            <Button
+              disabled={!readyToStart}
+              label="Start"
+              onClick={onStart}
+              pending={isStartGameInFlight}
+            />
           ) : (
             <p className="text-center m-0 text-brown">Waiting for host...</p>
           )}
@@ -73,6 +79,7 @@ function Lobby({ game, players, currentPlayer, onStart }: Props) {
           <LinkButton
             className="text-center mt-8"
             onClick={onLeave}
+            pending={isLeaveGameInFlight}
             label="Leave game"
           />
         </VGroup>

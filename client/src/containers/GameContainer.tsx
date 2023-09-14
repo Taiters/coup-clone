@@ -1,7 +1,6 @@
 import GameView from "../components/GameView";
 import Join from "../components/Join";
 import Lobby from "../components/Lobby";
-import { useEventEmitter } from "../socket";
 import { Game, GameEvent, GameState, Player, PlayerState } from "../types";
 
 type Props = {
@@ -12,8 +11,6 @@ type Props = {
 };
 
 function GameContainer({ game, players, events, currentPlayer }: Props) {
-  const emitEvent = useEventEmitter();
-
   if (currentPlayer.state === PlayerState.PENDING) {
     return <Join />;
   }
@@ -21,12 +18,7 @@ function GameContainer({ game, players, events, currentPlayer }: Props) {
   switch (game.state) {
     case GameState.LOBBY:
       return (
-        <Lobby
-          game={game}
-          players={players}
-          currentPlayer={currentPlayer}
-          onStart={() => emitEvent("start_game")}
-        />
+        <Lobby game={game} players={players} currentPlayer={currentPlayer} />
       );
     case GameState.RUNNING:
       return (

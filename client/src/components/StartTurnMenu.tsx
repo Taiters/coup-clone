@@ -15,7 +15,7 @@ type Props = {
 
 function StartTurnMenu({ game, players, currentPlayer }: Props) {
   const [targetedAction, setTargetedAction] = useState<TurnAction | null>(null);
-  const emitEvent = useEventEmitter();
+  const [emitTakeAction, isTakeActionInFlight] = useEventEmitter("take_action");
 
   if (!currentPlayer.isCurrentTurn) {
     return (
@@ -29,7 +29,7 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
     if (targetedAction == null) {
       throw new Error("Did not expect this");
     }
-    emitEvent("take_action", { action: targetedAction, target: player.id });
+    emitTakeAction({ action: targetedAction, target: player.id });
     setTargetedAction(null);
   };
 
@@ -40,38 +40,36 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
           <VGroup className="w-full">
             <Button
               label="Income"
-              onClick={() =>
-                emitEvent("take_action", { action: TurnAction.INCOME })
-              }
+              onClick={() => emitTakeAction({ action: TurnAction.INCOME })}
+              pending={isTakeActionInFlight}
             />
             <Button
               label="Tax"
-              onClick={() =>
-                emitEvent("take_action", { action: TurnAction.TAX })
-              }
+              onClick={() => emitTakeAction({ action: TurnAction.TAX })}
+              pending={isTakeActionInFlight}
             />
             <Button
               label="Exchange"
-              onClick={() =>
-                emitEvent("take_action", { action: TurnAction.EXCHANGE })
-              }
+              onClick={() => emitTakeAction({ action: TurnAction.EXCHANGE })}
+              pending={isTakeActionInFlight}
             />
           </VGroup>
           <VGroup className="w-full">
             <Button
               label="Foreign Aid"
-              onClick={() =>
-                emitEvent("take_action", { action: TurnAction.FOREIGN_AID })
-              }
+              onClick={() => emitTakeAction({ action: TurnAction.FOREIGN_AID })}
+              pending={isTakeActionInFlight}
             />
             <Button
               disabled={currentPlayer.coins < 3}
               label="Assassinate"
               onClick={() => setTargetedAction(TurnAction.ASSASSINATE)}
+              pending={isTakeActionInFlight}
             />
             <Button
               label="Steal"
               onClick={() => setTargetedAction(TurnAction.STEAL)}
+              pending={isTakeActionInFlight}
             />
           </VGroup>
         </HGroup>
@@ -79,6 +77,7 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
           disabled={currentPlayer.coins < 7}
           label="Coup"
           onClick={() => setTargetedAction(TurnAction.COUP)}
+          pending={isTakeActionInFlight}
         />
       </VGroup>
       {targetedAction != null && (

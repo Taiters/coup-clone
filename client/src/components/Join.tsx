@@ -11,10 +11,11 @@ import LinkButton from "./ui/LinkButton";
 function Join() {
   const { game } = useParams();
   const [name, setName] = useState("");
-  const emitEvent = useEventEmitter();
+  const [emitSetName, isSetNameInFlight] = useEventEmitter("set_name");
+  const [emitLeaveGame, isLeaveGameInFlight] = useEventEmitter("leave_game");
 
-  const onContinue = () => emitEvent("set_name", name);
-  const onLeave = () => emitEvent("leave_game");
+  const onContinue = () => emitSetName(name);
+  const onLeave = () => emitLeaveGame();
 
   return (
     <Container>
@@ -25,10 +26,15 @@ function Join() {
           onChange={setName}
           placeholder="Enter your name..."
         />
-        <Button label="Continue" onClick={onContinue} />
+        <Button
+          label="Continue"
+          onClick={onContinue}
+          pending={isSetNameInFlight}
+        />
         <LinkButton
           className="text-center mt-8"
           onClick={onLeave}
+          pending={isLeaveGameInFlight}
           label="Leave game"
         />
       </VGroup>

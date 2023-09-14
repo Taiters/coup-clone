@@ -23,7 +23,7 @@ function Inner({ game, currentPlayer }: Props) {
   const [exchangingInfluence, setExchangingInfluence] = useState<
     ExchangingInfluence[]
   >([]);
-  const emitEvent = useEventEmitter();
+  const [emitExchange, isExchangeInFlight] = useEventEmitter("exchange");
 
   useEffect(() => {
     setExchangingInfluence([
@@ -75,10 +75,7 @@ function Inner({ game, currentPlayer }: Props) {
     });
 
   const onExchange = () =>
-    emitEvent(
-      "exchange",
-      exchangingInfluence.filter((e) => e.enabled),
-    );
+    emitExchange(exchangingInfluence.filter((e) => e.enabled));
 
   return (
     <VGroup>
@@ -119,6 +116,7 @@ function Inner({ game, currentPlayer }: Props) {
         label={`Exchange (${selectedCount}/${selectionLimit})`}
         disabled={selectedCount !== selectionLimit}
         onClick={onExchange}
+        pending={isExchangeInFlight}
       />
     </VGroup>
   );
