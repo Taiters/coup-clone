@@ -55,3 +55,20 @@ jobs:
           tags: |
             ghcr.io/taiters/coup-server:latest
             ghcr.io/taiters/coup-server:${{ github.run_number }}
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SECRET_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SECRET_SERVER_IP >> ~/.ssh/known_hosts
+        env:
+          SECRET_SSH_KEY: "${{ secrets.SSH_KEY }}"
+          SECRET_SERVER_IP: "${{ secrets.SERVER_IP }}"
+      
+      - name: Deploy
+        run: |
+          ssh $SECRET_SERVER_USER@$SECRET_SERVER_IP "COUP_VERSION=${{ github.run_number }} docker compose up -d"
+        env:
+          SECRET_SERVER_USER: "${{ secrets.SERVER_USER }}"
+          SECRET_SERVER_IP: "${{ secrets.SERVER_IP }}"
