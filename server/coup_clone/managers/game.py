@@ -13,32 +13,16 @@ from coup_clone.db.players import Influence, PlayerRow, PlayersTable, PlayerStat
 from coup_clone.managers.exceptions import (
     GameFullException,
     GameNotFoundException,
+    InvalidGameStateException,
     NotEnoughPlayersException,
     NotPlayerTurnException,
     PlayerAlreadyInGameException,
+    PlayerNotHostException,
     PlayerNotInGameException,
 )
 from coup_clone.managers.notifications import NotificationsManager
-from coup_clone.models import Game, Player
+from coup_clone.models import Game, Player, get_shuffled_deck
 from coup_clone.request import Request
-
-DECK = [
-    Influence.DUKE,
-    Influence.DUKE,
-    Influence.DUKE,
-    Influence.CAPTAIN,
-    Influence.CAPTAIN,
-    Influence.CAPTAIN,
-    Influence.ASSASSIN,
-    Influence.ASSASSIN,
-    Influence.ASSASSIN,
-    Influence.CONTESSA,
-    Influence.CONTESSA,
-    Influence.CONTESSA,
-    Influence.AMBASSADOR,
-    Influence.AMBASSADOR,
-    Influence.AMBASSADOR,
-]
 
 
 @dataclass
@@ -76,9 +60,7 @@ class GameManager:
             raise PlayerAlreadyInGameException(current_player.game_id)
 
         game_id = "".join(random.choice(string.ascii_lowercase) for _ in range(6))
-        game = await Game.create(
-            request.conn, id=game_id, deck="".join(str(c.value) for c in random.sample(DECK, k=len(DECK)))
-        )
+        game = await Game.create(request.conn, id=game_id, deck="".join(str(c) for c in get_shuffled_deck()))
         hand = await game.take_from_deck()
         player = await Player.create(request.conn, game_id=game.id, host=True, influence_a=hand[0], influence_b=hand[1])
         await request.session.set_player(player.id)
@@ -662,3 +644,22 @@ class GameManager:
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
         await self.notifications_manager.notify_player(request.conn, player)
+
+    async def restart(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        if not player.row.host:
+            raise PlayerNotHostException()
+
+        game = await player.get_game()
+        if game.row.state != GameState.FINISHED:
+            raise InvalidGameStateException(game.id)
+
+        await game.reset()
+        await self._add_log_message(game, f"{player.row.name} has restarted the game")
+
+        await request.conn.commit()
+
+        await self.notifications_manager.broadcast_reset(request)

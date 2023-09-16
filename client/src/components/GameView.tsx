@@ -1,7 +1,7 @@
 import Container from "./layout/Container";
 import TopBar from "./ui/TopBar";
 import PlayerInfo from "./PlayerInfo";
-import { Game, GameEvent, GameState, Player, PlayerInfluence } from "../types";
+import { Game, GameEvent, Player } from "../types";
 import VGroup from "./layout/VGroup";
 import GameLog from "./GameLog";
 import TurnMenuContainer from "../containers/TurnMenuContainer";
@@ -64,20 +64,11 @@ function GameView({ game, players, events, currentPlayer }: Props) {
         </div>
         <div className="py-2 text-center">
           <Container>
-            {game.state === GameState.RUNNING ? (
-              currentPlayer.influenceA !== PlayerInfluence.UNKNOWN &&
-              currentPlayer.influenceB !== PlayerInfluence.UNKNOWN ? (
-                <p>You are out</p>
-              ) : (
-                <TurnMenuContainer
-                  game={game}
-                  players={players}
-                  currentPlayer={currentPlayer}
-                />
-              )
-            ) : (
-              <p>{game.winner?.name ?? "UNKNOWN"} has won the game!</p>
-            )}
+            <TurnMenuContainer
+              game={game}
+              players={players}
+              currentPlayer={currentPlayer}
+            />
           </Container>
         </div>
       </div>

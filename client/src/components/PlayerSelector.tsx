@@ -16,8 +16,8 @@ function PlayerSelector({ players, onSelect, onClose }: Props) {
     <Modal heading="Select target" onClose={onClose}>
       <VGroup>
         {players.map((p) => (
-          <HGroup className="justify-between content-center">
-            <PlayerName key={p.id} name={p.name} />
+          <HGroup key={p.id} className="justify-between content-center">
+            <PlayerName name={p.name} />
             <Button small label="Select" onClick={() => onSelect(p)} />
           </HGroup>
         ))}

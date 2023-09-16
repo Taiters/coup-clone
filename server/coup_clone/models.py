@@ -6,10 +6,22 @@ from typing import Any, Generic, Optional
 from aiosqlite import Connection
 from typing_extensions import Self
 
-from coup_clone.db.games import GameRow, GamesTable, TurnAction, TurnState
+from coup_clone.db.games import GameRow, GamesTable, GameState, TurnAction, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
 from coup_clone.db.sessions import SessionRow, SessionsTable
 from coup_clone.db.table import TID, T, Table
+
+DECK = [
+    Influence.DUKE,
+    Influence.CAPTAIN,
+    Influence.ASSASSIN,
+    Influence.CONTESSA,
+    Influence.AMBASSADOR,
+] * 3
+
+
+def get_shuffled_deck():
+    return [c.value for c in random.sample(DECK, k=len(DECK))]
 
 
 class Model(ABC, Generic[T, TID]):
@@ -127,6 +139,23 @@ class Game(Model[GameRow, str]):
     async def all_players_accepted(self) -> bool:
         players = await self.get_players()
         return all(p.row.accepts_action for p in players if p.id != self.row.player_turn_id and not p.is_out)
+
+    async def reset(self) -> None:
+        await self.update(
+            deck="".join(str(c) for c in get_shuffled_deck()),
+            state=GameState.RUNNING,
+            winner_id=None,
+        )
+        async with self.conn.cursor() as cursor:
+            await PlayersTable.reset_players(cursor, self.id)
+
+        players = await self.get_players()
+        cards = await self.take_from_deck(len(players) * 2)
+        pairs = [(cards[i], cards[i + 1]) for i in range(0, len(cards), 2)]
+        for player, influence in zip(players, pairs):
+            await player.update(influence_a=influence[0], influence_b=influence[1])
+
+        await self.reset_turn_state(players[0].id)
 
 
 class Player(Model[PlayerRow, int]):

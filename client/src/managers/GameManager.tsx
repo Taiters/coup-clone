@@ -98,14 +98,18 @@ function GameManager({ initializing, children }: Props) {
       setHand(hand);
     };
 
+    const handleReset = () => emitInitGame();
+
     socket.on("game", handleGame);
     socket.on("hand", handleHand);
+    socket.on("reset", handleReset);
 
     return () => {
       socket.off("game", handleGame);
       socket.off("hand", handleHand);
+      socket.off("reset", handleReset);
     };
-  }, [setGame, setPlayers, setEvents, setHand]);
+  }, [setGame, setPlayers, setEvents, setHand, emitInitGame]);
 
   const gamePlayers = players.map<Player>((p) => ({
     id: p.id,

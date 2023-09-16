@@ -7,11 +7,7 @@ from socketio.exceptions import ConnectionRefusedError
 
 from coup_clone import db
 from coup_clone.db.players import Influence
-from coup_clone.managers.exceptions import (
-    GameNotFoundException,
-    PlayerAlreadyInGameException,
-    UserException,
-)
+from coup_clone.managers.exceptions import GameNotFoundException, UserException
 from coup_clone.managers.game import ExchangeInfluence, GameManager
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.managers.session import NoActiveSessionException, SessionManager
@@ -187,3 +183,9 @@ class Handler(AsyncNamespace):
                 for e in exchange
             ],
         )
+
+    @socket_response
+    @log_event
+    @with_request
+    async def on_restart(self, request: Request) -> None:
+        await self.game_manager.restart(request)

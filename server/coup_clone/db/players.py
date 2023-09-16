@@ -80,7 +80,7 @@ class PlayersTable(Table[PlayerRow, int]):
             influence_b=Influence(row[6]),
             revealed_influence_a=row[7],
             revealed_influence_b=row[8],
-            host=row[9],
+            host=bool(row[9]),
             accepts_action=row[10],
         )
 
@@ -90,6 +90,20 @@ class PlayersTable(Table[PlayerRow, int]):
             """
         UPDATE players
         SET accepts_action = 0
+        WHERE game_id = :game_id
+        """,
+            {"game_id": game_id},
+        )
+
+    @staticmethod
+    async def reset_players(cursor: Cursor, game_id: str) -> None:
+        await cursor.execute(
+            """
+        UPDATE players
+        SET
+            coins = 2,
+            revealed_influence_a = 0,
+            revealed_influence_b = 0
         WHERE game_id = :game_id
         """,
             {"game_id": game_id},

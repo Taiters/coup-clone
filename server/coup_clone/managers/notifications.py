@@ -4,6 +4,11 @@ from socketio import AsyncServer
 from coup_clone.db.events import EventRow, EventsTable
 from coup_clone.db.games import GameRow, GamesTable, TurnState
 from coup_clone.db.players import Influence, PlayerRow, PlayersTable
+from coup_clone.managers.exceptions import (
+    GameNotFoundException,
+    NoActiveSessionException,
+    PlayerNotInGameException,
+)
 from coup_clone.models import Game, Player, Session
 from coup_clone.request import Request
 
@@ -89,11 +94,11 @@ class NotificationsManager:
     async def notify_player(self, conn: Connection, player: Player) -> None:
         session = await player.get_session()
         if session is None:
-            raise Exception("No session to nofify")
+            raise NoActiveSessionException()
 
         game = await Game.get(conn, player.game_id)
         if game is None:
-            raise Exception("No game!")
+            raise GameNotFoundException(player.game_id)
 
         await self._send_game(conn, player.game_id, to=session.id)
         await self.socket_server.emit(
@@ -120,3 +125,10 @@ class NotificationsManager:
 
     async def broadcast_game(self, conn: Connection, game_id: str) -> None:
         await self._send_game(conn, game_id, to=game_id)
+
+    async def broadcast_reset(self, request: Request) -> None:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+
+        await self.socket_server.emit("reset", to=player.game_id)

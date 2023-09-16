@@ -41,7 +41,7 @@ function BlockedMenu({ game, currentPlayer }: Props) {
         <Button
           className="w-full"
           label="Challenge"
-          onClick={() => emitChallengeBlock}
+          onClick={() => emitChallengeBlock()}
           pending={isChallengeBlockInFlight}
         />
       </HGroup>

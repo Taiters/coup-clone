@@ -71,7 +71,10 @@ function AttemptedTurnMenu({ game, players, currentPlayer }: Props) {
           <Button
             className="w-full"
             label="Challenge"
-            onClick={() => emitChallenge()}
+            onClick={() => {
+              console.log("HERE");
+              emitChallenge();
+            }}
             pending={isChallengeInFlight}
           />
         )}

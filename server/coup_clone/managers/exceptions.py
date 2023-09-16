@@ -16,6 +16,11 @@ class PlayerNotInGameException(UserException):
         super().__init__("Not in a game")
 
 
+class PlayerNotHostException(UserException):
+    def __init__(self):
+        super().__init__("Player is not the host")
+
+
 class GameNotFoundException(UserException):
     def __init__(self, game_id: str):
         super().__init__(f"No game found with ID: {game_id}")
@@ -29,6 +34,11 @@ class NotPlayerTurnException(UserException):
 class GameFullException(UserException):
     def __init__(self, game_id: str):
         super().__init__(f"Game {game_id} is full")
+
+
+class InvalidGameStateException(UserException):
+    def __init__(self, game_id: str):
+        super().__init__(f"Game {game_id} is in an unexpected state")
 
 
 class NoActiveSessionException(UserException):
