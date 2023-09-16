@@ -1,11 +1,18 @@
 services:
   backend:
-    image: ghcr.io/taiters/coup-server:latest
+    image: ghcr.io/taiters/coup-server:${COUP_VERSION}
     restart: always
+    environment:
+      - COUP_DB_PATH=/var/coup_db/coup.db
+    volumes:
+      - db:/var/coup_db
 
   web:
-    image: ghcr.io/taiters/coup-client:latest
+    image: ghcr.io/taiters/coup-client:${COUP_VERSION}
     restart: always
     ports:
       - "80:80"
       - "443:443"
+
+volumes:
+  db:
