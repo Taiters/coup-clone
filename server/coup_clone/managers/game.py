@@ -48,12 +48,6 @@ class GameManager:
                 message=message,
             )
 
-    async def _next_player_turn(self, game: Game) -> None:
-        next_player = await game.get_next_player_turn()
-        if next_player is None:
-            raise Exception("No next player available")
-        await game.reset_turn_state(next_player.id)
-
     async def create(self, request: Request) -> None:
         current_player = await request.session.get_player()
         if current_player is not None:
@@ -104,7 +98,7 @@ class GameManager:
             if next_player is None or next_player.id == player.id:
                 await game.update(player_turn_id=None)
             else:
-                await self._next_player_turn(game)
+                await game.next_player_turn()
 
         if game.row.state == GameState.RUNNING:
             await player.update(
@@ -147,7 +141,7 @@ class GameManager:
             if len(players) < 2:
                 raise NotEnoughPlayersException(game.id)
             await GamesTable.update(cursor, player.game_id, state=GameState.RUNNING)
-            await self._next_player_turn(game)
+            await game.next_player_turn()
             await self._add_log_message(game, "Welcome to Coup!")
             await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
@@ -161,9 +155,10 @@ class GameManager:
             raise NotPlayerTurnException()
 
         match turn_action:
+            # Actions go START > ACCEPT / DECLINE (With challenges and stuff in between)
             case TurnAction.INCOME:
                 await player.increment_coins()
-                await self._next_player_turn(game)
+                await game.next_player_turn()
                 await self._add_log_message(game, f"{player.row.name} took Income")
             case TurnAction.FOREIGN_AID:
                 await game.update(
@@ -245,11 +240,11 @@ class GameManager:
                 case TurnAction.FOREIGN_AID:
                     await self._add_log_message(game, f"{current_player.row.name} succesfully took Foreign Aid")
                     await current_player.increment_coins(amount=2)
-                    await self._next_player_turn(game)
+                    await game.next_player_turn()
                 case TurnAction.TAX:
                     await self._add_log_message(game, f"{current_player.row.name} succesfully took Tax")
                     await current_player.increment_coins(amount=3)
-                    await self._next_player_turn(game)
+                    await game.next_player_turn()
                 case TurnAction.STEAL:
                     target = await game.get_target_player()
                     if target is None:
@@ -259,7 +254,7 @@ class GameManager:
                     )
                     await current_player.increment_coins(amount=2)
                     await target.decrement_coins(amount=2)
-                    await self._next_player_turn(game)
+                    await game.next_player_turn()
                 case TurnAction.EXCHANGE:
                     await self._add_log_message(game, f"{current_player.row.name} draws 2 cards to exchange")
                     await game.update(turn_state=TurnState.EXCHANGING)
@@ -347,7 +342,7 @@ class GameManager:
                             turn_state=TurnState.CHALLENGER_REVEALING,
                         )
                     else:
-                        await self._next_player_turn(game)
+                        await game.next_player_turn()
                 case TurnAction.STEAL:
                     if influence == Influence.CAPTAIN:
                         target = await game.get_target_player()
@@ -368,7 +363,7 @@ class GameManager:
                             turn_state=TurnState.CHALLENGER_REVEALING,
                         )
                     else:
-                        await self._next_player_turn(game)
+                        await game.next_player_turn()
                 case TurnAction.EXCHANGE:
                     if influence == Influence.AMBASSADOR:
                         await game.return_to_deck([influence])
@@ -382,7 +377,7 @@ class GameManager:
                             turn_state=TurnState.CHALLENGER_REVEALING,
                         )
                     else:
-                        await self._next_player_turn(game)
+                        await game.next_player_turn()
                     pass
                 case TurnAction.ASSASSINATE:
                     if influence == Influence.ASSASSIN:
@@ -403,7 +398,7 @@ class GameManager:
                             case "B":
                                 await player.update(influence_b=new_card[0], revealed_influence_b=False)
                     else:
-                        await self._next_player_turn(game)
+                        await game.next_player_turn()
                 case _:
                     raise Exception("Unexpected challenge")
 
@@ -425,7 +420,7 @@ class GameManager:
                     else:
                         await self._add_log_message(game, f"{current_player.row.name} succesfully took Foreign Aid")
                         await current_player.increment_coins(amount=2)
-                        await self._next_player_turn(game)
+                        await game.next_player_turn()
 
                 case TurnAction.STEAL:
                     target = await game.get_target_player()
@@ -449,7 +444,7 @@ class GameManager:
                         )
                         await current_player.increment_coins(amount=2)
                         await target.decrement_coins(amount=2)
-                        await self._next_player_turn(game)
+                        await game.next_player_turn()
 
                 case TurnAction.ASSASSINATE:
                     target = await game.get_target_player()
@@ -488,9 +483,9 @@ class GameManager:
 
                 await self.notifications_manager.notify_player(request.conn, current_player)
             else:
-                await self._next_player_turn(game)
+                await game.next_player_turn()
         else:
-            await self._next_player_turn(game)
+            await game.next_player_turn()
 
         if player.is_out:
             await self._add_log_message(game, f"{player.row.name} is out of the game!")
@@ -576,7 +571,7 @@ class GameManager:
             raise Exception("Current turn player can only accept blocks")
 
         await self._add_log_message(game, f"{player.row.name} backs down")
-        await self._next_player_turn(game)
+        await game.next_player_turn()
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
@@ -639,7 +634,7 @@ class GameManager:
             raise Exception("Something weird has happened")
 
         await self._add_log_message(game, f"{player.row.name} returns 2 cards to the deck")
-        await self._next_player_turn(game)
+        await game.next_player_turn()
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
