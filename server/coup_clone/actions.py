@@ -1,22 +1,12 @@
 from abc import ABC, abstractmethod
-from coup_clone.models import Game
-from coup_clone.db.players import Influence
-from coup_clone.db.games import TurnAction
+from coup_clone.models import Game, Player
 
 class GameAction(ABC):
-    def __init__(self, game: Game):
-        self.game = game
-    
-    @staticmethod
-    def can_be_challenged() -> bool:
-        return False
-
-    @staticmethod
-    def can_be_blocked() -> bool:
-        return False
+    def __init__(self, actor: Player):
+        self.actor = actor
     
     @abstractmethod
-    async def execute(self) -> None:
+    async def execute(self, game: Game) -> None:
         ...
 
 
