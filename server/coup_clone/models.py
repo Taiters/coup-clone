@@ -109,7 +109,7 @@ class Game(Model[GameRow, str]):
             )
             await PlayersTable.reset_accepts_action(cursor, self.id)
             self.row = await GamesTable.get(cursor, self.id)
-    
+
     async def next_player_turn(self) -> None:
         next_player = await self.get_next_player_turn()
         if next_player is None:
