@@ -2,7 +2,7 @@ from typing import Any, Awaitable, Callable, Optional
 
 from attr import dataclass
 
-from coup_clone.db.games import TurnAction
+from coup_clone.db.games import TurnAction, TurnState
 from coup_clone.db.players import Influence
 from coup_clone.models import Game
 
@@ -12,34 +12,33 @@ ACTIONS = {}
 @dataclass
 class GameAction:
     effect: Callable[[Game], Awaitable[None]]
-    requires_influence: Optional[Influence] = None
+    influence: Optional[Influence] = None
     is_targetted: bool = False
-    can_challenge: bool = False
     can_be_blocked_by: list[Influence] = []
     cost: int = 0
 
 
-def game_action(
+def action(
     action: TurnAction,
-    requires_influence: Optional[Influence] = None,
+    influence: Optional[Influence] = None,
     is_targetted: bool = False,
-    can_challenge: bool = False,
     can_be_blocked_by: set[Influence] = [],
+    cost: int = 0,
 ) -> Callable[[Callable[..., Any]], Any]:
     def wrapper(f: Callable[[Game], Awaitable[None]]) -> Callable[[Game], Awaitable[None]]:
         ACTIONS[action] = GameAction(
             effect=f,
-            requires_influence=requires_influence,
+            influence=influence,
             is_targetted=is_targetted,
-            can_challenge=can_challenge,
             can_be_blocked_by=can_be_blocked_by,
+            cost=cost,
         )
         return f
 
     return wrapper
 
 
-@game_action(
+@action(
     TurnAction.INCOME,
 )
 async def income(game: Game) -> None:
@@ -48,10 +47,21 @@ async def income(game: Game) -> None:
     await game.next_player_turn()
 
 
-@game_action(
+@action(
+    TurnAction.FOREIGN_AID,
+    can_be_blocked_by={
+        Influence.DUKE,
+    }
+)
+async def foreign_aid(game: Game) -> None:
+    current_player = await game.get_current_player()
+    await current_player.increment_coins(2)
+    await game.next_player_turn()
+
+
+@action(
     TurnAction.TAX,
-    requires_influence=Influence.DUKE,
-    can_challenge=True,
+    influence=Influence.DUKE,
 )
 async def tax(game: Game) -> None:
     current_player = await game.get_current_player()
@@ -59,10 +69,9 @@ async def tax(game: Game) -> None:
     await game.next_player_turn()
 
 
-@game_action(
+@action(
     TurnAction.STEAL,
-    requires_influence=Influence.CAPTAIN,
-    can_challenge=True,
+    influence=Influence.CAPTAIN,
     can_be_blocked_by={
         Influence.CAPTAIN,
         Influence.AMBASSADOR,
@@ -74,3 +83,28 @@ async def steal(game: Game) -> None:
     await current_player.increment_coins(2)
     await target.decrement_coins(2)
     await game.next_player_turn()
+
+
+@action(
+    TurnAction.ASSASSINATE,
+    influence=Influence.ASSASSIN,
+    is_targetted=True,
+    can_be_blocked_by={
+        Influence.CONTESSA,
+    },
+    cost=3
+)
+async def assassinate(game: Game) -> None:
+    current_player = await game.get_current_player()
+    await current_player.decrement_coins(3)
+    await game.update(
+        turn_state=TurnState.TARGET_REVEALING,
+    )
+
+
+@action(
+    TurnAction.EXCHANGE,
+    influence=Influence.AMBASSADOR,
+)
+async def exchange(game: Game) -> None:
+    await game.update(turn_state=TurnState.EXCHANGING)
