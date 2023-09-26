@@ -23,6 +23,7 @@ from coup_clone.managers.exceptions import (
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.models import Game, Player, get_shuffled_deck
 from coup_clone.request import Request
+from coup_clone.actions import get_action
 
 
 @dataclass
@@ -153,69 +154,35 @@ class GameManager:
         game = await player.get_game()
         if game.row.player_turn_id != player.id:
             raise NotPlayerTurnException()
+        
+        if game.row.turn_state != TurnState.START:
+            raise InvalidGameStateException(game.id)
+        
+        action = get_action(turn_action)
 
-        match turn_action:
-            # Actions go START > ACCEPT / DECLINE (With challenges and stuff in between)
-            case TurnAction.INCOME:
-                await player.increment_coins()
-                await game.next_player_turn()
-                await self._add_log_message(game, f"{player.row.name} took Income")
-            case TurnAction.FOREIGN_AID:
-                await game.update(
-                    turn_action=TurnAction.FOREIGN_AID,
-                    turn_state=TurnState.ATTEMPTED,
-                )
-                await self._add_log_message(game, f"{player.row.name} attempts to take Foreign Aid")
-            case TurnAction.TAX:
-                await game.update(
-                    turn_action=TurnAction.TAX,
-                    turn_state=TurnState.ATTEMPTED,
-                )
-                await self._add_log_message(game, f"{player.row.name} attempts to take Tax")
-            case TurnAction.STEAL:
-                if target_id is None:
-                    raise Exception("Steal must have a target")
-                target = await Player.get(request.conn, target_id)
-                if target is None:
-                    raise Exception("Find a better exception...")
-                await self._add_log_message(game, f"{player.row.name} attempts to steal from {target.row.name}")
-                await game.update(
-                    turn_action=TurnAction.STEAL,
-                    turn_state=TurnState.ATTEMPTED,
-                    target_id=target.id,
-                )
-            case TurnAction.EXCHANGE:
-                await game.update(
-                    turn_action=TurnAction.EXCHANGE,
-                    turn_state=TurnState.ATTEMPTED,
-                )
-                await self._add_log_message(game, f"{player.row.name} attempts to Exchange")
-            case TurnAction.ASSASSINATE:
-                if target_id is None:
-                    raise Exception("Assasinate must have a target")
-                target = await Player.get(request.conn, target_id)
-                if target is None:
-                    raise Exception("Find a better exception...")
-                await self._add_log_message(game, f"{player.row.name} attempts to assasinate {target.row.name}")
-                await player.decrement_coins(amount=3)
-                await game.update(
-                    turn_action=TurnAction.ASSASSINATE,
-                    turn_state=TurnState.ATTEMPTED,
-                    target_id=target.id,
-                )
-            case TurnAction.COUP:
-                if target_id is None:
-                    raise Exception("Coup must have a target")
-                target = await Player.get(request.conn, target_id)
-                if target is None:
-                    raise Exception("Find a better exception...")
-                await self._add_log_message(game, f"{player.row.name} started a coup on {target.row.name}")
-                await player.decrement_coins(amount=7)
-                await game.update(
-                    turn_action=TurnAction.COUP,
-                    turn_state=TurnState.TARGET_REVEALING,
-                    target_id=target.id,
-                )
+        if action.is_targetted:
+            if target_id is None:
+                raise Exception("Missing target")
+            target = await Player.get(request.conn, target_id)
+            if target is None:
+                raise Exception("Really missing target")
+        
+        if action.cost > 0:
+            if action.cost > player.row.coins:
+                raise Exception("Player can't affort it")
+            await player.decrement_coins(action.cost)
+
+        await game.update(turn_action=turn_action, target_id=target_id)
+
+        if action.influence is None and not action.can_be_blocked_by:
+            await action.effect(game)
+            await self._add_log_message(game, f'{player.row.name} {action.success_message}')
+        else:
+            await game.update(
+                turn_state=TurnState.ATTEMPTED,
+            )
+            await self._add_log_message(game, f'{player.row.name} {action.attempt_message}')
+
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
@@ -234,41 +201,10 @@ class GameManager:
         current_player = await game.get_current_player()
         if current_player is None:
             raise Exception("Get a better exception..")
-
+        
         if all_players_accepted:
-            match game.row.turn_action:
-                case TurnAction.FOREIGN_AID:
-                    await self._add_log_message(game, f"{current_player.row.name} succesfully took Foreign Aid")
-                    await current_player.increment_coins(amount=2)
-                    await game.next_player_turn()
-                case TurnAction.TAX:
-                    await self._add_log_message(game, f"{current_player.row.name} succesfully took Tax")
-                    await current_player.increment_coins(amount=3)
-                    await game.next_player_turn()
-                case TurnAction.STEAL:
-                    target = await game.get_target_player()
-                    if target is None:
-                        raise Exception("Find a better exception...")
-                    await self._add_log_message(
-                        game, f"{current_player.row.name} succesfully stole from {target.row.name}"
-                    )
-                    await current_player.increment_coins(amount=2)
-                    await target.decrement_coins(amount=2)
-                    await game.next_player_turn()
-                case TurnAction.EXCHANGE:
-                    await self._add_log_message(game, f"{current_player.row.name} draws 2 cards to exchange")
-                    await game.update(turn_state=TurnState.EXCHANGING)
-                    await self.notifications_manager.notify_player(request.conn, current_player)
-                case TurnAction.ASSASSINATE:
-                    target = await game.get_target_player()
-                    if target is None:
-                        raise Exception("Find a better exception...")
-                    await self._add_log_message(
-                        game, f"{current_player.row.name} succesfully assasinated {target.row.name}"
-                    )
-                    await game.update(
-                        turn_state=TurnState.TARGET_REVEALING,
-                    )
+            action = get_action(game.row.turn_action)
+            await action.effect(game)
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
@@ -514,11 +450,8 @@ class GameManager:
         if game.row.player_turn_id == player.id:
             raise Exception("Cannot challenge self")
 
-        if game.row.turn_action in {
-            TurnAction.INCOME,
-            TurnAction.FOREIGN_AID,
-            TurnAction.COUP,
-        }:
+        action = get_action(game.row.turn_action)
+        if action.influence is None:
             raise Exception("Cannot challenge this action")
 
         current_player = await game.get_current_player()
@@ -548,12 +481,10 @@ class GameManager:
 
         if game.row.target_id is not None and game.row.target_id != player.id:
             raise Exception("Invalid requester for blocking")
+        
+        action = get_action(game.row.turn_action)
 
-        if game.row.turn_action not in {
-            TurnAction.FOREIGN_AID,
-            TurnAction.ASSASSINATE,
-            TurnAction.STEAL,
-        }:
+        if not action.is_blocked_by:
             raise Exception("Cannot block current action")
 
         await game.update(turn_state=TurnState.BLOCKED, blocked_by_id=player.id)
