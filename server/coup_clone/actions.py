@@ -38,8 +38,9 @@ async def tax(game: Game) -> None:
 async def steal(game: Game) -> None:
     current_player = not_null(await game.get_current_player())
     target = not_null(await game.get_target_player())
-    await current_player.increment_coins(2)
-    await target.decrement_coins(2)
+    coins_to_steal = min(target.row.coins, 2)
+    await current_player.increment_coins(coins_to_steal)
+    await target.decrement_coins(coins_to_steal)
 
 
 ACTIONS = {
