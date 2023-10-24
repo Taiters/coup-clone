@@ -14,7 +14,7 @@ function LinkButton({
   return (
     <button
       className={`inline text-left ${
-        !pending ? "cursor-pointer" : ""
+        !pending ? "cursor-pointer hover:brightness-90" : ""
       } text-purple underline ${className}`}
       {...rest}
     >

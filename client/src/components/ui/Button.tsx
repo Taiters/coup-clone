@@ -23,7 +23,7 @@ function Button({
       }}
       disabled={disabled || pending}
       className={`${className} ${colorClass} ${
-        disabled || pending ? "cursor-auto" : "cursor-pointer"
+        disabled || pending ? "cursor-auto" : "cursor-pointer hover:brightness-90"
       } rounded-none border-none px-8 text-white text-center h-10`}
       {...rest}
     >
