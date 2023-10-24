@@ -10,9 +10,6 @@ services:
   coup_web:
     image: ghcr.io/taiters/coup-client:${COUP_VERSION}
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
     networks:
       - default
       - gateway
