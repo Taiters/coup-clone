@@ -6,7 +6,7 @@ import Button from "./ui/Button";
 import HGroup from "./layout/HGroup";
 
 import { useEventEmitter } from "../socket";
-import { useState } from "react";
+import React, { useState } from "react";
 import LinkButton from "./ui/LinkButton";
 import Modal from "./ui/Modal";
 import Help from "./Help";
@@ -19,28 +19,33 @@ function Home() {
   const [emitJoinGame, isJoinGameInFlight] = useEventEmitter("join_game");
 
   const onCreateGame = async () => emitCreateGame();
-  const onJoinGame = async () => emitJoinGame(gameID);
+  const onJoinGame = async (e: React.FormEvent) => {
+    e.preventDefault();
+    emitJoinGame(gameID);
+  };
 
   return (
     <>
       <Container>
         <PageTitle heading="Coup" subheading="Another online Coup clone" />
-        <HGroup>
-          <TextInput
-            value={gameID}
-            onChange={setGameID}
-            placeholder="Enter game code..."
-            validate={(value) =>
-              value.length !== 6 ? "Game code should be 6 characters" : null
-            }
-          />
-          <Button
-            label="Join"
-            onClick={onJoinGame}
-            pending={isJoinGameInFlight}
-            disabled={gameID.length !== 6}
-          />
-        </HGroup>
+        <form onSubmit={onJoinGame}>
+          <HGroup>
+            <TextInput
+              value={gameID}
+              onChange={setGameID}
+              placeholder="Enter game code..."
+              validate={(value) =>
+                value.length !== 6 ? "Game code should be 6 characters" : null
+              }
+            />
+            <Button
+              label="Join"
+              type="submit"
+              pending={isJoinGameInFlight}
+              disabled={gameID.length !== 6}
+            />
+          </HGroup>
+        </form>
         <LinkButton
           className="mt-28 mx-auto !block text-center"
           onClick={onCreateGame}
