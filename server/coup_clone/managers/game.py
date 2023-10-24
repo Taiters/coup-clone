@@ -24,6 +24,7 @@ from coup_clone.managers.exceptions import (
 from coup_clone.managers.notifications import NotificationsManager
 from coup_clone.models import Game, Player, get_shuffled_deck
 from coup_clone.request import Request
+from coup_clone.utils import not_null
 
 
 @dataclass
@@ -48,7 +49,7 @@ class GameManager:
                 game_id=game.id,
                 message=message,
             )
-    
+
     async def _get_player_in_game(self, request: Request) -> Player:
         player = await request.session.get_player()
         if player is None:
@@ -177,10 +178,12 @@ class GameManager:
         if action.influence is None and not action.can_be_blocked_by:
             if action.effect:
                 await action.effect(game)
-            await self._add_log_message(game, action.success_message.format(
-                player=player.row.name,
-                target=target.row.name if target is not None else None
-            ))
+            await self._add_log_message(
+                game,
+                action.success_message.format(
+                    player=player.row.name, target=target.row.name if target is not None else None
+                ),
+            )
             if action.next_state == TurnState.START:
                 await game.next_player_turn()
             else:
@@ -189,10 +192,12 @@ class GameManager:
             await game.update(
                 turn_state=TurnState.ATTEMPTED,
             )
-            await self._add_log_message(game, action.attempt_message.format(
-                player=player.row.name,
-                target=target.row.name if target is not None else None
-            ))
+            await self._add_log_message(
+                game,
+                not_null(action.attempt_message).format(
+                    player=player.row.name, target=target.row.name if target is not None else None
+                ),
+            )
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
@@ -211,14 +216,16 @@ class GameManager:
             raise Exception("Get a better exception..")
 
         if all_players_accepted:
-            action = get_action(game.row.turn_action)
+            action = get_action(not_null(game.row.turn_action))
             if action.effect:
                 await action.effect(game)
             target = await game.get_target_player()
-            await self._add_log_message(game, action.success_message.format(
-                player=player.row.name,
-                target=target.row.name if target is not None else None
-            ))
+            await self._add_log_message(
+                game,
+                action.success_message.format(
+                    player=player.row.name, target=target.row.name if target is not None else None
+                ),
+            )
             if action.next_state == TurnState.START:
                 await game.next_player_turn()
             else:
@@ -275,7 +282,7 @@ class GameManager:
 
         await self._add_log_message(game, f"{player.row.name} revealed a {influence.name}")
 
-        action = get_action(game.row.turn_action)
+        action = get_action(not_null(game.row.turn_action))
         target = await game.get_target_player()
         match game.row.turn_state:
             case TurnState.CHALLENGED:
@@ -284,10 +291,12 @@ class GameManager:
                         await action.effect(game)
                     await game.return_to_deck([influence])
                     new_card = await game.take_from_deck(1)
-                    await self._add_log_message(game, action.success_message.format(
-                        player=player.row.name,
-                        target=target.row.name if target is not None else None
-                    ))
+                    await self._add_log_message(
+                        game,
+                        action.success_message.format(
+                            player=player.row.name, target=target.row.name if target is not None else None
+                        ),
+                    )
                     match revealed:
                         case "A":
                             await player.update(influence_a=new_card[0], revealed_influence_a=False)
@@ -299,15 +308,19 @@ class GameManager:
 
             case TurnState.BLOCK_CHALLENGED:
                 if influence in action.can_be_blocked_by:
-                    await self._add_log_message(game, f"{player.row.name} succesfully blocked {current_player.row.name}")
+                    await self._add_log_message(
+                        game, f"{player.row.name} succesfully blocked {current_player.row.name}"
+                    )
                     await game.update(turn_state=TurnState.BLOCK_CHALLENGER_REVEALING)
                 else:
                     if action.effect:
                         await action.effect(game)
-                    await self._add_log_message(game, action.success_message.format(
-                        player=player.row.name,
-                        target=target.row.name if target is not None else None
-                    ))
+                    await self._add_log_message(
+                        game,
+                        action.success_message.format(
+                            player=player.row.name, target=target.row.name if target is not None else None
+                        ),
+                    )
                     if action.next_state == TurnState.START:
                         await game.next_player_turn()
                     else:
@@ -339,7 +352,7 @@ class GameManager:
         if game.row.player_turn_id == player.id:
             raise Exception("Cannot challenge self")
 
-        action = get_action(game.row.turn_action)
+        action = get_action(not_null(game.row.turn_action))
         if action.influence is None:
             raise Exception("Cannot challenge this action")
 
@@ -368,7 +381,7 @@ class GameManager:
         if game.row.target_id is not None and game.row.target_id != player.id:
             raise Exception("Invalid requester for blocking")
 
-        action = get_action(game.row.turn_action)
+        action = get_action(not_null(game.row.turn_action))
 
         if not action.can_be_blocked_by:
             raise Exception("Cannot block current action")

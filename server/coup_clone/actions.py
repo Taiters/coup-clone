@@ -5,13 +5,14 @@ from attr import dataclass
 from coup_clone.db.games import TurnAction, TurnState
 from coup_clone.db.players import Influence
 from coup_clone.models import Game
+from coup_clone.utils import not_null
 
 
 @dataclass
 class GameAction:
     next_state: TurnState
+    success_message: str
     effect: Optional[Callable[[Game], Awaitable[None]]] = None
-    success_message: Optional[str] = None
     attempt_message: Optional[str] = None
     influence: Optional[Influence] = None
     is_targetted: bool = False
@@ -20,23 +21,23 @@ class GameAction:
 
 
 async def income(game: Game) -> None:
-    current_player = await game.get_current_player()
+    current_player = not_null(await game.get_current_player())
     await current_player.increment_coins()
 
 
 async def foreign_aid(game: Game) -> None:
-    current_player = await game.get_current_player()
+    current_player = not_null(await game.get_current_player())
     await current_player.increment_coins(2)
 
 
 async def tax(game: Game) -> None:
-    current_player = await game.get_current_player()
+    current_player = not_null(await game.get_current_player())
     await current_player.increment_coins(3)
 
 
 async def steal(game: Game) -> None:
-    current_player = await game.get_current_player()
-    target = await game.get_target_player()
+    current_player = not_null(await game.get_current_player())
+    target = not_null(await game.get_target_player())
     await current_player.increment_coins(2)
     await target.decrement_coins(2)
 
