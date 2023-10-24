@@ -10,6 +10,8 @@ lint:
 mypy:
 	mypy --config-file server/setup.cfg server/app.py
 
+test: lint mypy
+
 install:
 	python -m pip install --upgrade pip
 	pip install -r server/requirements.txt
