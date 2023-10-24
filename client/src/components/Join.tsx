@@ -30,8 +30,9 @@ function Join() {
             value={name}
             onChange={setName}
             placeholder="Enter your name..."
+            validate={(value) => value.length < 2 ? "Minimum 2 characters" : null}
           />
-          <Button label="Continue" type="submit" pending={isSetNameInFlight} />
+          <Button label="Continue" type="submit" disabled={name.length < 2} pending={isSetNameInFlight} />
           <LinkButton
             className="text-center mt-8"
             onClick={onLeave}

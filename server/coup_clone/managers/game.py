@@ -131,6 +131,8 @@ class GameManager:
         await self.notifications_manager.notify_session(request.session)
 
     async def set_name(self, request: Request, name: str) -> None:
+        if len(name) < 2:
+            raise Exception("Name must be minimum of 2 characters")
         async with request.conn.cursor() as cursor:
             player = await self._get_player_in_game(request)
             await PlayersTable.update(cursor, player.id, name=name, state=PlayerState.READY)
