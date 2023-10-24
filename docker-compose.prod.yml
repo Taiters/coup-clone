@@ -1,5 +1,5 @@
 services:
-  backend:
+  coup_backend:
     image: ghcr.io/taiters/coup-server:${COUP_VERSION}
     restart: always
     environment:
@@ -7,7 +7,7 @@ services:
     volumes:
       - db:/var/coup_db
 
-  web:
+  coup_web:
     image: ghcr.io/taiters/coup-client:${COUP_VERSION}
     restart: always
     ports:
