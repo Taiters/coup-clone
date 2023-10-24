@@ -33,6 +33,8 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
     setTargetedAction(null);
   };
 
+  const mustCoup = currentPlayer.coins >= 10;
+
   return (
     <>
       <VGroup>
@@ -40,16 +42,19 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
           <VGroup className="w-full">
             <Button
               label="Income"
+              disabled={mustCoup}
               onClick={() => emitTakeAction({ action: TurnAction.INCOME })}
               pending={isTakeActionInFlight}
             />
             <Button
               label="Tax"
+              disabled={mustCoup}
               onClick={() => emitTakeAction({ action: TurnAction.TAX })}
               pending={isTakeActionInFlight}
             />
             <Button
               label="Exchange"
+              disabled={mustCoup}
               onClick={() => emitTakeAction({ action: TurnAction.EXCHANGE })}
               pending={isTakeActionInFlight}
             />
@@ -57,17 +62,19 @@ function StartTurnMenu({ game, players, currentPlayer }: Props) {
           <VGroup className="w-full">
             <Button
               label="Foreign Aid"
+              disabled={mustCoup}
               onClick={() => emitTakeAction({ action: TurnAction.FOREIGN_AID })}
               pending={isTakeActionInFlight}
             />
             <Button
-              disabled={currentPlayer.coins < 3}
+              disabled={currentPlayer.coins < 3 || mustCoup}
               label="Assassinate"
               onClick={() => setTargetedAction(TurnAction.ASSASSINATE)}
               pending={isTakeActionInFlight}
             />
             <Button
               label="Steal"
+              disabled={mustCoup}
               onClick={() => setTargetedAction(TurnAction.STEAL)}
               pending={isTakeActionInFlight}
             />

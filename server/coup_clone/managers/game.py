@@ -161,6 +161,9 @@ class GameManager:
 
         action = get_action(turn_action)
 
+        if player.row.coins >= 10 and turn_action != TurnAction.COUP:
+            raise Exception("Player must perform a COUP if they have 10 or more coins")
+
         target = None
         if action.is_targetted:
             if target_id is None:
