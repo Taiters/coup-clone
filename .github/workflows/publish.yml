@@ -56,11 +56,13 @@ jobs:
         env:
           SECRET_SSH_KEY: "${{ secrets.SSH_KEY }}"
           SECRET_SERVER_IP: "${{ secrets.SERVER_IP }}"
-      
+
       - name: Deploy
         run: |
           scp docker-compose.prod.yml $SECRET_SERVER_USER@$SECRET_SERVER_IP:~/coup/docker-compose.yml
-          ssh $SECRET_SERVER_USER@$SECRET_SERVER_IP "cd coup && COUP_VERSION=${{ github.run_number }} docker compose up -d"
+          ssh $SECRET_SERVER_USER@$SECRET_SERVER_IP "echo $SECRET_GH_PASSWORD | docker login ghcr.io -u $SECRET_GH_USER --password-stdin && cd ~/coup && COUP_VERSION=${{ github.run_number }} docker compose up -d"
         env:
           SECRET_SERVER_USER: "${{ secrets.SERVER_USER }}"
           SECRET_SERVER_IP: "${{ secrets.SERVER_IP }}"
+          SECRET_GH_USER: "${{ github.actor }}"
+          SECRET_GH_PASSWORD: "${{ secrets.GITHUB_TOKEN }}"
