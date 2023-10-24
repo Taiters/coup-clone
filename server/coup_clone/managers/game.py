@@ -48,6 +48,12 @@ class GameManager:
                 game_id=game.id,
                 message=message,
             )
+    
+    async def _get_player_in_game(self, request: Request) -> Player:
+        player = await request.session.get_player()
+        if player is None:
+            raise PlayerNotInGameException()
+        return player
 
     async def create(self, request: Request) -> None:
         current_player = await request.session.get_player()
@@ -125,18 +131,14 @@ class GameManager:
 
     async def set_name(self, request: Request, name: str) -> None:
         async with request.conn.cursor() as cursor:
-            player = await request.session.get_player()
-            if player is None:
-                raise PlayerNotInGameException()
+            player = await self._get_player_in_game(request)
             await PlayersTable.update(cursor, player.id, name=name, state=PlayerState.READY)
             await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def start(self, request: Request) -> None:
         async with request.conn.cursor() as cursor:
-            player = await request.session.get_player()
-            if player is None:
-                raise PlayerNotInGameException()
+            player = await self._get_player_in_game(request)
             game = await player.get_game()
             players = await game.get_players()
             if len(players) < 2:
@@ -148,9 +150,7 @@ class GameManager:
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def take_action(self, request: Request, turn_action: TurnAction, target_id: Optional[int]) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
         if game.row.player_turn_id != player.id:
             raise NotPlayerTurnException()
@@ -177,7 +177,10 @@ class GameManager:
         if action.influence is None and not action.can_be_blocked_by:
             if action.effect:
                 await action.effect(game)
-            await self._add_log_message(game, f"{player.row.name} {action.success_message}")
+            await self._add_log_message(game, action.success_message.format(
+                player=player.row.name,
+                target=target.row.name if target is not None else None
+            ))
             if action.next_state == TurnState.START:
                 await game.next_player_turn()
             else:
@@ -186,16 +189,16 @@ class GameManager:
             await game.update(
                 turn_state=TurnState.ATTEMPTED,
             )
-            await self._add_log_message(game, f"{player.row.name} {action.attempt_message}")
+            await self._add_log_message(game, action.attempt_message.format(
+                player=player.row.name,
+                target=target.row.name if target is not None else None
+            ))
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def accept_action(self, request: Request) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
         if game.row.turn_state != TurnState.ATTEMPTED:
             raise Exception("Invalid turn state")
@@ -211,7 +214,11 @@ class GameManager:
             action = get_action(game.row.turn_action)
             if action.effect:
                 await action.effect(game)
-            await self._add_log_message(game, f"{player.row.name} {action.success_message}")
+            target = await game.get_target_player()
+            await self._add_log_message(game, action.success_message.format(
+                player=player.row.name,
+                target=target.row.name if target is not None else None
+            ))
             if action.next_state == TurnState.START:
                 await game.next_player_turn()
             else:
@@ -222,10 +229,7 @@ class GameManager:
 
     async def reveal_influence(self, request: Request, influence: Influence) -> None:
         # This is all horrible, must refactor... writing this makes me feel better in the meantime
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
 
         current_player = await game.get_current_player()
@@ -272,6 +276,7 @@ class GameManager:
         await self._add_log_message(game, f"{player.row.name} revealed a {influence.name}")
 
         action = get_action(game.row.turn_action)
+        target = await game.get_target_player()
         match game.row.turn_state:
             case TurnState.CHALLENGED:
                 if action.influence == influence:
@@ -279,7 +284,10 @@ class GameManager:
                         await action.effect(game)
                     await game.return_to_deck([influence])
                     new_card = await game.take_from_deck(1)
-                    await self._add_log_message(game, f"{player.row.name} {action.success_message}")
+                    await self._add_log_message(game, action.success_message.format(
+                        player=player.row.name,
+                        target=target.row.name if target is not None else None
+                    ))
                     match revealed:
                         case "A":
                             await player.update(influence_a=new_card[0], revealed_influence_a=False)
@@ -291,12 +299,15 @@ class GameManager:
 
             case TurnState.BLOCK_CHALLENGED:
                 if influence in action.can_be_blocked_by:
-                    await self._add_log_message(game, f"{player.row.name} succesfully blocked")
+                    await self._add_log_message(game, f"{player.row.name} succesfully blocked {current_player.row.name}")
                     await game.update(turn_state=TurnState.BLOCK_CHALLENGER_REVEALING)
                 else:
                     if action.effect:
                         await action.effect(game)
-                    await self._add_log_message(game, f"{player.row.name} {action.success_message}")
+                    await self._add_log_message(game, action.success_message.format(
+                        player=player.row.name,
+                        target=target.row.name if target is not None else None
+                    ))
                     if action.next_state == TurnState.START:
                         await game.next_player_turn()
                     else:
@@ -316,14 +327,10 @@ class GameManager:
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
-        # In case the hand changed...
         await self.notifications_manager.notify_player(request.conn, player)
 
     async def challenge(self, request: Request) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
 
         if game.row.turn_state != TurnState.ATTEMPTED:
@@ -346,10 +353,7 @@ class GameManager:
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def block(self, request: Request) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
         current_player = await game.get_current_player()
         if current_player is None:
@@ -375,10 +379,7 @@ class GameManager:
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def accept_block(self, request: Request) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
         if player.id != game.row.player_turn_id:
             raise Exception("Current turn player can only accept blocks")
@@ -389,10 +390,7 @@ class GameManager:
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def challenge_block(self, request: Request) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
         if player.id == game.row.blocked_by_id:
             raise Exception("Player can't challenge own block")
@@ -407,10 +405,7 @@ class GameManager:
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
 
     async def exchange(self, request: Request, exchanges: list[ExchangeInfluence]) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         game = await player.get_game()
         expected_influence = [Influence(int(i)) for i in game.row.deck[-2:]]
         if not player.row.revealed_influence_a:
@@ -454,10 +449,7 @@ class GameManager:
         await self.notifications_manager.notify_player(request.conn, player)
 
     async def restart(self, request: Request) -> None:
-        player = await request.session.get_player()
-        if player is None:
-            raise PlayerNotInGameException()
-
+        player = await self._get_player_in_game(request)
         if not player.row.host:
             raise PlayerNotHostException()
 
