@@ -59,8 +59,8 @@ jobs:
       
       - name: Deploy
         run: |
-          scp docker-compose.prod.yml $SECRET_SERVER_USER@$SECRET_SERVER_IP:~/docker-compose.yml
-          ssh $SECRET_SERVER_USER@$SECRET_SERVER_IP "COUP_VERSION=${{ github.run_number }} docker compose up -d"
+          scp docker-compose.prod.yml $SECRET_SERVER_USER@$SECRET_SERVER_IP:~/coup/docker-compose.yml
+          ssh $SECRET_SERVER_USER@$SECRET_SERVER_IP "cd coup && COUP_VERSION=${{ github.run_number }} docker compose up -d"
         env:
           SECRET_SERVER_USER: "${{ secrets.SERVER_USER }}"
           SECRET_SERVER_IP: "${{ secrets.SERVER_IP }}"
