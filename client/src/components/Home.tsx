@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import LinkButton from "./ui/LinkButton";
 import Modal from "./ui/Modal";
 import Help from "./Help";
+import Footer from "./ui/Footer";
 
 function Home() {
   const [gameID, setGameID] = useState("");
@@ -58,6 +59,7 @@ function Home() {
           label="How to play"
         />
       </Container>
+      <Footer />
       {showHelp && (
         <Modal heading="How to play" onClose={() => setShowHelp(false)}>
           <Help />

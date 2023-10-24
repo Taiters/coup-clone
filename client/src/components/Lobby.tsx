@@ -10,6 +10,7 @@ import { useEventEmitter } from "../socket";
 import { useState } from "react";
 import Modal from "./ui/Modal";
 import Help from "./Help";
+import Footer from "./ui/Footer";
 
 type Props = {
   game: Game;
@@ -84,6 +85,7 @@ function Lobby({ game, players, currentPlayer }: Props) {
           />
         </VGroup>
       </Container>
+      <Footer />
       {showHelp && (
         <Modal heading="How to play" onClose={() => setShowHelp(false)}>
           <Help />

@@ -7,6 +7,7 @@ import VGroup from "./layout/VGroup";
 import React, { useState } from "react";
 import { useEventEmitter } from "../socket";
 import LinkButton from "./ui/LinkButton";
+import Footer from "./ui/Footer";
 
 function Join() {
   const { game } = useParams();
@@ -22,26 +23,36 @@ function Join() {
   const onLeave = () => emitLeaveGame();
 
   return (
-    <Container>
-      <PageTitle heading="Joining" subheading={`Game: ${game}`} />
-      <form onSubmit={onContinue}>
-        <VGroup>
-          <TextInput
-            value={name}
-            onChange={setName}
-            placeholder="Enter your name..."
-            validate={(value) => value.length < 2 ? "Minimum 2 characters" : null}
-          />
-          <Button label="Continue" type="submit" disabled={name.length < 2} pending={isSetNameInFlight} />
-          <LinkButton
-            className="text-center mt-8"
-            onClick={onLeave}
-            pending={isLeaveGameInFlight}
-            label="Leave game"
-          />
-        </VGroup>
-      </form>
-    </Container>
+    <>
+      <Container>
+        <PageTitle heading="Joining" subheading={`Game: ${game}`} />
+        <form onSubmit={onContinue}>
+          <VGroup>
+            <TextInput
+              value={name}
+              onChange={setName}
+              placeholder="Enter your name..."
+              validate={(value) =>
+                value.length < 2 ? "Minimum 2 characters" : null
+              }
+            />
+            <Button
+              label="Continue"
+              type="submit"
+              disabled={name.length < 2}
+              pending={isSetNameInFlight}
+            />
+            <LinkButton
+              className="text-center mt-8"
+              onClick={onLeave}
+              pending={isLeaveGameInFlight}
+              label="Leave game"
+            />
+          </VGroup>
+        </form>
+      </Container>
+      <Footer />
+    </>
   );
 }
 
