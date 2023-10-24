@@ -12,10 +12,6 @@ RUN npm run build
 
 FROM nginx:1.25-alpine
 
-RUN mkdir -p /etc/ssl/certs
-COPY cf-origin.key /etc/ssl/certs/cf-origin.key
-COPY cf-origin.crt /etc/ssl/certs/cf-origin.crt
-
 RUN mkdir -p /var/www/coup/html
 COPY coup.conf /etc/nginx/conf.d/.
 COPY --from=build /usr/coup/build/. /var/www/coup/html/.

@@ -13,6 +13,14 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    networks:
+      - default
+      - gateway
 
 volumes:
   db:
+
+networks:
+  gateway:
+    name: gateway
+    exists: true
