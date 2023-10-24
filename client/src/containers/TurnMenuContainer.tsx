@@ -47,13 +47,6 @@ function TurnMenuContainer({ game, players, currentPlayer }: Props) {
               currentPlayer={currentPlayer}
             />
           );
-        case TurnState.REVEALING:
-          return (
-            <RevealingActionMenu
-              playerToReveal={nullthrows(game.currentTurn)}
-              currentPlayer={currentPlayer}
-            />
-          );
         case TurnState.CHALLENGER_REVEALING:
           return (
             <RevealingActionMenu

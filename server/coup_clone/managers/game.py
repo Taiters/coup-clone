@@ -161,6 +161,7 @@ class GameManager:
 
         action = get_action(turn_action)
 
+        target = None
         if action.is_targetted:
             if target_id is None:
                 raise Exception("Missing target")
@@ -233,6 +234,7 @@ class GameManager:
 
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
+        await self.notifications_manager.notify_player(request.conn, current_player)
 
     async def reveal_influence(self, request: Request, influence: Influence) -> None:
         # This is all horrible, must refactor... writing this makes me feel better in the meantime
@@ -244,7 +246,6 @@ class GameManager:
             raise Exception("Current player is missing")
 
         if game.row.turn_state not in {
-            TurnState.REVEALING,
             TurnState.TARGET_REVEALING,
             TurnState.CHALLENGED,
             TurnState.CHALLENGER_REVEALING,
@@ -253,9 +254,7 @@ class GameManager:
         }:
             raise Exception("Invalid turn state")
 
-        if (
-            game.row.turn_state == TurnState.REVEALING or game.row.turn_state == TurnState.CHALLENGED
-        ) and player.id != game.row.player_turn_id:
+        if game.row.turn_state == TurnState.CHALLENGED and player.id != game.row.player_turn_id:
             raise Exception("Expecting current turn player to reveal")
 
         if game.row.turn_state == TurnState.TARGET_REVEALING and player.id != game.row.target_id:
@@ -311,6 +310,13 @@ class GameManager:
                     await self._add_log_message(
                         game, f"{player.row.name} succesfully blocked {current_player.row.name}"
                     )
+                    await game.return_to_deck([influence])
+                    new_card = await game.take_from_deck(1)
+                    match revealed:
+                        case "A":
+                            await player.update(influence_a=new_card[0], revealed_influence_a=False)
+                        case "B":
+                            await player.update(influence_b=new_card[0], revealed_influence_b=False)
                     await game.update(turn_state=TurnState.BLOCK_CHALLENGER_REVEALING)
                 else:
                     if action.effect:
@@ -325,6 +331,9 @@ class GameManager:
                         await game.next_player_turn()
                     else:
                         await game.update(turn_state=action.next_state)
+
+            case TurnState.BLOCK_CHALLENGER_REVEALING:
+                await game.next_player_turn()
 
             case _:
                 await game.update(turn_state=action.next_state)
@@ -341,6 +350,7 @@ class GameManager:
         await request.conn.commit()
         await self.notifications_manager.broadcast_game(request.conn, player.game_id)
         await self.notifications_manager.notify_player(request.conn, player)
+        await self.notifications_manager.notify_player(request.conn, current_player)
 
     async def challenge(self, request: Request) -> None:
         player = await self._get_player_in_game(request)
